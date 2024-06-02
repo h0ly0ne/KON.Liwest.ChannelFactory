@@ -15,4 +15,4 @@ ERROR(S):
   -c, --inputfile            Filename from which to generate Excel channel sort file.
   -d, --inputfileencoding    Encoding which is used in input file.
   --help                     Display this help screen.
-  --version                  Display version information.```
+  --version                  Display version information.
