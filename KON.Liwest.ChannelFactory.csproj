@@ -5,6 +5,26 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <StartupObject>KON.Liwest.ChannelFactory.Program</StartupObject>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="CsvHelper" Version="32.0.3" />
+    <PackageReference Include="NanoXLSX" Version="2.4.0" />
+    <PackageReference Include="NLog" Version="5.3.2" />
+    <PackageReference Include="Pastel" Version="5.1.0" />
+    <PackageReference Include="Polly" Version="8.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\KON.OctoScan.NET\KON.OctoScan.NET.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Interop.NetFwTypeLib">
+      <HintPath>..\KON.OctoScan.NET\obj\Debug\net8.0\Interop.NetFwTypeLib.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>
