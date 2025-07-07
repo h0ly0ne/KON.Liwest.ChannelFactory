@@ -6,15 +6,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <StartupObject>KON.Liwest.ChannelFactory.Program</StartupObject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="CsvHelper" Version="32.0.3" />
-    <PackageReference Include="NanoXLSX" Version="2.4.0" />
-    <PackageReference Include="NLog" Version="5.3.2" />
-    <PackageReference Include="Pastel" Version="5.1.0" />
-    <PackageReference Include="Polly" Version="8.4.2" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="NanoXLSX" Version="2.6.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NLog" Version="6.0.1" />
+    <PackageReference Include="Pastel" Version="6.0.1" />
+    <PackageReference Include="Polly" Version="8.6.1" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +27,12 @@
     <Reference Include="Interop.NetFwTypeLib">
       <HintPath>..\KON.OctoScan.NET\obj\Debug\net8.0\Interop.NetFwTypeLib.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="resources\StringVariationDictionary.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

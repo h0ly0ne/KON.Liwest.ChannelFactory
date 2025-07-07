@@ -2,7 +2,7 @@
   "profiles": {
     "KON.Liwest.ChannelFactory": {
       "commandName": "Project",
-      "commandLineArgs": "--mode FetchTransponderDataFromLiwestBlindscan --smartcardid 01359096687 --serverip 172.31.255.185"
+      "commandLineArgs": "--mode ExportSourceDataToDVBViewerChannelDatabase --source File --sourcedatafilename SourceData.xml --dvbviewerchanneldatabasefilename channels.dat"
     }
   }
 }
