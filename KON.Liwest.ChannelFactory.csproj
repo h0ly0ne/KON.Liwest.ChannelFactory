@@ -10,6 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="resources\channels.dat" />
+    <None Remove="resources\Sample_SourceData.xml" />
+    <None Remove="resources\Sample_SourceDataExcelExport.xlsx" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="NanoXLSX" Version="2.6.3" />
@@ -30,8 +36,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="resources\StringVariationDictionary.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="resources\*">
+	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  <TargetPath>%(Filename)%(Extension)</TargetPath>
     </None>
   </ItemGroup>
 

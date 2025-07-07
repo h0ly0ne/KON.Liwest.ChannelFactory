@@ -866,6 +866,25 @@ namespace KON.Liwest.ChannelFactory
                     drNewDataRow["SPID"] = s.Where(w => w["SPID"] != DBNull.Value).Select(s => s["SPID"]).FirstOrDefault() ?? DBNull.Value;
                     drNewDataRow["TPID"] = s.Where(w => w["TPID"] != DBNull.Value).Select(s => s["TPID"]).FirstOrDefault() ?? DBNull.Value;
 
+                    if (drNewDataRow["VPID"] == DBNull.Value && drNewDataRow["APIDS"] == DBNull.Value)
+                        return null;
+                    if (drNewDataRow["VPID"] == DBNull.Value && Convert.ToString(drNewDataRow["APIDS"]) == "0")
+                        return null;
+                    if (drNewDataRow["VPID"] == DBNull.Value && string.IsNullOrEmpty(Convert.ToString(drNewDataRow["APIDS"])))
+                        return null;
+                    if (Convert.ToString(drNewDataRow["VPID"]) == "0" && Convert.ToString(drNewDataRow["APIDS"]) == "0")
+                        return null;
+                    if (Convert.ToString(drNewDataRow["VPID"]) == "0" && drNewDataRow["APIDS"] == DBNull.Value)
+                        return null;
+                    if (Convert.ToString(drNewDataRow["VPID"]) == "0" && string.IsNullOrEmpty(Convert.ToString(drNewDataRow["APIDS"])))
+                        return null;
+                    if (string.IsNullOrEmpty(Convert.ToString(drNewDataRow["VPID"])) && string.IsNullOrEmpty(Convert.ToString(drNewDataRow["APIDS"])))
+                        return null;
+                    if (string.IsNullOrEmpty(Convert.ToString(drNewDataRow["VPID"])) && drNewDataRow["APIDS"] == DBNull.Value)
+                        return null;
+                    if (string.IsNullOrEmpty(Convert.ToString(drNewDataRow["VPID"])) && Convert.ToString(drNewDataRow["APIDS"]) == "0")
+                        return null;
+
                     return drNewDataRow;
                 });
 
