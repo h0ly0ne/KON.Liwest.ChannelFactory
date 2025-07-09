@@ -15,19 +15,8 @@
         public const int ciCableSatModulation = 0;
         public const int ciCableSubStreamID = -1;
 
-        public const string csDefaultSourceDataFilename = "SourceData.xml";
-        public const string csDefaultStringVariationDictionaryFilename = "StringVariationDictionary.xml";
-        public const string csDefaultSmartcardId = "01234567890";
-        public const string csDefaultFrequencies = "50-954:8";
-        public const string csDefaultDVBViewerTransponderFilename = "DVB-C_at_LIWEST.ini";
-        public const string csDefaultDVBViewerChannelDatabaseFilename = "channels.dat";
         public const string csDefaultDVBViewerChannelDatabaseID = "B2C2";
         public const int csDefaultDVBViewerChannelDatabaseVersionHi = 1;
         public const int csDefaultDVBViewerChannelDatabaseVersionLo = 10;
-        public const string csDefaultExcelExportFilename = "SourceDataExcelExport.xlsx";
-
-        public const string csExcelChannelSortFile = "ChannelListSort.xlsx";
-        public const string csExcelChannelSortTemplate = "ChannelListSortTemplate.xlsx";
-
     }
 }

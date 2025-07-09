@@ -1,26 +1,15 @@
-﻿using Newtonsoft.Json;
-using System.Runtime.InteropServices;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Channels;
+﻿using System.Runtime.InteropServices;
 
 namespace KON.Liwest.ChannelFactory
 {
     public class DVBViewer
     {
-        public enum AVFormat : int
+        public enum AVFormat
         {
             AUDIO_MPEG = 0,
             AUDIO_AC3 = 1,
-            AUDIO_AAC = 2,
-            AUDIO_AES3 = 3,
-            AUDIO_DRA = 4,
             VIDEO_MPEG2 = 0,
             VIDEO_H264 = 1,
-            VIDEO_HEVC = 2,
-            VIDEO_AVS = 3,
-            VIDEO_VVC = 4
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -28,7 +17,7 @@ namespace KON.Liwest.ChannelFactory
         {
             public byte IDLength;                                   // default: 4
             [MarshalAs(UnmanagedType.ByValArray, SizeConst = 4)]
-            public char[] ID;                                       // default: 'B2C2'
+            public char[]? ID;                                      // default: 'B2C2'
             public byte VersionHi;                                  // default: 1
             public byte VersionLo;                                  // default: 10
         }
@@ -94,19 +83,19 @@ namespace KON.Liwest.ChannelFactory
 
             return bytes;
         }
-        public static unsafe dynamic? ToObject(byte[] bytes)
-        {
-            var rf = __makeref(bytes);
-            **(int**)(&rf) += 8;
-            return GCHandle.Alloc(bytes).Target;
-        }
-        public static byte HexStringToByte(string hex)
-        {
-            return Enumerable.Range(0, hex.Length)
-                .Where(x => x % 2 == 0)
-                .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-                .ToArray()[0];
-        }
+        //public static unsafe dynamic? ToObject(byte[] bytes)
+        //{
+        //    var rf = __makeref(bytes);
+        //    **(int**)&rf += 8;
+        //    return GCHandle.Alloc(bytes).Target;
+        //}
+        //public static byte HexStringToByte(string hex)
+        //{
+        //    return Enumerable.Range(0, hex.Length)
+        //        .Where(x => x % 2 == 0)
+        //        .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+        //        .ToArray()[0];
+        //}
 
         public static byte NibblesToByte(int iLocalLoNibble, int iLocalHiNibble)
         {

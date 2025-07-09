@@ -57,6 +57,45 @@ namespace KON.Liwest.ChannelFactory
         }
 
         public class StringVariationDictionary : Dictionary<string, string[]>;
+        public class ChannelRemovalDictionary
+        {
+            public string? ChannelName { get; set; }
+            public string? ChannelFrequency { get; set; }
+        }
+        public class ChannelSortingDictionary
+        {
+            public string? SortNumber { get; set; }
+            public string? ChannelName { get; set; }
+            public string? ChannelFrequency { get; set; }
+        }
+
+        public enum FlagMode
+        {
+            GenerateData = 0,
+            ModifyData = 1,
+            DumpDVBViewerChannelDatabase = 2
+        }
+
+        public enum FlagSource
+        {
+            ChannelList = 0,
+            SmartcardList = 1,
+            BlindscanList = 2,
+            CombinedList = 3,
+            FileList = 4
+        }
+        public enum FlagTarget
+        {
+            None = 0,
+            FileList = 1
+        }
+
+        public enum FlagSourceCleanup
+        {
+            None = 0,
+            RemoveInvalidSIDs = 1,
+            GroupAndInvalidate = 2
+        }
 
         public static void InitDataContainers(ref DataTable dtLocalDataTable)
         {
@@ -187,10 +226,10 @@ namespace KON.Liwest.ChannelFactory
                             drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[1]).RepairEncoding().TrimAdvanced().CheckVariationForPrimary();
                             drModifiedDataRow["ChannelFrequency"] = Convert.ToString(drCurrentRequestDataRow[6])?.Replace(".00 MHz", string.Empty).ToInt32() * 1000;
                             drModifiedDataRow["Free"] = Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() : DBNull.Value;
-                            drModifiedDataRow["Pairing"] = Convert.ToString(drCurrentRequestDataRow[3]).RepairEncoding().TrimAdvanced();
-                            drModifiedDataRow["Issues"] = Convert.ToString(drCurrentRequestDataRow[4]).RepairEncoding().TrimAdvanced();
-                            drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[5]).RepairEncoding().TrimAdvanced();
-                            drModifiedDataRow["Codec"] = Convert.ToString(drCurrentRequestDataRow[7]).RepairEncoding().TrimAdvanced();
+                            drModifiedDataRow["Pairing"] = Convert.ToString(drCurrentRequestDataRow[3]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
+                            drModifiedDataRow["Issues"] = Convert.ToString(drCurrentRequestDataRow[4]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
+                            drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[5]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
+                            drModifiedDataRow["Codec"] = Convert.ToString(drCurrentRequestDataRow[7]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
                             dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
                         }
                     }
@@ -212,10 +251,10 @@ namespace KON.Liwest.ChannelFactory
                             drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[1]).RepairEncoding().TrimAdvanced().CheckVariationForPrimary();
                             drModifiedDataRow["ChannelFrequency"] = Convert.ToString(drCurrentRequestDataRow[6])?.Replace(".00 MHz", string.Empty).ToInt32() * 1000;
                             drModifiedDataRow["Free"] = Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() : DBNull.Value;
-                            drModifiedDataRow["Pairing"] = Convert.ToString(drCurrentRequestDataRow[3]).RepairEncoding().TrimAdvanced();
-                            drModifiedDataRow["Issues"] = Convert.ToString(drCurrentRequestDataRow[4]).RepairEncoding().TrimAdvanced();
-                            drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[5]).RepairEncoding().TrimAdvanced();
-                            drModifiedDataRow["Codec"] = Convert.ToString(drCurrentRequestDataRow[7]).RepairEncoding().TrimAdvanced();
+                            drModifiedDataRow["Pairing"] = Convert.ToString(drCurrentRequestDataRow[3]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
+                            drModifiedDataRow["Issues"] = Convert.ToString(drCurrentRequestDataRow[4]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
+                            drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[5]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
+                            drModifiedDataRow["Codec"] = Convert.ToString(drCurrentRequestDataRow[7]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
                             dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
                         }
                     }
@@ -351,7 +390,7 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Info("-» Load source data from file".Pastel(ConsoleColor.Green));
 
                 List<SourceDataTable>? lsdtCurrentListSourceDataTable = JsonConvert.DeserializeObject<List<SourceDataTable>>(File.ReadAllText(strLocalSourceDataFilename, Encoding.UTF8));
-                if (lsdtCurrentListSourceDataTable != null && lsdtCurrentListSourceDataTable.Count > 0)
+                if (lsdtCurrentListSourceDataTable is { Count: > 0 })
                 {
                     PropertyInfo[] piaSourceDataTablePropertyInfo = typeof(SourceDataTable).GetProperties();
 
@@ -363,7 +402,12 @@ namespace KON.Liwest.ChannelFactory
                             if (piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable) == null)
                                 drNewDataRow[piSourceDataTablePropertyInfo.Name] = DBNull.Value;
                             else
-                                drNewDataRow[piSourceDataTablePropertyInfo.Name] = piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable);
+                            {
+                                if (piSourceDataTablePropertyInfo.Name == "ChannelName")
+                                    drNewDataRow[piSourceDataTablePropertyInfo.Name] = Convert.ToString(piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable)).TrimAdvanced().CheckVariationForPrimary();
+                                else
+                                    drNewDataRow[piSourceDataTablePropertyInfo.Name] = piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable);
+                            }
                         }
                         dtSourceDataTable.Rows.Add(drNewDataRow);
                     }
@@ -375,18 +419,18 @@ namespace KON.Liwest.ChannelFactory
         /// Global.SaveStringVariationDictionaryToFile()
         /// </summary>
         /// <param name="strLocalStringVariationDictionaryFilename"></param>
-        public static void SaveStringVariationDictionaryToFile(string? strLocalStringVariationDictionaryFilename)
-        {
-            if (!string.IsNullOrEmpty(strLocalStringVariationDictionaryFilename))
-            {
-                lCurrentLogger.Trace("Global.SaveStringVariationDictionaryToFile()".Pastel(ConsoleColor.Cyan));
-                lCurrentLogger.Info("-» Save string variation dictionary to file".Pastel(ConsoleColor.Green));
+        //public static void SaveStringVariationDictionaryToFile(string? strLocalStringVariationDictionaryFilename)
+        //{
+        //    if (!string.IsNullOrEmpty(strLocalStringVariationDictionaryFilename))
+        //    {
+        //        lCurrentLogger.Trace("Global.SaveStringVariationDictionaryToFile()".Pastel(ConsoleColor.Cyan));
+        //        lCurrentLogger.Info("-» Save string variation dictionary to file".Pastel(ConsoleColor.Green));
 
-                StringVariationDictionary svdCurrentStringVariationDictionary = new StringVariationDictionary();
+        //        StringVariationDictionary svdCurrentStringVariationDictionary = new StringVariationDictionary();
 
-                File.WriteAllText(strLocalStringVariationDictionaryFilename, JsonConvert.SerializeObject(svdCurrentStringVariationDictionary, Formatting.Indented), Encoding.UTF8);
-            }
-        }
+        //        File.WriteAllText(strLocalStringVariationDictionaryFilename, JsonConvert.SerializeObject(svdCurrentStringVariationDictionary, Formatting.Indented), Encoding.UTF8);
+        //    }
+        //}
 
         /// <summary>
         /// Global.LoadStringVariationDictionaryFromFile()
@@ -406,6 +450,7 @@ namespace KON.Liwest.ChannelFactory
         /// <summary>
         /// Global.ExportSourceDataToDVBViewerTransponderFile()
         /// </summary>
+        /// <param name="strLocalDVBViewerTransponderFilename"></param>
         public static void ExportSourceDataToDVBViewerTransponderFile(string? strLocalDVBViewerTransponderFilename)
         {
             if (!string.IsNullOrEmpty(strLocalDVBViewerTransponderFilename))
@@ -413,13 +458,13 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Trace("Global.ExportSourceDataToDVBViewerTransponderFile()".Pastel(ConsoleColor.Cyan));
                 lCurrentLogger.Info("-» Export source data to DVBViewer transponder file".Pastel(ConsoleColor.Green));
 
-                var strTransponderRootElementName = $"LIWEST ({DateTime.Now:yyyy-MM-dd HH:mm:ss})";
+                var strTransponderRootElementName = $"LIWEST ({DateTime.Now:yyyy-MM-dd HH:mm})";
 
                 var dtLocalSourceDataTable = dtSourceDataTable.DefaultView.ToTable(true, "ChannelFrequency");
                 dtLocalSourceDataTable.DefaultView.Sort = "ChannelFrequency";
                 dtLocalSourceDataTable = dtLocalSourceDataTable.DefaultView.ToTable();
 
-                using var swCurrentStreamWriter = new StreamWriter(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, strLocalDVBViewerTransponderFilename), false);
+                using var swCurrentStreamWriter = new StreamWriter(File.Open(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, strLocalDVBViewerTransponderFilename), FileMode.Create));
                 swCurrentStreamWriter.WriteLine("[SATTYPE]");
                 swCurrentStreamWriter.WriteLine("1={0}", ciCableOrbitalPosition);
                 swCurrentStreamWriter.WriteLine("2={0}", strTransponderRootElementName);
@@ -444,6 +489,9 @@ namespace KON.Liwest.ChannelFactory
         {
             if (!string.IsNullOrEmpty(strLocalDVBViewerChannelDatabaseFilename))
             {
+                lCurrentLogger.Trace("Global.ExportSourceDataToDVBViewerChannelDatabase()".Pastel(ConsoleColor.Cyan));
+                lCurrentLogger.Info("-» Export source data to DVBViewer channel database file".Pastel(ConsoleColor.Green));
+
                 DataTable dtLocalExportSourceData = dtSourceDataTable.Copy();
 
                 using BinaryWriter bwCurrentBinaryWriter = new BinaryWriter(File.Open(strLocalDVBViewerChannelDatabaseFilename, FileMode.Create));
@@ -559,6 +607,7 @@ namespace KON.Liwest.ChannelFactory
 
             
         }
+
         /// <summary>
         /// Global.DumpDVBViewerChannelDatabase()
         /// </summary>
@@ -685,186 +734,137 @@ namespace KON.Liwest.ChannelFactory
             }
         }
 
-        public static void GenerateExcelChannelSortFile()
+        /// <summary>
+        /// Global.ModifyDataRemoveChannels()
+        /// </summary>
+        /// <param name="strLocalChannelRemovalFile"></param>
+        public static void ModifyDataRemoveChannels(string? strLocalChannelRemovalFile)
         {
-            //Console.WriteLine("Generate: ExcelSortFile");
+            if (!string.IsNullOrEmpty(strLocalChannelRemovalFile))
+            {
+                lCurrentLogger.Trace("Global.ModifyDataRemoveChannels()".Pastel(ConsoleColor.Cyan));
+                lCurrentLogger.Info("-» Remove channels by channelremoval file".Pastel(ConsoleColor.Green));
 
-            //string strChannelsRootElementName = string.Format(@"LIWEST ({0})", DateTime.Now.ToString("yyyy-MM-dd"));
-            //DVBViewer dvCurrentDVBViewer = new DVBViewer(ciCableTunerType, strChannelsRootElementName, csCategory, ciCableOrbitalPosition, ciCablePolarity, ciCableSymbolrate, ciCableSatModulation, ciCableSubStreamID);
+                var crdCurrentChannelRemovalDictionary = JsonConvert.DeserializeObject<ChannelRemovalDictionary[]>(File.ReadAllText(strLocalChannelRemovalFile, Encoding.UTF8));
+                List<DataRow> ldrLocalRemovedChannels = [];
 
-            //Console.WriteLine("*-> Convert DVBViewer channel file to DVBViewer channel data class ...");
-            //dvCurrentDVBViewer.LoadDataFromINI(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, o.generateExcelChannelSortFilename), o.generateExcelChannelSortInputEncoding);
+                if (dtSourceDataTable.Rows.Count > 0 && crdCurrentChannelRemovalDictionary?.Length > 0)
+                {
+                    ldrLocalRemovedChannels.AddRange(from DataRow drCurrentDataRow in dtSourceDataTable.Rows let iecrdCurrentChannelRemovalDictionary = crdCurrentChannelRemovalDictionary.Where(x => x.ChannelName == Convert.ToString(drCurrentDataRow["ChannelName"]) && x.ChannelFrequency == Convert.ToString(drCurrentDataRow["ChannelFrequency"])) where iecrdCurrentChannelRemovalDictionary.Any() select drCurrentDataRow);
 
-            //Console.WriteLine("*-> Save DVBViewer channel data class to Excel sort file ...");
-            //dvCurrentDVBViewer.SaveToExcel(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, csExcelChannelSortFile), strChannelsRootElementName);
-
-            //Console.WriteLine("*-> Convert DVBViewer channel data class to DVBViewer channel datatable ...");
-            //DataTable dtDVBViewerChannels = dvCurrentDVBViewer.DataTable().Copy();
-
-
-
-
-
-
-
-
-            //DataTable dtProviderSmartcardChannelsTV = null;
-            //DataTable dtProviderSmartcardChannelsRADIO = null;
-
-            //string strSmartcardID = "01359096687";
-            //var request = new HttpRequestMessage(HttpMethod.Post, string.Format("https://auskunft.liwest.at/index.php?scID={0}#smartcard-abfrage", strSmartcardID));
-            //var content = new MultipartFormDataContent();
-            //content.Add(new StringContent(strSmartcardID, Encoding.UTF8, MediaTypeNames.Text.Plain), "scID");
-            //content.Add(new StringContent("&raquo; Jetzt anzeigen", Encoding.UTF8, MediaTypeNames.Text.Plain), "action");
-            //request.Content = content;
-
-            //var header = new ContentDispositionHeaderValue("form-data");
-            //request.Content.Headers.ContentDisposition = header;
-            //var response = hcCurrentHttpClient.PostAsync(request.RequestUri.ToString(), request.Content).ConfigureAwait(false).GetAwaiter().GetResult();
-            //var result = response.Content.ReadAsStringAsync().Result;
-
-            //if (response.IsSuccessStatusCode)
-            //{
-            //    var hrmHttpResponseMessageTV = hcCurrentHttpClient.GetAsync(string.Format("https://auskunft.liwest.at/sc_query_result.php?scID={0}&pType=TV", strSmartcardID)).ConfigureAwait(false).GetAwaiter().GetResult();
-            //    var hrmHttpResponseMessageTVResult = hrmHttpResponseMessageTV.Content.ReadAsStringAsync().Result;
-
-            //    if (hrmHttpResponseMessageTV.IsSuccessStatusCode)
-            //    {
-            //        var hrmHttpResponseMessageTVFile = hcCurrentHttpClient.GetAsync(string.Format("https://auskunft.liwest.at/files/{0}_{1}.csv", strSmartcardID, DateTime.Now.ToString("yyyyMMdd"))).ConfigureAwait(false).GetAwaiter().GetResult();
-            //        using (var sCurrentStream = hrmHttpResponseMessageTVFile.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult())
-            //        {
-            //            dtProviderSmartcardChannelsTV = new DataTable();
-            //            dtProviderSmartcardChannelsTV.Load(new CsvDataReader(new CsvReader(new StreamReader(sCurrentStream, Encoding.Latin1), new CsvConfiguration(CultureInfo.InvariantCulture) { Encoding = Encoding.Latin1, Delimiter = ";" })));
-            //        }
-            //    }
-
-            //    var hrmHttpResponseMessageRADIO = hcCurrentHttpClient.GetAsync(string.Format("https://auskunft.liwest.at/sc_query_result.php?scID={0}&pType=Radio", strSmartcardID)).ConfigureAwait(false).GetAwaiter().GetResult();
-            //    var hrmHttpResponseMessageRADIOResult = hrmHttpResponseMessageRADIO.Content.ReadAsStringAsync().Result;
-
-            //    if (hrmHttpResponseMessageRADIO.IsSuccessStatusCode)
-            //    {
-            //        var hrmHttpResponseMessageRADIOFile = hcCurrentHttpClient.GetAsync(string.Format("https://auskunft.liwest.at/files/{0}_{1}.csv", strSmartcardID, DateTime.Now.ToString("yyyyMMdd"))).ConfigureAwait(false).GetAwaiter().GetResult();
-            //        using (var sCurrentStream = hrmHttpResponseMessageRADIOFile.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult())
-            //        {
-            //            dtProviderSmartcardChannelsRADIO = new DataTable();
-            //            dtProviderSmartcardChannelsRADIO.Load(new CsvDataReader(new CsvReader(new StreamReader(sCurrentStream, Encoding.Latin1), new CsvConfiguration(CultureInfo.InvariantCulture) { Encoding = Encoding.Latin1, Delimiter = ";" })));
-            //        }
-            //    }
-            //}
-
-            //DataTable dtProviderSmartcardChannels = null;
-            //if (dtProviderSmartcardChannelsTV != null)
-            //    if (dtProviderSmartcardChannels != null)
-            //        dtProviderSmartcardChannels.Merge(dtProviderSmartcardChannelsTV);
-            //    else
-            //        dtProviderSmartcardChannels = dtProviderSmartcardChannelsTV.Copy();
-            //if (dtProviderSmartcardChannelsRADIO != null)
-            //    if (dtProviderSmartcardChannels != null)
-            //        dtProviderSmartcardChannels.Merge(dtProviderSmartcardChannelsRADIO);
-            //    else
-            //        dtProviderSmartcardChannels = dtProviderSmartcardChannelsRADIO.Copy();
-            //dtProviderSmartcardChannels.DefaultView.Sort = "Nr. ASC";
-            //dtProviderSmartcardChannels = dtProviderSmartcardChannels.DefaultView.ToTable();
-            //dtProviderSmartcardChannels.Columns.Remove("Pairing");
-            //dtProviderSmartcardChannels.Columns.Remove("Stï¿½g");
-
-            //// Does its job - but provider list is incorrect (regarding channel names!!!)
-            ////Console.WriteLine("*-> Merge DVBViewer channel datatable with provider channel datatable ...");
-            ////DataTable dtProviderChannels = null;
-            ////if (dtProviderChannelsTV != null)
-            ////    if (dtProviderChannels != null)
-            ////        dtProviderChannels.Merge(dtProviderChannelsTV);
-            ////    else
-            ////        dtProviderChannels = dtProviderChannelsTV.Copy();
-            ////if (dtProviderChannelsRADIO != null)
-            ////    if (dtProviderChannels != null)
-            ////        dtProviderChannels.Merge(dtProviderChannelsRADIO);
-            ////    else
-            ////        dtProviderChannels = dtProviderChannelsRADIO.Copy();
-            ////dtProviderChannels.DefaultView.Sort = "ProviderChannel ASC";
-            ////dtProviderChannels = dtProviderChannels.DefaultView.ToTable();
-
-            //var results =
-            //    (from drDVBViewerChannelsDataRow in dtDVBViewerChannels.AsEnumerable()
-            //     join drProviderSmartcardChannelsDataRow in dtProviderSmartcardChannels.AsEnumerable()
-            //     on new { a = drDVBViewerChannelsDataRow["Name"].ToString().ToLower().Trim() } equals new { a = drProviderSmartcardChannelsDataRow["Programm"].ToString().ToLower().Trim() } into dtMergedDataTableTemporary
-            //     from drMergedDataTableTemporaryDataRow in dtMergedDataTableTemporary.DefaultIfEmpty()
-            //     select new
-            //     {
-            //         Number = drDVBViewerChannelsDataRow.Field<int>("Number"),
-            //         ProviderChannel = Convert.ToInt32((drMergedDataTableTemporaryDataRow == null) ? 0 : drMergedDataTableTemporaryDataRow.Field<string>("Nr.")),
-            //         LCN = drDVBViewerChannelsDataRow.Field<int>("LCN"),
-            //         TunerType = drDVBViewerChannelsDataRow.Field<int>("TunerType"),
-            //         Root = drDVBViewerChannelsDataRow.Field<string>("Root"),
-            //         Category = drDVBViewerChannelsDataRow.Field<string>("Category"),
-            //         Name = drDVBViewerChannelsDataRow.Field<string>("Name"),
-            //         ProviderName = (drMergedDataTableTemporaryDataRow == null) ? "" : drMergedDataTableTemporaryDataRow.Field<string>("Programm"),
-            //         OrbitalPos = drDVBViewerChannelsDataRow.Field<int>("OrbitalPos"),
-            //         NetworkID = drDVBViewerChannelsDataRow.Field<int>("NetworkID"),
-            //         StreamID = drDVBViewerChannelsDataRow.Field<int>("StreamID"),
-            //         SID = drDVBViewerChannelsDataRow.Field<int>("SID"),
-            //         PMTPID = drDVBViewerChannelsDataRow.Field<int>("PMTPID"),
-            //         VPID = drDVBViewerChannelsDataRow.Field<int>("VPID"),
-            //         APID = drDVBViewerChannelsDataRow.Field<int>("APID"),
-            //         PCRPID = drDVBViewerChannelsDataRow.Field<int>("PCRPID"),
-            //         AC3 = drDVBViewerChannelsDataRow.Field<int>("AC3"),
-            //         Language = drDVBViewerChannelsDataRow.Field<string>("Language"),
-            //         Volume = drDVBViewerChannelsDataRow.Field<int>("Volume"),
-            //         EPGFlag = drDVBViewerChannelsDataRow.Field<int>("EPGFlag"),
-            //         TelePID = drDVBViewerChannelsDataRow.Field<int>("TelePID"),
-            //         AudioChannel = drDVBViewerChannelsDataRow.Field<int>("AudioChannel"),
-            //         Encrypted = drDVBViewerChannelsDataRow.Field<int>("Encrypted"),
-            //         Group = drDVBViewerChannelsDataRow.Field<int>("Group"),
-            //         Frequency = drDVBViewerChannelsDataRow.Field<int>("Frequency"),
-            //         Polarity = drDVBViewerChannelsDataRow.Field<int>("Polarity"),
-            //         Symbolrate = drDVBViewerChannelsDataRow.Field<int>("Symbolrate"),
-            //         SatModulation = drDVBViewerChannelsDataRow.Field<int>("SatModulation"),
-            //         SubStreamID = drDVBViewerChannelsDataRow.Field<int>("SubStreamID")
-            //     }
-            //    ).ToList();
-
-            //DataTable dtMergedDataTable = Utility.LINQResultToDataTable(results);
+                    foreach (var drCurrentDataRow in ldrLocalRemovedChannels)
+                    {
+                        dtSourceDataTable.Rows.Remove(drCurrentDataRow);
+                    }
+                }
+            }
         }
 
         /// <summary>
+        /// Global.ModifyDataSortChannels()
+        /// </summary>
+        /// <param name="strLocalChannelSortingFile"></param>
+        public static void ModifyDataSortChannels(string? strLocalChannelSortingFile)
+        {
+            if (!string.IsNullOrEmpty(strLocalChannelSortingFile))
+            {
+                lCurrentLogger.Trace("Global.ModifyDataSortChannels()".Pastel(ConsoleColor.Cyan));
+                lCurrentLogger.Info("-» Sorting channels by channelsorting file".Pastel(ConsoleColor.Green));
+
+                var csdCurrentChannelSortingDictionary = JsonConvert.DeserializeObject<ChannelSortingDictionary[]>(File.ReadAllText(strLocalChannelSortingFile, Encoding.UTF8));
+
+                if (dtSourceDataTable.Rows.Count > 0 && csdCurrentChannelSortingDictionary?.Length > 0)
+                {
+                    foreach (DataRow drCurrentDataRow in dtSourceDataTable.Rows)
+                    {
+                        drCurrentDataRow["ChannelNumber"] = DBNull.Value;
+
+                        var iecsdCurrentChannelSortingDictionary = csdCurrentChannelSortingDictionary.Where(x => x.ChannelName == Convert.ToString(drCurrentDataRow["ChannelName"]) && x.ChannelFrequency == Convert.ToString(drCurrentDataRow["ChannelFrequency"]));
+                        var currentChannelSortingDictionary = iecsdCurrentChannelSortingDictionary as ChannelSortingDictionary[] ?? iecsdCurrentChannelSortingDictionary.ToArray();
+                        if (currentChannelSortingDictionary.Any())
+                            drCurrentDataRow["ChannelNumber"] = currentChannelSortingDictionary.First().SortNumber;
+                    }
+                }
+            }
+        }
+        
+        /// <summary>
         /// Global.CleanupSourceData()
         /// </summary>
-        /// <returns>DataTable</returns>
-        public static DataTable CleanupSourceData()
+        /// <param name="fscLocalFlagSourceCleanup"></param>
+        /// <returns></returns>
+        public static DataTable CleanupSourceData(FlagSourceCleanup fscLocalFlagSourceCleanup)
         {
             lCurrentLogger.Trace("Global.CleanupSourceData()".Pastel(ConsoleColor.Cyan));
-            lCurrentLogger.Info("-» Cleanup sourcedata".Pastel(ConsoleColor.Green));
+            lCurrentLogger.Info("-» Cleanup sourcedata by defined operation".Pastel(ConsoleColor.Green));
 
-            if (dtSourceDataTable.Rows.Count > 0)
+            switch (fscLocalFlagSourceCleanup)
             {
-                var dtLocalCleanupSourceData = dtSourceDataTable.Copy();
+                case FlagSourceCleanup.RemoveInvalidSIDs:
+                {
+                    return CleanupSourceData_RemoveInvalidSIDs(dtSourceDataTable);
+                }
+                case FlagSourceCleanup.GroupAndInvalidate:
+                {
+                    return CleanupSourceData_RemoveInvalidSIDs(CleanupSourceData_GroupAndInvalidate(dtSourceDataTable));
+                }
+            }
 
-                IEnumerable<DataRow> ercCurrentEnumerableRowCollection = dtLocalCleanupSourceData.AsEnumerable().GroupBy(gb => new { ChannelName = Convert.ToString(gb["ChannelName"])?.ToUpper(), ChannelFrequency = gb["ChannelFrequency"] }).Select(s => {
-                    var drNewDataRow = dtLocalCleanupSourceData.NewRow();
+            return dtSourceDataTable;
+        }
 
-                    drNewDataRow["ChannelNumber"] = s.Where(w => w["ChannelNumber"] != DBNull.Value).Select(s => s["ChannelNumber"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ChannelName"] = s.Where(w => w["ChannelName"] != DBNull.Value).Select(s => s["ChannelName"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ChannelFrequency"] = s.Where(w => w["ChannelFrequency"] != DBNull.Value).Select(s => s["ChannelFrequency"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Package"] = s.Where(w => w["Package"] != DBNull.Value).Select(s => s["Package"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Dolby"] = s.Where(w => w["Dolby"] != DBNull.Value).Select(s => s["Dolby"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["VoD"] = s.Where(w => w["VoD"] != DBNull.Value).Select(s => s["VoD"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Language"] = s.Where(w => w["Language"] != DBNull.Value).Select(s => s["Language"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Stingray"] = s.Where(w => w["Stingray"] != DBNull.Value).Select(s => s["Stingray"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Free"] = s.Where(w => w["Free"] != DBNull.Value).Select(s => s["Free"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Pairing"] = s.Where(w => w["Pairing"] != DBNull.Value).Select(s => s["Pairing"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Issues"] = s.Where(w => w["Issues"] != DBNull.Value).Select(s => s["Issues"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Codec"] = s.Where(w => w["Codec"] != DBNull.Value).Select(s => s["Codec"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ProviderName"] = s.Where(w => w["ProviderName"] != DBNull.Value).Select(s => s["ProviderName"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["CAM"] = s.Where(w => w["CAM"] != DBNull.Value).Select(s => s["CAM"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["SID"] = s.Where(w => w["SID"] != DBNull.Value).Select(s => s["SID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["TSID"] = s.Where(w => w["TSID"] != DBNull.Value).Select(s => s["TSID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ONID"] = s.Where(w => w["ONID"] != DBNull.Value).Select(s => s["ONID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["PMT"] = s.Where(w => w["PMT"] != DBNull.Value).Select(s => s["PMT"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["PCRPID"] = s.Where(w => w["PCRPID"] != DBNull.Value).Select(s => s["PCRPID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["VPID"] = s.Where(w => w["VPID"] != DBNull.Value).Select(s => s["VPID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["APIDS"] = s.Where(w => w["APIDS"] != DBNull.Value).Select(s => s["APIDS"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["SPID"] = s.Where(w => w["SPID"] != DBNull.Value).Select(s => s["SPID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["TPID"] = s.Where(w => w["TPID"] != DBNull.Value).Select(s => s["TPID"]).FirstOrDefault() ?? DBNull.Value;
+        /// <summary>
+        /// Global.CleanupSourceData_RemoveInvalidSIDs()
+        /// </summary>
+        /// <param name="dtLocalDataTable"></param>
+        /// <returns></returns>
+        public static DataTable CleanupSourceData_RemoveInvalidSIDs(DataTable dtLocalDataTable)
+        {
+            lCurrentLogger.Trace("Global.CleanupSourceData_RemoveInvalidSIDs()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info("-» Cleanup sourcedata by removing invalid SIDs".Pastel(ConsoleColor.Green));
+
+            return dtLocalDataTable.Rows.Count > 0 ? dtLocalDataTable.Copy().Rows.Cast<DataRow>().Where(r => r["SID"] != DBNull.Value).CopyToDataTable() : dtLocalDataTable;
+        }
+
+        /// <summary>
+        /// Global.CleanupSourceData_GroupAndInvalidate()
+        /// </summary>
+        /// <param name="dtLocalDataTable"></param>
+        /// <returns></returns>
+        public static DataTable CleanupSourceData_GroupAndInvalidate(DataTable dtLocalDataTable)
+        {
+            lCurrentLogger.Trace("Global.CleanupSourceData_GroupAndInvalidate()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info("-» Cleanup sourcedata by grouping and invalidating".Pastel(ConsoleColor.Green));
+
+            if (dtLocalDataTable.Rows.Count > 0)
+            {
+                IEnumerable<DataRow?> ercCurrentEnumerableRowCollection = dtLocalDataTable.Copy().AsEnumerable().GroupBy(gb => new { ChannelName = Convert.ToString(gb["ChannelName"])?.ToUpper(), ChannelFrequency = gb["ChannelFrequency"] }).Select(s =>
+                {
+                    DataRow drNewDataRow = dtLocalDataTable.Clone().NewRow();
+
+                    drNewDataRow["ChannelNumber"] = s.Where(w => w["ChannelNumber"] != DBNull.Value).Select(ss => ss["ChannelNumber"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["ChannelName"] = s.Where(w => w["ChannelName"] != DBNull.Value).Select(ss => ss["ChannelName"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["ChannelFrequency"] = s.Where(w => w["ChannelFrequency"] != DBNull.Value).Select(ss => ss["ChannelFrequency"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Package"] = s.Where(w => w["Package"] != DBNull.Value).Select(ss => ss["Package"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Dolby"] = s.Where(w => w["Dolby"] != DBNull.Value).Select(ss => ss["Dolby"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["VoD"] = s.Where(w => w["VoD"] != DBNull.Value).Select(ss => ss["VoD"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Language"] = s.Where(w => w["Language"] != DBNull.Value).Select(ss => ss["Language"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Stingray"] = s.Where(w => w["Stingray"] != DBNull.Value).Select(ss => ss["Stingray"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Free"] = s.Where(w => w["Free"] != DBNull.Value).Select(ss => ss["Free"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Pairing"] = s.Where(w => w["Pairing"] != DBNull.Value).Select(ss => ss["Pairing"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Issues"] = s.Where(w => w["Issues"] != DBNull.Value).Select(ss => ss["Issues"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["Codec"] = s.Where(w => w["Codec"] != DBNull.Value).Select(ss => ss["Codec"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["ProviderName"] = s.Where(w => w["ProviderName"] != DBNull.Value).Select(ss => ss["ProviderName"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["CAM"] = s.Where(w => w["CAM"] != DBNull.Value).Select(ss => ss["CAM"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["SID"] = s.Where(w => w["SID"] != DBNull.Value).Select(ss => ss["SID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["TSID"] = s.Where(w => w["TSID"] != DBNull.Value).Select(ss => ss["TSID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["ONID"] = s.Where(w => w["ONID"] != DBNull.Value).Select(ss => ss["ONID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["PMT"] = s.Where(w => w["PMT"] != DBNull.Value).Select(ss => ss["PMT"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["PCRPID"] = s.Where(w => w["PCRPID"] != DBNull.Value).Select(ss => ss["PCRPID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["VPID"] = s.Where(w => w["VPID"] != DBNull.Value).Select(ss => ss["VPID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["APIDS"] = s.Where(w => w["APIDS"] != DBNull.Value).Select(ss => ss["APIDS"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["SPID"] = s.Where(w => w["SPID"] != DBNull.Value).Select(ss => ss["SPID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["TPID"] = s.Where(w => w["TPID"] != DBNull.Value).Select(ss => ss["TPID"]).FirstOrDefault() ?? DBNull.Value;
 
                     if (drNewDataRow["VPID"] == DBNull.Value && drNewDataRow["APIDS"] == DBNull.Value)
                         return null;
@@ -886,27 +886,22 @@ namespace KON.Liwest.ChannelFactory
                         return null;
 
                     return drNewDataRow;
-                });
+                }).Where(_ => true);
 
-                return ercCurrentEnumerableRowCollection.CopyToDataTable();
+                DataTable dtLocalCleanupSourceData = ercCurrentEnumerableRowCollection.Cast<DataRow>().CopyToDataTable();
+                return dtLocalCleanupSourceData.Rows.Count > 0 ? dtLocalCleanupSourceData : dtLocalDataTable;
             }
 
-            return dtSourceDataTable;
+            return dtLocalDataTable;
         }
+
         /// <summary>
-        /// Global.CleanupSourceDataRemoveInvalidSID()
+        /// Global.ConvertLiwestChannelListCSVtoDataTable()
         /// </summary>
-        /// <returns>DataTable</returns>
-        public static DataTable CleanupSourceDataRemoveInvalidSID()
-        {
-            lCurrentLogger.Trace("Global.CleanupSourceDataRemoveInvalidSID()".Pastel(ConsoleColor.Cyan));
-            lCurrentLogger.Info("-» Cleanup sourcedata by removing rows with invalid sid".Pastel(ConsoleColor.Green));
-
-            if (dtSourceDataTable.Rows.Count > 0)
-                return dtSourceDataTable.Copy().Rows.Cast<DataRow>().Where(r => r["SID"] != DBNull.Value ).CopyToDataTable();
-
-            return dtSourceDataTable;
-        }
+        /// <param name="sLocalStream"></param>
+        /// <param name="bLocalParseHeader"></param>
+        /// <param name="bLocalSkipEmptyLines"></param>
+        /// <returns></returns>
         public static DataTable ConvertLiwestChannelListCSVtoDataTable(Stream sLocalStream, bool bLocalParseHeader, bool bLocalSkipEmptyLines)
         {
             var dtCurrentDataTable = new DataTable();
@@ -971,6 +966,11 @@ namespace KON.Liwest.ChannelFactory
 
             return dtCurrentDataTable;
         }
+
+        /// <summary>
+        /// Global.CreateFirewallRule()
+        /// </summary>
+        /// <returns></returns>
         public static bool CreateFirewallRule()
         {
             lCurrentLogger.Trace("Global.CreateFirewallRule()".Pastel(ConsoleColor.Cyan));

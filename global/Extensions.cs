@@ -34,7 +34,7 @@ namespace KON.Liwest.ChannelFactory
         }
         public static string TrimAdvanced(this string? strLocalString)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? strLocalString.MergeNewLine().MergeTabs().MergeIndent().Replace("\r\n\t", " ").Replace("\r\n", " ").Replace("\t", " ").Replace("\r", " ").Replace("\n", " ").Replace("'", string.Empty).MergeWhitespace().Trim() : string.Empty;
+            return !string.IsNullOrEmpty(strLocalString) ? strLocalString.MergeNewLine().MergeTabs().MergeIndent().Replace("\r\n\t", " ").Replace("\r\n", " ").Replace("\t", " ").Replace("\r", " ").Replace("\n", " ").MergeWhitespace().Trim() : string.Empty;
         }
 
         public static string MergeWhitespace(this string? strLocalString)
@@ -58,7 +58,7 @@ namespace KON.Liwest.ChannelFactory
         {
             if (Global.svdStringVariationDictionary != null)
             {
-                foreach (KeyValuePair<string, string[]> kvpCurrentKeyValuePair in Global.svdStringVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString)))
+                foreach (var kvpCurrentKeyValuePair in Global.svdStringVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString)))
                 {
                     return kvpCurrentKeyValuePair.Key;
                 }
@@ -70,11 +70,7 @@ namespace KON.Liwest.ChannelFactory
         public static char[] ToBinary25CharArray(this string? strLocalString)
         {
             if (!string.IsNullOrEmpty(strLocalString))
-            {
-                int iCurrentStringLength = strLocalString.Length;
-                string strReturnString = strLocalString.Substring(0, iCurrentStringLength > 25 ? 25 : iCurrentStringLength).PadRight(25, '\0').PadLeft(26, BitConverter.ToChar(BitConverter.GetBytes(iCurrentStringLength)));
-                return strReturnString.ToCharArray();
-            }
+                return strLocalString.Substring(0, strLocalString.Length > 25 ? 25 : strLocalString.Length).PadRight(25, '\0').PadLeft(26, strLocalString.Length > 25 ? BitConverter.ToChar(BitConverter.GetBytes(25)) : BitConverter.ToChar(BitConverter.GetBytes(strLocalString.Length))).ToCharArray();
 
             return string.Empty.PadRight(25, '\0').PadLeft(26, BitConverter.ToChar(BitConverter.GetBytes(0))).ToCharArray();
         }
