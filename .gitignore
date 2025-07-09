@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+/examples
+/resources/ChannelsRemoval.json
+/resources/ChannelsSorting.json
+/resources/VariationDictionary.json
