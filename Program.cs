@@ -32,8 +32,8 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "targetfile", HelpText = "Filename for factory target to save to")]
             public string? cloTargetFile { get; set; }
 
-            [Option(longName: "variationdictionaryfile", HelpText = "Filename for string variation dictionary to load from")]
-            public string? cloVariationDictionaryFile { get; set; }
+            [Option(longName: "channelvariationfile", HelpText = "Filename for channel variation dictionary to load from")]
+            public string? cloChannelVariationFile { get; set; }
             [Option(longName: "sourcecleanup", HelpText = "Source cleanup operation mode")]
             public FlagSourceCleanup cloSourceCleanup { get; set; }
             [Option(longName: "channelremovalfile", HelpText = "Filename for channel removal dictionary to load from")]
@@ -47,18 +47,14 @@ namespace KON.Liwest.ChannelFactory
             public string? cloExportDVBViewerChannelDatabaseFile { get; set; }
             [Option(longName: "exportexcelchannelfile", HelpText = "Filename for excel channel export to save to")]
             public string? cloExportExcelChannelFile { get; set; }
+            [Option(longName: "exportenigmadbfile", HelpText = "Filename for enigma db channel export to save to")]
+            public string? cloExportEnigmaDBFile{ get; set; }
 
             [Option(longName: "keypress", HelpText = "Wait for keypress after operation")]
             public bool cloKeyPress { get; set; }
             [Option(longName: "verbose", HelpText = "Set output to verbose level")]
             public bool cloVerbose { get; set; }
         }
-
-        //public class Options
-        //{
-        //    [Option(longName: "program", Required = false, HelpText = "Factory program to use")]
-        //    public FlagMode cloProgram { get; set; }
-        //}
 
         static void Main(string[] saLocalArguments)
         { 
@@ -112,7 +108,7 @@ namespace KON.Liwest.ChannelFactory
         private static void DisplayHelpWithCustomCondition(string[] saLocalCustomConditions)
         {
             // TODO: Add new parameters and samples
-            ParserResult<Options> prCurrentParseResult = new Parser(x => { x.HelpWriter = null; }).ParseArguments<Options>(["--help"]);
+            var prCurrentParseResult = new Parser(x => { x.HelpWriter = null; }).ParseArguments<Options>(["--help"]);
             var htCurrentHelpText = HelpText.AutoBuild(prCurrentParseResult, htCurrentHelpText =>
             {
                 htCurrentHelpText.AddNewLineBetweenHelpSections = true;
@@ -123,9 +119,9 @@ namespace KON.Liwest.ChannelFactory
 
                 if (saLocalCustomConditions.Length > 0)
                 {
-                    htCurrentHelpText.AddPreOptionsLine($"ERROR(S):");
+                    htCurrentHelpText.AddPreOptionsLine("ERROR(S):");
 
-                    foreach (string strCurrentCustomCondition in saLocalCustomConditions)
+                    foreach (var strCurrentCustomCondition in saLocalCustomConditions)
                     {
                         if (!string.IsNullOrEmpty(strCurrentCustomCondition))
                             htCurrentHelpText.AddPreOptionsLine($"  * Custom option '{strCurrentCustomCondition}' not met or missing.");
@@ -152,8 +148,8 @@ namespace KON.Liwest.ChannelFactory
                 string[] saLocalCustomCondition = [];
 
                 // Check for custom conditions
-                if (!string.IsNullOrEmpty(oLocalOptions.cloVariationDictionaryFile) && !File.Exists(oLocalOptions.cloVariationDictionaryFile))
-                    saLocalCustomCondition = saLocalCustomCondition.Append("variationdictionaryfile").ToArray();
+                if (!string.IsNullOrEmpty(oLocalOptions.cloChannelVariationFile) && !File.Exists(oLocalOptions.cloChannelVariationFile))
+                    saLocalCustomCondition = saLocalCustomCondition.Append("channelvariationfile").ToArray();
 
                 switch (oLocalOptions.cloMode)
                 {
@@ -210,8 +206,8 @@ namespace KON.Liwest.ChannelFactory
                 // Do operation if all custom conditions are met
                 else
                 {
-                    if (!string.IsNullOrEmpty(oLocalOptions.cloVariationDictionaryFile))
-                        LoadStringVariationDictionaryFromFile(strLocalStringVariationDictionaryFilename: oLocalOptions.cloVariationDictionaryFile);
+                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelVariationFile))
+                        LoadChannelVariationDictionaryFromFile(strLocalChannelVariationDictionaryFilename: oLocalOptions.cloChannelVariationFile);
 
                     switch (oLocalOptions.cloMode)
                     {
@@ -234,7 +230,9 @@ namespace KON.Liwest.ChannelFactory
                             if (!string.IsNullOrEmpty(oLocalOptions.cloExportDVBViewerChannelDatabaseFile))
                                 ExportSourceDataToDVBViewerChannelDatabase(strLocalDVBViewerChannelDatabaseFilename: oLocalOptions.cloExportDVBViewerChannelDatabaseFile);
                             if (!string.IsNullOrEmpty(oLocalOptions.cloExportExcelChannelFile))
-                                ExportSourceDataToExcelExportFile(strLocalExcelExportFilename: oLocalOptions.cloExportExcelChannelFile);
+                                ExportSourceDataToExcelExportFile(strLocalExcelFilename: oLocalOptions.cloExportExcelChannelFile);
+                            if (!string.IsNullOrEmpty(oLocalOptions.cloExportEnigmaDBFile))
+                                ExportSourceDataToEnigmaDBFile(strLocalEnigmaDBFilename: oLocalOptions.cloExportEnigmaDBFile);
 
                             break;
                         }

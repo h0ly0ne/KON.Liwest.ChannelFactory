@@ -53,7 +53,7 @@ namespace KON.Liwest.ChannelFactory
             public byte FEC;                                        // 0 = Auto, 1 = 1/2, 2 = 2/3, 3 = 3/4, 4 = 5/6, 5 = 7/8, 6 = 8/9, 7 = 3/5, 8 = 4/5, 9 = 9/10
             public byte Reserved2;                                  // must be 0
             public ushort ChannelNumber;
-            public byte Polarity;                                   // (Required) - DVB-S polarity - 0 = horizontal, 1 = vertical, 2 = circular left, 3 = circular right - or DVB-C modulation, 0 = Auto, 1 = 16QAM, 2 = 32QAM, 3 = 64QAM, 4 = 128QAM, 5 = 256 QAM - or DVB-T bandwidth - 0 = 6 MHz, 1 = 7 MHz, 2 = 8 MHz
+            public byte PolarityOrModulation;                       // (Required) - DVB-S polarity - 0 = horizontal, 1 = vertical, 2 = circular left, 3 = circular right - or DVB-C modulation, 0 = Auto, 1 = 16QAM, 2 = 32QAM, 3 = 64QAM, 4 = 128QAM, 5 = 256 QAM - or DVB-T bandwidth - 0 = 6 MHz, 1 = 7 MHz, 2 = 8 MHz
             public byte Reserved4;                                  // must be 0
             public ushort OrbitalPosition;
             public byte Tone;                                       // 0 = off, 1 = 22 khz

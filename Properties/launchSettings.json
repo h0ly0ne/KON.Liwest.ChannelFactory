@@ -1,8 +1,7 @@
 {
   "profiles": {
     "KON.Liwest.ChannelFactory": {
-      "commandName": "Project",
-      "commandLineArgs": "--mode ModifyData --source FileList --target FileList --sourcefile SourceData_Cleaned.json --targetfile TargetData_Removed.json --channelremovalfile ChannelsRemoval.json --keypress"
+      "commandName": "Project"
     }
   }
 }

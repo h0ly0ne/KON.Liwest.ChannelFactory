@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EnigmaSettings\EnigmaSettings\EnigmaSettings.csproj" />
     <ProjectReference Include="..\KON.OctoScan.NET\KON.OctoScan.NET.csproj" />
   </ItemGroup>
 
@@ -38,7 +39,7 @@
   <ItemGroup>
     <None Update="resources\*">
 	  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-	  <TargetPath>%(Filename)%(Extension)</TargetPath>
+	  <TargetPath>resources\%(Filename)%(Extension)</TargetPath>
     </None>
   </ItemGroup>
 

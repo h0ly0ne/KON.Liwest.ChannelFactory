@@ -56,9 +56,9 @@ namespace KON.Liwest.ChannelFactory
 
         public static string? CheckVariationForPrimary(this string? strLocalString)
         {
-            if (Global.svdStringVariationDictionary != null)
+            if (Global.svdChannelVariationDictionary != null)
             {
-                foreach (var kvpCurrentKeyValuePair in Global.svdStringVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString)))
+                foreach (var kvpCurrentKeyValuePair in Global.svdChannelVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString)))
                 {
                     return kvpCurrentKeyValuePair.Key;
                 }
@@ -89,6 +89,11 @@ namespace KON.Liwest.ChannelFactory
             }
 
             return string.Empty;
+        }
+
+        public static string ToHexString4Byte(this int strLocalValue)
+        {
+            return Convert.ToString(strLocalValue, 16).PadLeft(4, '0').ToLowerInvariant();
         }
     }
 }
