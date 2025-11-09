@@ -54,7 +54,10 @@ namespace KON.Liwest.ChannelFactory
             public int? PMT { get; set; }                    // BS
             public int? PCRPID { get; set; }                 // BS
             public int? VPID { get; set; }                   // BS
+            public string? VPIDST { get; set; }              // BS
             public string? APIDS { get; set; }               // BS
+            public string? APIDSST { get; set; }             // BS
+            public string? APIDSLANG { get; set; }           // BS
             public int? SPID { get; set; }                   // BS
             public int? TPID { get; set; }                   // BS
         }
@@ -123,7 +126,10 @@ namespace KON.Liwest.ChannelFactory
             dtLocalDataTable.Columns.Add(new DataColumn("PMT", typeof(int)) { AllowDBNull = true });               // BS
             dtLocalDataTable.Columns.Add(new DataColumn("PCRPID", typeof(int)) { AllowDBNull = true });            // BS
             dtLocalDataTable.Columns.Add(new DataColumn("VPID", typeof(int)) { AllowDBNull = true });              // BS
+            dtLocalDataTable.Columns.Add(new DataColumn("VPIDST", typeof(string)) { AllowDBNull = true });         // BS
             dtLocalDataTable.Columns.Add(new DataColumn("APIDS", typeof(string)) { AllowDBNull = true });          // BS
+            dtLocalDataTable.Columns.Add(new DataColumn("APIDSST", typeof(string)) { AllowDBNull = true });        // BS
+            dtLocalDataTable.Columns.Add(new DataColumn("APIDSLANG", typeof(string)) { AllowDBNull = true });      // BS
             dtLocalDataTable.Columns.Add(new DataColumn("SPID", typeof(int)) { AllowDBNull = true });              // BS
             dtLocalDataTable.Columns.Add(new DataColumn("TPID", typeof(int)) { AllowDBNull = true });              // BS
         }
@@ -310,13 +316,9 @@ namespace KON.Liwest.ChannelFactory
                             else
                             {
                                 if (iFrequenciesRangeStart == iFrequenciesRangeEnd)
-                                {
                                     lsFrequencies.Add(Convert.ToString(iFrequenciesRangeStart));
-                                }
                                 else
-                                {
                                     lCurrentLogger.Warn("-» Invalid frequency start/end/step".Pastel(ConsoleColor.Yellow));
-                                }
                             }
                         }
                     }
@@ -340,7 +342,7 @@ namespace KON.Liwest.ChannelFactory
                     osiCurrentOSScanIP.AddTransponderInfo(otiCurrentOSTransponderInfo);
                 }
 
-                osiCurrentOSScanIP.Scan(lLocalTimeout: 5, iLocalScanRetries: 1, iLocalTransponderRetries: 3);
+                osiCurrentOSScanIP.Scan(lLocalTimeout: 10, iLocalScanRetries: 1, iLocalTransponderRetries: 3);
 
                 var dtCurrentRequestDataTable = osiCurrentOSScanIP.ExportServicesToDataTable();
                 foreach (DataRow drCurrentRequestDataRow in dtCurrentRequestDataTable.Rows)
@@ -356,9 +358,12 @@ namespace KON.Liwest.ChannelFactory
                     drModifiedDataRow["PMT"] = Convert.ToString(drCurrentRequestDataRow[7]).ToInt32();
                     drModifiedDataRow["PCRPID"] = Convert.ToString(drCurrentRequestDataRow[8]).ToInt32();
                     drModifiedDataRow["VPID"] = Convert.ToString(drCurrentRequestDataRow[9]).ToInt32();
-                    drModifiedDataRow["APIDS"] = Convert.ToString(drCurrentRequestDataRow[10]).TrimAdvanced();
-                    drModifiedDataRow["SPID"] = Convert.ToString(drCurrentRequestDataRow[11]).ToInt32();
-                    drModifiedDataRow["TPID"] = Convert.ToString(drCurrentRequestDataRow[12]).ToInt32();
+                    drModifiedDataRow["VPIDST"] = Convert.ToString(drCurrentRequestDataRow[10]).TrimAdvanced();
+                    drModifiedDataRow["APIDS"] = Convert.ToString(drCurrentRequestDataRow[11]).TrimAdvanced();
+                    drModifiedDataRow["APIDSST"] = Convert.ToString(drCurrentRequestDataRow[12]).TrimAdvanced();
+                    drModifiedDataRow["APIDSLANG"] = Convert.ToString(drCurrentRequestDataRow[13]).TrimAdvanced();
+                    drModifiedDataRow["SPID"] = Convert.ToString(drCurrentRequestDataRow[14]).ToInt32();
+                    drModifiedDataRow["TPID"] = Convert.ToString(drCurrentRequestDataRow[15]).ToInt32();
                     dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
                 }
 
@@ -489,13 +494,18 @@ namespace KON.Liwest.ChannelFactory
                     foreach (DataRow drCurrentDataRow in dtLocalExportSourceData.Rows)
                     {
                         var strCurrentAPIDS = Convert.ToString(drCurrentDataRow["APIDS"]);
+                        var strCurrentAPIDSST = Convert.ToString(drCurrentDataRow["APIDSST"]);
+                        var strCurrentAPIDSLANG = Convert.ToString(drCurrentDataRow["APIDSLANG"]);
 
                         ChannelDatabaseChannel cdcCurrentChannelDatabaseChannel;
-                        if (!string.IsNullOrEmpty(strCurrentAPIDS))
+                        if (!string.IsNullOrEmpty(strCurrentAPIDS) && !string.IsNullOrEmpty(strCurrentAPIDSST))
                         {
                             var bParentAPID = true;
+                            var iCurrentAPIDCounter = 0;
                             foreach (var iCurrentAPID in strCurrentAPIDS.Split(','))
                             {
+                                var strCurrentAPIDC = strCurrentAPIDSST.Split(',')[iCurrentAPIDCounter];
+
                                 cdcCurrentChannelDatabaseChannel = new ChannelDatabaseChannel
                                 {
                                     TunerData = new ChannelDatabaseTuner
@@ -505,7 +515,8 @@ namespace KON.Liwest.ChannelFactory
                                         Frequency = Convert.ToUInt32(drCurrentDataRow["ChannelFrequency"]),
                                         Symbolrate = ciSymbolRate,
                                         PMT_PID = Convert.ToUInt16(drCurrentDataRow["PMT"]),
-                                        ChannelAVFormat = GenerateChannelAVFormat(drCurrentDataRow["Dolby"] != DBNull.Value && Convert.ToBoolean(drCurrentDataRow["Dolby"]) ? AVFormat.AUDIO_AC3 : AVFormat.AUDIO_MPEG, Convert.ToString(drCurrentDataRow["Codec"]) == "MPEG4" ? AVFormat.VIDEO_H264 : AVFormat.VIDEO_MPEG2),
+                                        //ChannelAVFormat = GenerateChannelAVFormat(drCurrentDataRow["Dolby"] != DBNull.Value && Convert.ToBoolean(drCurrentDataRow["Dolby"]) ? AVFormat.AUDIO_AC3 : AVFormat.AUDIO_MPEG, Convert.ToString(drCurrentDataRow["Codec"]) == "MPEG4" ? AVFormat.VIDEO_H264 : AVFormat.VIDEO_MPEG2),
+                                        ChannelAVFormat = GenerateChannelAVFormat(strCurrentAPIDC, Convert.ToString(drCurrentDataRow["VPIDST"]) ?? string.Empty),
                                         ChannelNumber = drCurrentDataRow["ChannelNumber"] != DBNull.Value ? Convert.ToUInt16(drCurrentDataRow["ChannelNumber"]) : Convert.ToUInt16(0),
                                         PolarityOrModulation = ciModulation,
                                         FEC = ciFEC,
@@ -534,12 +545,13 @@ namespace KON.Liwest.ChannelFactory
                                     Root = csCategory.ToBinary25CharArray(),
                                     ChannelName = drCurrentDataRow["ChannelName"].ToString().ToBinary25CharArray(),
                                     Category = csCategory.ToBinary25CharArray(),
-                                    Encrypted = Convert.ToBoolean(drCurrentDataRow["CAM"])?(byte)1:(byte)0,
+                                    Encrypted = Convert.ToBoolean(drCurrentDataRow["CAM"]) ? (byte)1 : (byte)0,
                                     Reserved = 0
                                 };
                                 bwCurrentBinaryWriter.Write(Binarize(cdcCurrentChannelDatabaseChannel));
 
                                 bParentAPID = false;
+                                iCurrentAPIDCounter++;
                             }
                         }
                         else
@@ -553,7 +565,8 @@ namespace KON.Liwest.ChannelFactory
                                     Frequency = Convert.ToUInt32(drCurrentDataRow["ChannelFrequency"]),
                                     Symbolrate = ciSymbolRate,
                                     PMT_PID = Convert.ToUInt16(drCurrentDataRow["PMT"]),
-                                    ChannelAVFormat = GenerateChannelAVFormat(drCurrentDataRow["Dolby"] != DBNull.Value && Convert.ToBoolean(drCurrentDataRow["Dolby"]) ? AVFormat.AUDIO_AC3 : AVFormat.AUDIO_MPEG, Convert.ToString(drCurrentDataRow["Codec"]) == "MPEG4" ? AVFormat.VIDEO_H264 : AVFormat.VIDEO_MPEG2),
+                                    //ChannelAVFormat = GenerateChannelAVFormat(drCurrentDataRow["Dolby"] != DBNull.Value && Convert.ToBoolean(drCurrentDataRow["Dolby"]) ? AVFormat.AUDIO_AC3 : AVFormat.AUDIO_MPEG, Convert.ToString(drCurrentDataRow["Codec"]) == "MPEG4" ? AVFormat.VIDEO_H264 : AVFormat.VIDEO_MPEG2),
+                                    ChannelAVFormat = GenerateChannelAVFormat(string.Empty, Convert.ToString(drCurrentDataRow["VPIDST"]) ?? string.Empty),
                                     FEC = ciFEC,
                                     ChannelNumber = drCurrentDataRow["ChannelNumber"] != DBNull.Value ? Convert.ToUInt16(drCurrentDataRow["ChannelNumber"]) : Convert.ToUInt16(0),
                                     PolarityOrModulation = ciModulation,
@@ -719,6 +732,11 @@ namespace KON.Liwest.ChannelFactory
             }
         }
 
+        /// <summary>
+        /// Global.ExportSourceDataToEnigmaDBFileTransponders()
+        /// </summary>
+        /// <param name="sioLocalSettingsIO"></param>
+        /// <param name="isLocalISettings"></param>
         public static void ExportSourceDataToEnigmaDBFileTransponders(ref SettingsIO sioLocalSettingsIO, ref ISettings isLocalISettings)
         {
             lCurrentLogger.Trace("Global.ExportSourceDataToEnigmaDBFileTransponders()".Pastel(ConsoleColor.Cyan));
@@ -949,7 +967,10 @@ namespace KON.Liwest.ChannelFactory
                     drNewDataRow["PMT"] = s.Where(w => w["PMT"] != DBNull.Value).Select(ss => ss["PMT"]).FirstOrDefault() ?? DBNull.Value;
                     drNewDataRow["PCRPID"] = s.Where(w => w["PCRPID"] != DBNull.Value).Select(ss => ss["PCRPID"]).FirstOrDefault() ?? DBNull.Value;
                     drNewDataRow["VPID"] = s.Where(w => w["VPID"] != DBNull.Value).Select(ss => ss["VPID"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["VPIDST"] = s.Where(w => w["VPIDST"] != DBNull.Value).Select(ss => ss["VPIDST"]).FirstOrDefault() ?? DBNull.Value;
                     drNewDataRow["APIDS"] = s.Where(w => w["APIDS"] != DBNull.Value).Select(ss => ss["APIDS"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["APIDSST"] = s.Where(w => w["APIDSST"] != DBNull.Value).Select(ss => ss["APIDSST"]).FirstOrDefault() ?? DBNull.Value;
+                    drNewDataRow["APIDSLANG"] = s.Where(w => w["APIDSLANG"] != DBNull.Value).Select(ss => ss["APIDSLANG"]).FirstOrDefault() ?? DBNull.Value;
                     drNewDataRow["SPID"] = s.Where(w => w["SPID"] != DBNull.Value).Select(ss => ss["SPID"]).FirstOrDefault() ?? DBNull.Value;
                     drNewDataRow["TPID"] = s.Where(w => w["TPID"] != DBNull.Value).Select(ss => ss["TPID"]).FirstOrDefault() ?? DBNull.Value;
 

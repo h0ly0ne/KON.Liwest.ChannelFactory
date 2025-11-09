@@ -8,8 +8,32 @@ namespace KON.Liwest.ChannelFactory
         {
             AUDIO_MPEG = 0,
             AUDIO_AC3 = 1,
+            AUDIO_AAC = 2,
             VIDEO_MPEG2 = 0,
             VIDEO_H264 = 1,
+            VIDEO_HEVC = 2,
+            VIDEO_AVS = 3,
+            VIDEO_VVC = 4
+        }
+
+        public enum AVFormatM2TS : byte
+        {
+            AUDIO_MPEG1    = 0x03,
+            AUDIO_MPEG2    = 0x04,
+            AUDIO_AC3S     = 0x06,
+            AUDIO_AAC      = 0x0F,
+            AUDIO_AAC_LATM = 0x11,
+            AUDIO_AC3      = 0x81,
+            AUDIO_DTS      = 0x82,
+            AUDIO_TRUEHD   = 0x83,
+            VIDEO_MPEG1    = 0x01,
+            VIDEO_MPEG2    = 0x02,
+            VIDEO_MPEG4    = 0x10,
+            VIDEO_H264     = 0x1B,
+            VIDEO_HEVC     = 0x24,
+            VIDEO_CAVS     = 0x42,
+            VIDEO_VC1      = 0xEA,
+            VIDEO_DIRAC    = 0XD1
         }
 
         [StructLayout(LayoutKind.Sequential, Pack = 1)]
@@ -133,6 +157,73 @@ namespace KON.Liwest.ChannelFactory
         public static byte GenerateChannelAVFormat(AVFormat cavfLocalChannelAudioFormat, AVFormat cavfLocalChannelVideoFormat)
         {
             return NibblesToByte((int)cavfLocalChannelAudioFormat, (int)cavfLocalChannelVideoFormat);
+        }
+
+        public static byte GenerateChannelAVFormat(string strLocalChannelAudioFormat, string strLocalChannelVideoFormat)
+        {
+            int cavfLocalChannelAudioFormat = 0;
+            int cavfLocalChannelVideoFormat = 0;
+
+            if (!string.IsNullOrEmpty(strLocalChannelAudioFormat) && !string.IsNullOrEmpty(strLocalChannelVideoFormat))
+            {
+                AVFormatM2TS avfm2tsCurrentChannelAudioFormat = (AVFormatM2TS)Enum.Parse(typeof(AVFormatM2TS), Convert.ToString(Convert.ToInt32(strLocalChannelAudioFormat, 16)));
+                AVFormatM2TS avfm2tsCurrentChannelVideoFormat = (AVFormatM2TS)Enum.Parse(typeof(AVFormatM2TS), Convert.ToString(Convert.ToInt32(strLocalChannelVideoFormat, 16)));
+
+                switch (avfm2tsCurrentChannelAudioFormat)
+                {
+                    case AVFormatM2TS.AUDIO_MPEG1:
+                    case AVFormatM2TS.AUDIO_MPEG2:
+                    {
+                        cavfLocalChannelAudioFormat = (int)AVFormat.AUDIO_MPEG;
+                        break;
+                    }
+                    case AVFormatM2TS.AUDIO_AC3:
+                    case AVFormatM2TS.AUDIO_AC3S:
+                    {
+                        cavfLocalChannelAudioFormat = (int)AVFormat.AUDIO_AC3;
+                        break;
+                    }
+                    case AVFormatM2TS.AUDIO_AAC:
+                    case AVFormatM2TS.AUDIO_AAC_LATM:
+                    {
+                        cavfLocalChannelAudioFormat = (int)AVFormat.AUDIO_AAC;
+                        break;
+                    }
+                }
+
+                switch (avfm2tsCurrentChannelVideoFormat)
+                {
+                    case AVFormatM2TS.VIDEO_MPEG1:
+                    case AVFormatM2TS.VIDEO_MPEG2:
+                    case AVFormatM2TS.VIDEO_MPEG4:
+                    {
+                        cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_MPEG2;
+                        break;
+                    }
+                    case AVFormatM2TS.VIDEO_H264:
+                    {
+                        cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_H264;
+                        break;
+                    }
+                    case AVFormatM2TS.VIDEO_HEVC:
+                    {
+                        cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_HEVC;
+                        break;
+                    }
+                    case AVFormatM2TS.VIDEO_CAVS:
+                    {
+                        cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_AVS;
+                        break;
+                    }
+                    case AVFormatM2TS.VIDEO_VC1:
+                    {
+                        cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_VVC;
+                        break;
+                    }
+                }
+            }
+
+            return NibblesToByte(cavfLocalChannelAudioFormat, cavfLocalChannelVideoFormat);
         }
     }
 }
