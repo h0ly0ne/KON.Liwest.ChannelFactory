@@ -106,8 +106,8 @@
   },
   {
     "SortNumber": "22",
-    "ChannelName": "SKY REPLAY HD",
-    "ChannelFrequency": "594000"
+    "ChannelName": "SKY ATLANTIC HD",
+    "ChannelFrequency": "634000"
   },
   {
     "SortNumber": "23",
@@ -146,1247 +146,1277 @@
   },
   {
     "SortNumber": "30",
+    "ChannelName": "SKY AXN WHITE",
+    "ChannelFrequency": "538000"
+  },
+  {
+    "SortNumber": "31",
+    "ChannelName": "SKY AXN BLACK",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "SortNumber": "32",
     "ChannelName": "COMEDY C. ÖSTERREICH",
     "ChannelFrequency": "714000"
   },
   {
-    "SortNumber": "31",
+    "SortNumber": "33",
     "ChannelName": "HEIMATKANAL",
     "ChannelFrequency": "626000"
   },
   {
-    "SortNumber": "32",
+    "SortNumber": "34",
     "ChannelName": "ROMANCE TV HD",
     "ChannelFrequency": "626000"
   },
   {
-    "SortNumber": "33",
+    "SortNumber": "35",
     "ChannelName": "DAS ERSTE HD",
     "ChannelFrequency": "562000"
   },
   {
-    "SortNumber": "34",
+    "SortNumber": "36",
     "ChannelName": "ZDF HD",
     "ChannelFrequency": "562000"
   },
   {
-    "SortNumber": "35",
+    "SortNumber": "37",
     "ChannelName": "ZDF NEO HD",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "36",
+    "SortNumber": "38",
     "ChannelName": "ONE HD",
     "ChannelFrequency": "706000"
   },
   {
-    "SortNumber": "37",
+    "SortNumber": "39",
     "ChannelName": "ARTE HD",
     "ChannelFrequency": "706000"
   },
   {
-    "SortNumber": "38",
+    "SortNumber": "40",
     "ChannelName": "3SAT HD",
     "ChannelFrequency": "562000"
   },
   {
-    "SortNumber": "39",
+    "SortNumber": "41",
     "ChannelName": "SERVUS TV HD ÖSTERREICH",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "40",
+    "SortNumber": "42",
     "ChannelName": "BR HD SÜD",
     "ChannelFrequency": "562000"
   },
   {
-    "SortNumber": "41",
+    "SortNumber": "43",
     "ChannelName": "ARD ALPHA HD",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "42",
+    "SortNumber": "44",
     "ChannelName": "NDR HD MV",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "43",
+    "SortNumber": "45",
     "ChannelName": "SR HD",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "44",
+    "SortNumber": "46",
     "ChannelName": "WDR HD KÖLN",
     "ChannelFrequency": "602000"
   },
   {
-    "SortNumber": "45",
+    "SortNumber": "47",
     "ChannelName": "MDR HD SACHSEN",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "46",
+    "SortNumber": "48",
     "ChannelName": "HR HD",
     "ChannelFrequency": "602000"
   },
   {
-    "SortNumber": "47",
+    "SortNumber": "49",
     "ChannelName": "RBB HD BRANDENBURG",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "48",
+    "SortNumber": "50",
     "ChannelName": "SWR HD BW",
     "ChannelFrequency": "602000"
   },
   {
-    "SortNumber": "49",
+    "SortNumber": "51",
     "ChannelName": "SUPER RTL ÖSTERREICH",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "50",
+    "SortNumber": "52",
     "ChannelName": "KIKA HD",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "51",
+    "SortNumber": "53",
     "ChannelName": "NICKELODEON",
     "ChannelFrequency": "602000"
   },
   {
-    "SortNumber": "52",
+    "SortNumber": "54",
     "ChannelName": "DISNEY CHANNEL",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "53",
+    "SortNumber": "55",
     "ChannelName": "RIC",
     "ChannelFrequency": "586000"
   },
   {
-    "SortNumber": "54",
+    "SortNumber": "56",
     "ChannelName": "CARTOONITO",
     "ChannelFrequency": "594000"
   },
   {
-    "SortNumber": "55",
+    "SortNumber": "57",
     "ChannelName": "NICK JR",
     "ChannelFrequency": "778000"
   },
   {
-    "SortNumber": "56",
+    "SortNumber": "58",
     "ChannelName": "NICKTOONS",
     "ChannelFrequency": "714000"
   },
   {
-    "SortNumber": "57",
+    "SortNumber": "59",
     "ChannelName": "CARTOON NETWORK",
     "ChannelFrequency": "666000"
   },
   {
-    "SortNumber": "58",
+    "SortNumber": "60",
     "ChannelName": "ORF SPORT+ HD",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "59",
+    "SortNumber": "61",
     "ChannelName": "SKY SPORT NEWS HD",
     "ChannelFrequency": "594000"
   },
   {
-    "SortNumber": "60",
+    "SortNumber": "62",
     "ChannelName": "LAOLA1 TV HD",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "61",
+    "SortNumber": "63",
     "ChannelName": "SPORT1 HD ÖSTERREICH",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "62",
+    "SortNumber": "64",
     "ChannelName": "DMAX ÖSTERREICH",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "63",
+    "SortNumber": "65",
     "ChannelName": "PHOENIX HD",
     "ChannelFrequency": "706000"
   },
   {
-    "SortNumber": "64",
+    "SortNumber": "66",
     "ChannelName": "SKY DOCUMENTARIES HD",
     "ChannelFrequency": "634000"
   },
   {
-    "SortNumber": "65",
+    "SortNumber": "67",
     "ChannelName": "SKY NATURE HD",
     "ChannelFrequency": "690000"
   },
   {
-    "SortNumber": "66",
+    "SortNumber": "68",
     "ChannelName": "HISTORY HD",
     "ChannelFrequency": "538000"
   },
   {
-    "SortNumber": "67",
+    "SortNumber": "69",
     "ChannelName": "NATGEO HD",
     "ChannelFrequency": "690000"
   },
   {
-    "SortNumber": "68",
+    "SortNumber": "70",
+    "ChannelName": "NATGEO WILD HD",
+    "ChannelFrequency": "650000"
+  },
+  {
+    "SortNumber": "71",
     "ChannelName": "KABEL1 DOKU ÖSTERREICH",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "69",
+    "SortNumber": "72",
     "ChannelName": "N24 DOKU ÖSTERREICH",
     "ChannelFrequency": "778000"
   },
   {
-    "SortNumber": "70",
+    "SortNumber": "73",
     "ChannelName": "WELT",
     "ChannelFrequency": "730000"
   },
   {
-    "SortNumber": "71",
+    "SortNumber": "74",
     "ChannelName": "CRIME + INVESTIGATION",
     "ChannelFrequency": "626000"
   },
   {
-    "SortNumber": "72",
+    "SortNumber": "75",
     "ChannelName": "LT1 HD",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "73",
+    "SortNumber": "76",
     "ChannelName": "LL TV",
     "ChannelFrequency": "554000"
   },
   {
-    "SortNumber": "74",
+    "SortNumber": "77",
     "ChannelName": "DORF TV HD",
     "ChannelFrequency": "746000"
   },
   {
-    "SortNumber": "75",
+    "SortNumber": "78",
     "ChannelName": "RTV HD",
     "ChannelFrequency": "554000"
   },
   {
-    "SortNumber": "76",
+    "SortNumber": "79",
     "ChannelName": "TV1 HD OÖ",
     "ChannelFrequency": "554000"
   },
   {
-    "SortNumber": "77",
+    "SortNumber": "80",
     "ChannelName": "OE24 PLUS HD",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "78",
+    "SortNumber": "81",
     "ChannelName": "MÜHLVIERTEL TV HD",
     "ChannelFrequency": "554000"
   },
   {
-    "SortNumber": "79",
+    "SortNumber": "82",
     "ChannelName": "SALZI TV",
     "ChannelFrequency": "554000"
   },
   {
-    "SortNumber": "80",
+    "SortNumber": "83",
+    "ChannelName": "HT1",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "SortNumber": "84",
+    "ChannelName": "TV REGIONAL",
+    "ChannelFrequency": "554000"
+  },
+  {
+    "SortNumber": "85",
+    "ChannelName": "WT1 HD",
+    "ChannelFrequency": "554000"
+  },
+  {
+    "SortNumber": "86",
     "ChannelName": "STREAMSTER TV HD",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "81",
+    "SortNumber": "87",
     "ChannelName": "TAGESSCHAU24 HD",
     "ChannelFrequency": "706000"
   },
   {
-    "SortNumber": "82",
+    "SortNumber": "88",
     "ChannelName": "KRONE TV HD",
     "ChannelFrequency": "666000"
   },
   {
-    "SortNumber": "83",
+    "SortNumber": "89",
     "ChannelName": "KURIER TV HD",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "84",
+    "SortNumber": "90",
     "ChannelName": "PULS24 HD",
     "ChannelFrequency": "666000"
   },
   {
-    "SortNumber": "85",
+    "SortNumber": "91",
     "ChannelName": "NTV ÖSTERREICH",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "86",
+    "SortNumber": "92",
     "ChannelName": "BLOOMBERG TV",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "87",
+    "SortNumber": "93",
     "ChannelName": "EURONEWS",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "88",
+    "SortNumber": "94",
     "ChannelName": "CNN",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "89",
+    "SortNumber": "95",
     "ChannelName": "BBC NEWS",
     "ChannelFrequency": "746000"
   },
   {
-    "SortNumber": "90",
+    "SortNumber": "96",
     "ChannelName": "CGTN HD",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "91",
+    "SortNumber": "97",
     "ChannelName": "AL JAZEERA HD",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "92",
+    "SortNumber": "98",
     "ChannelName": "NHK WORLD HD JAPAN",
     "ChannelFrequency": "730000"
   },
   {
-    "SortNumber": "93",
+    "SortNumber": "99",
     "ChannelName": "ORF2 HD EUROPE",
     "ChannelFrequency": "586000"
   },
   {
-    "SortNumber": "94",
-    "ChannelName": "OE24 BUSINESS TV HD",
-    "ChannelFrequency": "586000"
-  },
-  {
-    "SortNumber": "95",
+    "SortNumber": "100",
     "ChannelName": "QVC HD",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "96",
+    "SortNumber": "101",
     "ChannelName": "HSE24 HD",
     "ChannelFrequency": "730000"
   },
   {
-    "SortNumber": "97",
+    "SortNumber": "102",
     "ChannelName": "SONNENKLAR TV",
     "ChannelFrequency": "730000"
   },
   {
-    "SortNumber": "98",
+    "SortNumber": "103",
     "ChannelName": "HOME AND GARDEN TV",
     "ChannelFrequency": "586000"
   },
   {
-    "SortNumber": "99",
+    "SortNumber": "104",
     "ChannelName": "ARCADIA WORLD HD",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "100",
+    "SortNumber": "105",
     "ChannelName": "BEATE-UHSE TV HD",
-    "ChannelFrequency": "522000"
+    "ChannelFrequency": "626000"
   },
   {
-    "SortNumber": "101",
+    "SortNumber": "106",
     "ChannelName": "ZDF INFO HD",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "102",
+    "SortNumber": "107",
     "ChannelName": "SRF INFO HD",
     "ChannelFrequency": "658000"
   },
   {
-    "SortNumber": "103",
+    "SortNumber": "108",
     "ChannelName": "BIBEL TV HD",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "104",
+    "SortNumber": "109",
     "ChannelName": "K-TV HD",
     "ChannelFrequency": "730000"
   },
   {
-    "SortNumber": "105",
+    "SortNumber": "110",
     "ChannelName": "TGCOM24",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "106",
+    "SortNumber": "111",
     "ChannelName": "TV5MONDE HD",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "107",
+    "SortNumber": "112",
     "ChannelName": "FRANCE24 HD",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "108",
+    "SortNumber": "113",
     "ChannelName": "RTS SVET HD",
     "ChannelFrequency": "730000"
   },
   {
-    "SortNumber": "109",
+    "SortNumber": "114",
     "ChannelName": "RTK1",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "110",
+    "SortNumber": "115",
     "ChannelName": "DUNA1 HD",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "111",
+    "SortNumber": "116",
     "ChannelName": "ARIRANG HD",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "112",
+    "SortNumber": "117",
     "ChannelName": "HITRADIO Ö3 TV",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "113",
+    "SortNumber": "118",
     "ChannelName": "DELUXE MUSIC",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "114",
+    "SortNumber": "119",
     "ChannelName": "MELODIE TV",
     "ChannelFrequency": "586000"
   },
   {
-    "SortNumber": "115",
+    "SortNumber": "120",
     "ChannelName": "JUKEBOX",
     "ChannelFrequency": "666000"
   },
   {
-    "SortNumber": "116",
+    "SortNumber": "121",
+    "ChannelName": "STIMMUNGSGARTEN TV",
+    "ChannelFrequency": "738000"
+  },
+  {
+    "SortNumber": "122",
     "ChannelName": "TOTAL HITS UK",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "117",
+    "SortNumber": "123",
     "ChannelName": "ROCK ANTHEMS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "118",
+    "SortNumber": "124",
     "ChannelName": "DRIVE",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "119",
+    "SortNumber": "125",
     "ChannelName": "ROCK ALTERNATIVE",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "120",
+    "SortNumber": "126",
     "ChannelName": "HEADBANGERS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "121",
+    "SortNumber": "127",
     "ChannelName": "60S",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "122",
+    "SortNumber": "128",
     "ChannelName": "70S",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "123",
+    "SortNumber": "129",
     "ChannelName": "DANCEFLOOR FILLERS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "124",
+    "SortNumber": "130",
     "ChannelName": "BASS, BREAKS AND BEATS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "125",
+    "SortNumber": "131",
     "ChannelName": "ULTIMATE URBAN",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "126",
+    "SortNumber": "132",
     "ChannelName": "CLASSIC R'N'B AND SOUL",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "127",
+    "SortNumber": "133",
     "ChannelName": "REGGAE",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "128",
+    "SortNumber": "134",
     "ChannelName": "WORLD CARNIVAL",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "129",
+    "SortNumber": "135",
     "ChannelName": "JAZZ CLASSICS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "130",
+    "SortNumber": "136",
     "ChannelName": "COOL JAZZ",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "131",
+    "SortNumber": "137",
     "ChannelName": "CHILLOUT",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "132",
+    "SortNumber": "138",
     "ChannelName": "HOT COUNTRY",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "133",
+    "SortNumber": "139",
     "ChannelName": "INDIE CLASSICS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "134",
+    "SortNumber": "140",
     "ChannelName": "BLUES",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "135",
+    "SortNumber": "141",
     "ChannelName": "CLASSICAL GREATS",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "136",
+    "SortNumber": "142",
     "ChannelName": "CLASSICAL ORCHESTRAL",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "137",
+    "SortNumber": "143",
     "ChannelName": "CLASSICAL CALM",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "138",
+    "SortNumber": "144",
     "ChannelName": "80S",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "139",
+    "SortNumber": "145",
     "ChannelName": "90S",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "140",
+    "SortNumber": "146",
     "ChannelName": "SILK (LOVE SONGS)",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "141",
+    "SortNumber": "147",
     "ChannelName": "FREEDOM",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "142",
+    "SortNumber": "148",
     "ChannelName": "COCKTAIL LOUNGE",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "143",
+    "SortNumber": "149",
     "ChannelName": "ALL DAY PARTY",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "144",
+    "SortNumber": "150",
     "ChannelName": "TOTAL HITS GERMANY",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "145",
+    "SortNumber": "151",
     "ChannelName": "SCHLAGER",
     "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "146",
+    "SortNumber": "152",
     "ChannelName": "KIDS",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "147",
+    "SortNumber": "153",
     "ChannelName": "GROOVE (DISCO AND FUNK)",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "148",
+    "SortNumber": "154",
     "ChannelName": "REVIVAL 60S - 70S",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "149",
+    "SortNumber": "155",
     "ChannelName": "VOLKSMUSIK",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "150",
+    "SortNumber": "156",
     "ChannelName": "TOTAL HITS ITALY",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "151",
+    "SortNumber": "157",
     "ChannelName": "TÜRK MÜZIGI",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "152",
+    "SortNumber": "158",
     "ChannelName": "TOTAL HITS NORDIC",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "153",
+    "SortNumber": "159",
     "ChannelName": "SEASONAL CHANNEL",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "154",
+    "SortNumber": "160",
     "ChannelName": "CLASSIC ROCK",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "155",
+    "SortNumber": "161",
     "ChannelName": "ROCK'N'ROLL",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "156",
+    "SortNumber": "162",
     "ChannelName": "ARABIC",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "157",
+    "SortNumber": "163",
     "ChannelName": "BOLLYWOOD HITS",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "158",
+    "SortNumber": "164",
     "ChannelName": "NEW AGE",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "159",
+    "SortNumber": "165",
     "ChannelName": "TOTAL HITS AUSTRIA",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "160",
+    "SortNumber": "166",
     "ChannelName": "THE ALTERNATIVE",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "161",
+    "SortNumber": "167",
     "ChannelName": "HIP HOP",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "162",
+    "SortNumber": "168",
     "ChannelName": "REWIND 80S - 90S",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "163",
+    "SortNumber": "169",
     "ChannelName": "CHANSONS",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "164",
+    "SortNumber": "170",
     "ChannelName": "Ö1",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "165",
+    "SortNumber": "171",
     "ChannelName": "Ö2 OÖ",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "166",
+    "SortNumber": "172",
     "ChannelName": "Ö3",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "167",
+    "SortNumber": "173",
     "ChannelName": "FM4",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "168",
+    "SortNumber": "174",
     "ChannelName": "LIFE RADIO",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "169",
+    "SortNumber": "175",
     "ChannelName": "RADIO ARABELLA OÖ",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "170",
+    "SortNumber": "176",
     "ChannelName": "KRONEHIT",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "171",
+    "SortNumber": "177",
     "ChannelName": "WELLE1",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "172",
+    "SortNumber": "178",
     "ChannelName": "LOUNGE FM",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "173",
+    "SortNumber": "179",
     "ChannelName": "RADIO FRO",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "174",
+    "SortNumber": "180",
     "ChannelName": "RADIO MARIA",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "175",
+    "SortNumber": "181",
     "ChannelName": "Ö2 W",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "176",
+    "SortNumber": "182",
     "ChannelName": "Ö2 NÖ",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "177",
+    "SortNumber": "183",
     "ChannelName": "Ö2 B",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "178",
+    "SortNumber": "184",
     "ChannelName": "Ö2 S",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "179",
+    "SortNumber": "185",
     "ChannelName": "Ö2 T",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "180",
+    "SortNumber": "186",
     "ChannelName": "Ö2 V",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "181",
+    "SortNumber": "187",
     "ChannelName": "Ö2 ST",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "182",
+    "SortNumber": "188",
     "ChannelName": "Ö2 K",
     "ChannelFrequency": "578000"
   },
   {
-    "SortNumber": "183",
+    "SortNumber": "189",
     "ChannelName": "ANTENNE BAYERN",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "184",
+    "SortNumber": "190",
     "ChannelName": "BAYERN1",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "185",
+    "SortNumber": "191",
     "ChannelName": "BAYERN2",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "186",
+    "SortNumber": "192",
     "ChannelName": "BAYERN3",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "187",
+    "SortNumber": "193",
     "ChannelName": "BR KLASSIK",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "188",
+    "SortNumber": "194",
     "ChannelName": "BR24",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "189",
+    "SortNumber": "195",
     "ChannelName": "BR SCHLAGER",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "190",
-    "ChannelName": "PULS",
-    "ChannelFrequency": "770000"
-  },
-  {
-    "SortNumber": "191",
+    "SortNumber": "196",
     "ChannelName": "HR1",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "192",
+    "SortNumber": "197",
     "ChannelName": "HR2",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "193",
+    "SortNumber": "198",
     "ChannelName": "HR3",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "194",
+    "SortNumber": "199",
     "ChannelName": "HR4",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "195",
+    "SortNumber": "200",
     "ChannelName": "HR INFO",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "196",
+    "SortNumber": "201",
     "ChannelName": "MDR SACHSEN",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "197",
+    "SortNumber": "202",
     "ChannelName": "MDR SACHSEN-ANHALT",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "198",
+    "SortNumber": "203",
     "ChannelName": "MDR THÜRINGEN",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "199",
+    "SortNumber": "204",
     "ChannelName": "MDR KULTUR",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "200",
+    "SortNumber": "205",
     "ChannelName": "MDR JUMP",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "201",
+    "SortNumber": "206",
     "ChannelName": "MDR SPUTNIK",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "202",
+    "SortNumber": "207",
     "ChannelName": "MDR AKTUELL",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "203",
+    "SortNumber": "208",
     "ChannelName": "MDR KLASSIK",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "204",
+    "SortNumber": "209",
     "ChannelName": "NDR2",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "205",
+    "SortNumber": "210",
     "ChannelName": "NDR KULTUR",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "206",
+    "SortNumber": "211",
     "ChannelName": "NDR INFO",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "207",
+    "SortNumber": "212",
     "ChannelName": "NDR 90,3",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "208",
+    "SortNumber": "213",
     "ChannelName": "NDR1 WELLE NORD",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "209",
+    "SortNumber": "214",
     "ChannelName": "NDR1 MV",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "210",
+    "SortNumber": "215",
     "ChannelName": "NDR1 NIEDERSACHSEN",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "211",
+    "SortNumber": "216",
     "ChannelName": "NDR INFO SPEZIAL",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "212",
+    "SortNumber": "217",
     "ChannelName": "BREMEN EINS",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "213",
+    "SortNumber": "218",
     "ChannelName": "BREMEN ZWEI",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "214",
+    "SortNumber": "219",
     "ChannelName": "BREMEN VIER",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "215",
+    "SortNumber": "220",
     "ChannelName": "INFORADIO",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "216",
+    "SortNumber": "221",
     "ChannelName": "RBB KULTUR",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "217",
+    "SortNumber": "222",
     "ChannelName": "ANTENNE BRANDENBURG",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "218",
+    "SortNumber": "223",
     "ChannelName": "RBB 88,8",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "219",
+    "SortNumber": "224",
     "ChannelName": "RADIOEINS",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "220",
+    "SortNumber": "225",
     "ChannelName": "SWR1 BW",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "221",
+    "SortNumber": "226",
     "ChannelName": "SWR1 RP",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "222",
+    "SortNumber": "227",
     "ChannelName": "SWR2",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "223",
+    "SortNumber": "228",
     "ChannelName": "SWR3",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "224",
+    "SortNumber": "229",
     "ChannelName": "SWR4 BW",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "225",
+    "SortNumber": "230",
     "ChannelName": "SWR4 RP",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "226",
+    "SortNumber": "231",
     "ChannelName": "DASDING",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "227",
+    "SortNumber": "232",
     "ChannelName": "WDR2 RHEINLAND",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "228",
+    "SortNumber": "233",
     "ChannelName": "WDR3",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "229",
+    "SortNumber": "234",
     "ChannelName": "WDR4",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "230",
+    "SortNumber": "235",
     "ChannelName": "WDR5",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "231",
+    "SortNumber": "236",
     "ChannelName": "COSMO",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "232",
+    "SortNumber": "237",
     "ChannelName": "WDR EVENT",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "233",
-    "ChannelName": "DKULTUR",
-    "ChannelFrequency": "698000"
-  },
-  {
-    "SortNumber": "234",
+    "SortNumber": "238",
     "ChannelName": "DLF",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "235",
+    "SortNumber": "239",
+    "ChannelName": "DLF KULTUR",
+    "ChannelFrequency": "698000"
+  },
+  {
+    "SortNumber": "240",
+    "ChannelName": "DLF NOVA",
+    "ChannelFrequency": "698000"
+  },
+  {
+    "SortNumber": "241",
     "ChannelName": "DIE MAUS",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "236",
+    "SortNumber": "242",
     "ChannelName": "1LIVE",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "237",
-    "ChannelName": "DRADIO WISSEN",
-    "ChannelFrequency": "698000"
-  },
-  {
-    "SortNumber": "238",
+    "SortNumber": "243",
     "ChannelName": "YOU FM",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "239",
+    "SortNumber": "244",
     "ChannelName": "N-JOY",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "240",
+    "SortNumber": "245",
     "ChannelName": "FRITZ",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "241",
+    "SortNumber": "246",
     "ChannelName": "SR1 EUROPAWELLE",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "242",
+    "SortNumber": "247",
     "ChannelName": "SR2 KULTURRADIO",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "243",
+    "SortNumber": "248",
     "ChannelName": "SR3 SAARLANDWELLE",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "244",
+    "SortNumber": "249",
     "ChannelName": "SWR AKTUELL",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "245",
+    "SortNumber": "250",
     "ChannelName": "1LIVE DIGGI",
     "ChannelFrequency": "770000"
   },
   {
-    "SortNumber": "246",
+    "SortNumber": "251",
     "ChannelName": "SUNSHINE LIVE",
     "ChannelFrequency": "698000"
   },
   {
-    "SortNumber": "247",
+    "SortNumber": "252",
     "ChannelName": "BBCW SERVICE",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "248",
+    "SortNumber": "253",
     "ChannelName": "CNN TÜRK RADYO",
     "ChannelFrequency": "786000"
   },
   {
-    "SortNumber": "249",
+    "SortNumber": "254",
     "ChannelName": "RADYO1",
     "ChannelFrequency": "746000"
   },
   {
-    "SortNumber": "250",
+    "SortNumber": "255",
     "ChannelName": "RADYO3",
     "ChannelFrequency": "746000"
   },
   {
-    "SortNumber": "251",
+    "SortNumber": "256",
     "ChannelName": "TRT RADYO HABER",
     "ChannelFrequency": "746000"
   },
   {
-    "SortNumber": "252",
+    "SortNumber": "257",
     "ChannelName": "TRT FM",
     "ChannelFrequency": "746000"
   },
   {
-    "SortNumber": "253",
-    "ChannelName": "HRT-HR1",
-    "ChannelFrequency": "754000"
-  },
-  {
-    "SortNumber": "254",
-    "ChannelName": "HRT-HR2",
-    "ChannelFrequency": "754000"
-  },
-  {
-    "SortNumber": "255",
-    "ChannelName": "HRT-HR3",
-    "ChannelFrequency": "754000"
-  },
-  {
-    "SortNumber": "256",
+    "SortNumber": "258",
     "ChannelName": "RADIO MARIJA",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "257",
+    "SortNumber": "259",
     "ChannelName": "RADIO BEOGRAD",
     "ChannelFrequency": "738000"
   },
   {
-    "SortNumber": "258",
+    "SortNumber": "260",
     "ChannelName": "RADIO HOREB",
     "ChannelFrequency": "610000"
   },
   {
-    "SortNumber": "259",
+    "SortNumber": "261",
     "ChannelName": "CBA",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "260",
+    "SortNumber": "262",
     "ChannelName": "FREIESRADIO SALZKAMMERGUT",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "261",
+    "SortNumber": "263",
     "ChannelName": "HARMONY FM",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "262",
+    "SortNumber": "264",
     "ChannelName": "ANTENNE SALZBURG",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "263",
+    "SortNumber": "265",
     "ChannelName": "RADIO ARABELLA W",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "264",
+    "SortNumber": "266",
     "ChannelName": "RADIO ARABELLA RELAX",
     "ChannelFrequency": "722000"
   },
   {
-    "SortNumber": "265",
+    "SortNumber": "267",
     "ChannelName": "RADIO ARABELLA NÖ",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "266",
+    "SortNumber": "268",
     "ChannelName": "RADIO ARABELLA SCHLAGER",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "267",
+    "SortNumber": "269",
     "ChannelName": "RADIO ARABELLA ROCK",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "268",
+    "SortNumber": "270",
     "ChannelName": "RADIO ARABELLA HOLIDAY",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "269",
+    "SortNumber": "271",
     "ChannelName": "RADIO ARABELLA LOVE",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "270",
+    "SortNumber": "272",
     "ChannelName": "RADIO ARABELLA AUSTROPOP",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "271",
+    "SortNumber": "273",
     "ChannelName": "RADIO ARABELLA TI AMO",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "272",
+    "SortNumber": "274",
     "ChannelName": "RADIO ARABELLA MAGIC",
     "ChannelFrequency": "618000"
   },
   {
-    "SortNumber": "273",
-    "ChannelName": "RADIO AUSTRIA",
-    "ChannelFrequency": "610000"
+    "SortNumber": "275",
+    "ChannelName": "RADIO ARABELLA 70ER",
+    "ChannelFrequency": "754000"
   },
   {
-    "SortNumber": "274",
+    "SortNumber": "276",
+    "ChannelName": "RADIO ARABELLA 80ER",
+    "ChannelFrequency": "754000"
+  },
+  {
+    "SortNumber": "277",
+    "ChannelName": "RADIO ARABELLA 90ER",
+    "ChannelFrequency": "754000"
+  },
+  {
+    "SortNumber": "278",
     "ChannelName": "BR HEIMAT",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "275",
-    "ChannelName": "BR24 LIVE",
-    "ChannelFrequency": "762000"
-  },
-  {
-    "SortNumber": "276",
+    "SortNumber": "279",
     "ChannelName": "NDR BLUE",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "277",
+    "SortNumber": "280",
     "ChannelName": "NDR PLUS",
     "ChannelFrequency": "762000"
   },
   {
-    "SortNumber": "278",
+    "SortNumber": "281",
     "ChannelName": "BREMEN NEXT",
     "ChannelFrequency": "762000"
+  },
+  {
+    "SortNumber": "282",
+    "ChannelName": "88.6",
+    "ChannelFrequency": "754000"
+  },
+  {
+    "SortNumber": "283",
+    "ChannelName": "MUSEUMRADIO",
+    "ChannelFrequency": "618000"
+  },
+  {
+    "SortNumber": "284",
+    "ChannelName": "OE24 RADIO",
+    "ChannelFrequency": "610000"
   }
 ]

@@ -2,7 +2,7 @@
   "profiles": {
     "KON.Liwest.ChannelFactory": {
       "commandName": "Project",
-      "commandLineArgs": "--mode GenerateData --source CombinedList --target FileList --smartcardid 01359096687 --serverip 172.31.255.185 --frequencies 386-786:8 --targetfile .\\resources\\ChannelScanned.json --keypress"
+      "commandLineArgs": "--mode GenerateData --source FileList --target None --sourcefile SourceData_RemovedList_20260714.json --exportexcelchannelfile SourceData_Channels_20260714.xlsx --keypress"
     }
   }
 }

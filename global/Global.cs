@@ -996,7 +996,7 @@ namespace KON.Liwest.ChannelFactory
                     return drNewDataRow;
                 }).Where(_ => true);
 
-                DataTable dtLocalCleanupSourceData = ercCurrentEnumerableRowCollection.Cast<DataRow>().CopyToDataTable();
+                DataTable dtLocalCleanupSourceData = ercCurrentEnumerableRowCollection.Cast<DataRow>().Where(drCurrentDataRow => drCurrentDataRow != null).CopyToDataTable();
                 return dtLocalCleanupSourceData.Rows.Count > 0 ? dtLocalCleanupSourceData : dtLocalDataTable;
             }
 

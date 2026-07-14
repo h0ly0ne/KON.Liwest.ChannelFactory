@@ -522,7 +522,8 @@
   ],
   "ROCK'N'ROLL": [
     "Rock n Roll",
-    "Rock`n` Roll"
+    "Rock`n` Roll",
+    "ROCK'N'ROLL"
   ],
   "THE ALTERNATIVE": [
     "The Alternative (Germany)",
@@ -541,7 +542,8 @@
     "Arabella Wien"
   ],
   "RADIO ARABELLA RELAX": [
-    "Arabella Relax"
+    "Arabella Relax",
+    "RADIO ARABELLA RELAX"
   ],
   "RADIO ARABELLA NÖ": [
     "Radio Arabella Niederösterreich",
@@ -574,6 +576,18 @@
   "RADIO ARABELLA MAGIC": [
     "Radio Arabella Magic",
     "Arabella Magic"
+  ],
+  "RADIO ARABELLA 70ER": [
+    "Radio Arabella 70er",
+    "Arabella 70er"
+  ],
+  "RADIO ARABELLA 80ER": [
+    "Radio Arabella 80er",
+    "Arabella 80er"
+  ],
+  "RADIO ARABELLA 90ER": [
+    "Radio Arabella 90er",
+    "Arabella 90er"
   ],
   "BR24 LIVE": [
     "BR24 Live",
@@ -627,9 +641,14 @@
     "AXN HD",
     "AXN Black"
   ],
+  "BN": [
+    "BN"
+  ],
   "BN2": [
-    "BN 2 HD",
     "BN 2"
+  ],
+  "BN2 HD": [
+    "BN 2 HD"
   ],
   "CRIME + INVESTIGATION HD": [
     "Crime + Investigation HD",
@@ -643,6 +662,9 @@
     "duckTV",
     "duck TV"
   ],
+  "DUCK TV HD": [
+    "duck TV HD"
+  ],
   "DUNA1 HD": [
     "DUNA 1 HD",
     "Duna HD"
@@ -650,6 +672,9 @@
   "EXTREME SPORTS CHANNEL": [
     "Extreme Sports Channel",
     "Extrem Sports"
+  ],
+  "EXTREME SPORTS HD": [
+    "Extrem Sports HD"
   ],
   "HAYAT FOLK": [
     "Hayat Folk",
@@ -677,7 +702,9 @@
     "MTV 90s"
   ],
   "NATGEO WILD HD": [
-    "Nat Geo Wild HD"
+    "Nat Geo Wild HD",
+    "Sky NatGeoWild HD",
+    "NatGeo Wild HD"
   ],
   "NICKTOONS": [
     "Nicktoons",
@@ -807,6 +834,9 @@
   ],
   "ATV AVRUPA": [
     "atv avrupa"
+  ],
+  "ATV AVRUPA HD": [
+    "atv avrupa HD"
   ],
   "AXN WHITE": [
     "AXN White"
@@ -1191,6 +1221,12 @@
   "SKY CINEMA PREMIERE HD": [
     "Sky Cinema Premiere HD"
   ],
+  "SKY CINEMA BLOCKBUSTER HD": [
+    "Sky Cinema Blockbuster HD"
+  ],
+  "SKY CINEMA FEELGOOD HD": [
+    "Sky Cinema Feelgood HD"
+  ],
   "SKY CRIME HD": [
     "Sky Crime HD"
   ],
@@ -1282,7 +1318,8 @@
     "SWR BW HD"
   ],
   "SYFY HD": [
-    "Syfy HD"
+    "Syfy HD",
+    "Sky Sci-Fi"
   ],
   "TAGESSCHAU24 HD": [
     "Tagesschau24 HD"
@@ -1296,13 +1333,26 @@
     "Testkanal 5701",
     "Testkanal 5702",
     "Testkanal 5703",
-    "Testkanal 730"
+    "Testkanal 730",
+    "Testkanal 17505",
+    "Testkanal 5541",
+    "Testkanal 5704",
+    "Testkanal 7461",
+    "Testkanal 7543",
+    "Testkanal 7542",
+    "Testkanal 7541",
+    "Testkanal 7625",
+    "Testkanal 7624",
+    "Testkanal 7623",
+    "Testkanal 7622",
+    "Testkanal 7621"
   ],
   "TEVE2": [
     "teve 2"
   ],
   "TGCOM24": [
-    "TgCom24"
+    "TgCom24",
+    "TGCOM24"
   ],
   "TLC ÖSTERREICH": [
     "TLC Austria"
@@ -1347,5 +1397,41 @@
   ],
   "ORF SPORT+ HD": [
     "ORF Sport + HD"
+  ],
+  "HT1": [
+    "HT 1"
+  ],
+  "STIMMUNGSGARTEN TV": [
+    "Stimmungsgarten"
+  ],
+  "CGTN HD": [
+    "CGTN HD"
+  ],
+  "CGTN": [
+    "CGTN"
+  ],
+  "DLF KULTUR": [
+    "Dlf Kultur"
+  ],
+  "DLF NOVA": [
+    "Dlf Nova"
+  ],
+  "OE24 RADIO": [
+    "oe24 Radio"
+  ],
+  "88.6": [
+    "* 88.6 *"
+  ],
+  "MUSEUMRADIO": [
+    "Museumradio"
+  ],
+  "SKY AXN WHITE": [
+    "Sky AXN White"
+  ],
+  "SKY AXN BLACK": [
+    "Sky AXN Black"
+  ],
+  "SERVICE": [
+    "Service 61058"
   ]
 }
