@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "KON.Liwest.ChannelFactory": {
-      "commandName": "Project",
-      "commandLineArgs": "--mode GenerateData --source FileList --target None --sourcefile SourceData_RemovedList_20260714.json --exportexcelchannelfile SourceData_Channels_20260714.xlsx --keypress"
-    }
-  }
-}

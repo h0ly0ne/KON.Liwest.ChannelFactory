@@ -692,20 +692,20 @@ namespace KON.Liwest.ChannelFactory
                     }
 
                     var fCorrectionFactorForColumnFilter = 3 * EXCEL_CHARACTER_TO_WIDTH_CONSTANT;
-                    float fSenderFieldMaximumLength = 0;
-                    float fPaketFieldMaximumLength = 0;
+                    float? fSenderFieldMaximumLength = 0;
+                    float? fPaketFieldMaximumLength = 0;
 
-                    var fSenderFieldMaximumLengthCurrent = (from DataRow drCurrentDataRow in dtLocalExportSourceData.Rows where !string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow[1])) select Convert.ToString(drCurrentDataRow[1]).Length).Prepend(0).Max();
+                    var fSenderFieldMaximumLengthCurrent = (from DataRow drCurrentDataRow in dtLocalExportSourceData.Rows where !string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow[1])) select Convert.ToString(drCurrentDataRow[1])?.Length).Prepend(0).Max();
                     if (fSenderFieldMaximumLengthCurrent > fSenderFieldMaximumLength)
                         fSenderFieldMaximumLength = fSenderFieldMaximumLengthCurrent;
 
-                    var fPaketFieldMaximumLengthCurrent = (from DataRow drCurrentDataRow in dtLocalExportSourceData.Rows where !string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow[2])) select Convert.ToString(drCurrentDataRow[2]).Length).Prepend(0).Max();
+                    var fPaketFieldMaximumLengthCurrent = (from DataRow drCurrentDataRow in dtLocalExportSourceData.Rows where !string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow[2])) select Convert.ToString(drCurrentDataRow[2])?.Length).Prepend(0).Max();
                     if (fPaketFieldMaximumLengthCurrent > fPaketFieldMaximumLength)
                         fPaketFieldMaximumLength = fPaketFieldMaximumLengthCurrent;
 
                     for (var iCurrentColumnNumber = 0; iCurrentColumnNumber <= wsCurrentWorksheet.GetLastColumnNumber(); iCurrentColumnNumber++)
                     {
-                        var fCurrentMaximumLengthValuesWithHeader = Convert.ToSingle(Convert.ToString(wsCurrentWorksheet.GetCell(iCurrentColumnNumber, 0).Value)!.Length) * EXCEL_CHARACTER_TO_WIDTH_CONSTANT + fCorrectionFactorForColumnFilter;
+                        float? fCurrentMaximumLengthValuesWithHeader = Convert.ToSingle(Convert.ToString(wsCurrentWorksheet.GetCell(iCurrentColumnNumber, 0).Value)!.Length) * EXCEL_CHARACTER_TO_WIDTH_CONSTANT + fCorrectionFactorForColumnFilter;
 
                         switch (iCurrentColumnNumber)
                         {
@@ -723,7 +723,7 @@ namespace KON.Liwest.ChannelFactory
                             }
                         }
 
-                        wsCurrentWorksheet.SetColumnWidth(iCurrentColumnNumber, fCurrentMaximumLengthValuesWithHeader);
+                        wsCurrentWorksheet.SetColumnWidth(Convert.ToString(iCurrentColumnNumber), Convert.ToSingle(fCurrentMaximumLengthValuesWithHeader));
                     }
 
                     wsCurrentWorksheet.SetAutoFilter(0, wsCurrentWorksheet.GetLastColumnNumber());
@@ -776,6 +776,14 @@ namespace KON.Liwest.ChannelFactory
             if (!string.IsNullOrEmpty(strLocalEnigmaDBFilename))
             {
                 string strLocalEnigmaDBFilenameFullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, strLocalEnigmaDBFilename));
+                string strLocalEnigmaTemplateDBFilenameFullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, "./resources/lamedb"));
+
+                if (!File.Exists(strLocalEnigmaDBFilenameFullPath) || new FileInfo(strLocalEnigmaDBFilenameFullPath).Length == 0)
+                {
+                    File.Create(strLocalEnigmaDBFilenameFullPath).Dispose();
+                    File.WriteAllText(strLocalEnigmaDBFilenameFullPath, File.Exists(strLocalEnigmaTemplateDBFilenameFullPath) ? File.ReadAllText(strLocalEnigmaTemplateDBFilenameFullPath) : "eDVB services /4/\ntransponders\nend\nservices\nend\nKON.Liwest.ChannelFactory\n");
+                }
+
                 ISettings settings = settingsIO.Load(strLocalEnigmaDBFilenameFullPath);
                 settings.Log = new NullLogger();
 

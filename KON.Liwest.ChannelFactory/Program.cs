@@ -88,7 +88,7 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.AdditionalNewLineAfterOption = false;
                 htCurrentHelpText.MaximumDisplayWidth = 100;
                 htCurrentHelpText.Heading = "KON.Liwest.ChannelFactory";
-                htCurrentHelpText.Copyright = "Copyright (C) 2025 Oswald Oliver";
+                htCurrentHelpText.Copyright = "Copyright (C) 2024-2026 Oswald Oliver";
 
                 //htCurrentHelpText.AddPostOptionsLine($"* Example: Generate DVBViewer transponder file \"DVB-C_AT_LIWEST.ini\"");
                 //htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateDVBViewerTransponderFile -t -r");
@@ -115,7 +115,7 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.AdditionalNewLineAfterOption = false;
                 htCurrentHelpText.MaximumDisplayWidth = 100;
                 htCurrentHelpText.Heading = "KON.Liwest.ChannelFactory";
-                htCurrentHelpText.Copyright = "Copyright (C) 2025 Oswald Oliver";
+                htCurrentHelpText.Copyright = "Copyright (C) 2024-2026 Oswald Oliver";
 
                 if (saLocalCustomConditions.Length > 0)
                 {

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "KON.Liwest.ChannelFactory": {
+      "commandName": "Project",
+      "commandLineArgs": "--help --keypress"
+    }
+  }
+}
