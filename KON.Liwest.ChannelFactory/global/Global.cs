@@ -90,7 +90,8 @@ namespace KON.Liwest.ChannelFactory
             SmartcardList = 1,
             BlindscanList = 2,
             CombinedList = 3,
-            FileList = 4
+            FileList = 4,
+            CustomFile = 5
         }
         public enum FlagTarget
         {
@@ -125,6 +126,12 @@ namespace KON.Liwest.ChannelFactory
             Engima2Ver3 = 3, 
             Engima2Ver4 = 4, 
             Engima2Ver5 = 5
+        }
+
+        public enum FlagDumpDataMode
+        {
+            None = 0,
+            DVBViewerChannelDatabase = 1
         }
 
         public static void InitDataContainers(ref DataTable dtLocalDataTable)

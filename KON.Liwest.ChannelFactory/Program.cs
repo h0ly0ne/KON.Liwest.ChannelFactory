@@ -49,8 +49,8 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "exportfilenameformat", HelpText = "Filename format for export operation to use to save to")]
             public FlagExportEnigmaFormat? cloExportFilenameFormat { get; set; }
 
-            [Option(longName: "dumpdvbvcdbfile", HelpText = "Filename of dvbviewer channel database to dump from")]
-            public string? cloDumpDVBViewerChannelDatabaseFile { get; set; }
+            [Option(longName: "dumpdatamode", HelpText = "Dump data mode selection")]
+            public FlagDumpDataMode cloDumpDataMode { get; set; }
 
             [Option(longName: "keypress", HelpText = "Wait for keypress after operation")]
             public bool cloKeyPress { get; set; }
@@ -171,6 +171,10 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
                 htCurrentHelpText.AddPostOptionsLine($"    --exportmode EnigmaBouquetsFiles --exportfilenameformat Engima2Ver4");
                 htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Dump CustomFile with DVBViewerChannelDatabase to console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode DumpData --dumpdatamode DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    --source CustomFile --sourcefile channels.dat");
+                htCurrentHelpText.AddPostOptionsLine($"");
 
                 return HelpText.DefaultParsingErrorsHandler(prLocalParseResult, htCurrentHelpText);
             }, e => e);
@@ -284,8 +288,11 @@ namespace KON.Liwest.ChannelFactory
                     }
                     case FlagMode.DumpData:
                     {
-                        if (!string.IsNullOrEmpty(oLocalOptions.cloDumpDVBViewerChannelDatabaseFile) && !File.Exists(oLocalOptions.cloDumpDVBViewerChannelDatabaseFile))
-                            saLocalCustomCondition = saLocalCustomCondition.Append("dumpdvbvcdbfile").ToArray();
+                        if (oLocalOptions.cloSource is not FlagSource.CustomFile)
+                            saLocalCustomCondition = saLocalCustomCondition.Append("source").ToArray();
+
+                        if (string.IsNullOrEmpty(oLocalOptions.cloSourceFile) | !File.Exists(oLocalOptions.cloSourceFile))
+                            saLocalCustomCondition = saLocalCustomCondition.Append("sourcefile").ToArray();
 
                         break;
                     }
@@ -386,8 +393,15 @@ namespace KON.Liwest.ChannelFactory
                         }
                         case FlagMode.DumpData:
                         {
-                            if (!string.IsNullOrEmpty(oLocalOptions.cloDumpDVBViewerChannelDatabaseFile))
-                                DumpDVBViewerChannelDatabase(strLocalDVBViewerChannelDatabaseFilename: oLocalOptions.cloDumpDVBViewerChannelDatabaseFile);
+                            switch (oLocalOptions.cloDumpDataMode)
+                            {
+                                case FlagDumpDataMode.DVBViewerChannelDatabase:
+                                {
+                                    DumpDVBViewerChannelDatabase(strLocalDVBViewerChannelDatabaseFilename: oLocalOptions.cloSourceFile);
+
+                                    break;
+                                }
+                            }
 
                             break;
                         }
