@@ -1,5 +1,15 @@
-﻿using CsvHelper;
+﻿using System.Data;
+using System.Diagnostics;
+using System.Globalization;
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
+
+using CsvHelper;
 using CsvHelper.Configuration;
+using DataTablePrettyPrinter;
 using KON.OctoScan.NET;
 using Krkadoni.EnigmaSettings;
 using Krkadoni.EnigmaSettings.Interfaces;
@@ -8,15 +18,6 @@ using NetFwTypeLib;
 using Newtonsoft.Json;
 using NLog;
 using Pastel;
-
-using System.Data;
-using System.Diagnostics;
-using System.Globalization;
-using System.Net.Http.Headers;
-using System.Net.Mime;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 
 using static KON.Liwest.ChannelFactory.Constants;
 using static KON.Liwest.ChannelFactory.DVBViewer;
@@ -79,7 +80,8 @@ namespace KON.Liwest.ChannelFactory
         {
             GenerateData = 0,
             ModifyData = 1,
-            DumpDVBViewerChannelDatabase = 2
+            ExportData = 2,
+            DumpData = 3
         }
 
         public enum FlagSource
@@ -93,7 +95,8 @@ namespace KON.Liwest.ChannelFactory
         public enum FlagTarget
         {
             None = 0,
-            FileList = 1
+            ConsoleList = 1,
+            FileList = 2
         }
 
         public enum FlagSourceCleanup
@@ -101,6 +104,27 @@ namespace KON.Liwest.ChannelFactory
             None = 0,
             RemoveInvalidSIDs = 1,
             GroupAndInvalidate = 2
+        }
+
+        public enum FlagExportMode
+        {
+            None = 0,
+            ExcelChannelList = 1,
+            DVBViewerTransponderList = 2,
+            DVBViewerChannelDatabase = 3,
+            EnigmaTransponderList = 4,
+            EnigmaChannelDatabase = 5,
+            EnigmaBouquetsFiles = 6
+        }
+
+        public enum FlagExportEnigmaFormat
+        {
+            None = 0,
+            Engima2Ver1 = 1, 
+            Engima2Ver2 = 2, 
+            Engima2Ver3 = 3, 
+            Engima2Ver4 = 4, 
+            Engima2Ver5 = 5
         }
 
         public static void InitDataContainers(ref DataTable dtLocalDataTable)
@@ -135,7 +159,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.GetSourceDataFromChannelList()
+        ///     Global.GetSourceDataFromChannelList()
         /// </summary>
         public static void GetSourceDataFromChannelList()
         {
@@ -192,7 +216,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.GetSourceDataFromSmartcard()
+        ///     Global.GetSourceDataFromSmartcard()
         /// </summary>
         /// <param name="strLocalSmartcardId"></param>
         public static void GetSourceDataFromSmartcard(string? strLocalSmartcardId)
@@ -206,7 +230,7 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Info("-» Get source data from smartcard".Pastel(ConsoleColor.Green));
 
                 var hrmCurrentHttpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"https://auskunft.liwest.at/index.php?scID={strLocalSmartcardId}#smartcard-abfrage");
-                var mfdcCurrentMultipartFormDataContent = new MultipartFormDataContent { { new StringContent(strLocalSmartcardId, Encoding.UTF8, MediaTypeNames.Text.Plain), "scID" }, { new StringContent("&raquo; Jetzt anzeigen", Encoding.UTF8, MediaTypeNames.Text.Plain), "action" } };
+                var mfdcCurrentMultipartFormDataContent = new MultipartFormDataContent { { new StringContent(strLocalSmartcardId, Encoding.UTF8, MediaTypeNames.Text.Plain), "scID" }, { new StringContent("» Jetzt anzeigen", Encoding.UTF8, MediaTypeNames.Text.Plain), "action" } };
                 hrmCurrentHttpRequestMessage.Content = mfdcCurrentMultipartFormDataContent;
 
                 var cdhvCurrentContentDispositionHeaderValue = new ContentDispositionHeaderValue("form-data");
@@ -214,7 +238,7 @@ namespace KON.Liwest.ChannelFactory
                 var hrmCurrentHttpResponseMessage = hcCurrentHttpClient.PostAsync(hrmCurrentHttpRequestMessage.RequestUri?.ToString(), hrmCurrentHttpRequestMessage.Content).ConfigureAwait(false).GetAwaiter().GetResult();
                 _ = hrmCurrentHttpResponseMessage.Content.ReadAsStringAsync().Result;
 
-                Thread.Sleep(new TimeSpan(0, 0, 15));
+                Thread.Sleep(new TimeSpan(0, 0, 30));
 
                 if (hrmCurrentHttpResponseMessage.IsSuccessStatusCode)
                 {
@@ -274,7 +298,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.GetSourceDataFromBlindscan()
+        ///     Global.GetSourceDataFromBlindscan()
         /// </summary>
         /// <param name="strLocalServerIP"></param>
         /// <param name="strLocalFrequencies"></param>
@@ -372,7 +396,18 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.SaveSourceDataToFile()
+        ///     Global.SaveSourceDataToConsole()
+        /// </summary>
+        public static void SaveSourceDataToConsole()
+        {
+            lCurrentLogger.Trace("Global.SaveSourceDataToConsole()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info("-» Save source data to console".Pastel(ConsoleColor.Green));
+
+            Console.WriteLine(dtSourceDataTable.SetColumnWidthToColumnCaption().ToPrettyPrintedString());
+        }
+
+        /// <summary>
+        ///     Global.SaveSourceDataToFile()
         /// </summary>
         /// <param name="strLocalSourceDataFilename"></param>
         public static void SaveSourceDataToFile(string? strLocalSourceDataFilename)
@@ -387,7 +422,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.LoadSourceDataFromFile()
+        ///     Global.LoadSourceDataFromFile()
         /// </summary>
         /// <param name="strLocalSourceDataFilename"></param>
         public static void LoadSourceDataFromFile(string? strLocalSourceDataFilename)
@@ -424,7 +459,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.LoadChannelVariationDictionaryFromFile()
+        ///     Global.LoadChannelVariationDictionaryFromFile()
         /// </summary>
         /// <param name="strLocalChannelVariationDictionaryFilename"></param>
         public static void LoadChannelVariationDictionaryFromFile(string? strLocalChannelVariationDictionaryFilename)
@@ -439,7 +474,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.ExportSourceDataToDVBViewerTransponderFile()
+        ///     Global.ExportSourceDataToDVBViewerTransponderFile()
         /// </summary>
         /// <param name="strLocalDVBViewerTransponderFilename"></param>
         public static void ExportSourceDataToDVBViewerTransponderFile(string? strLocalDVBViewerTransponderFilename)
@@ -473,7 +508,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.ExportSourceDataToDVBViewerChannelDatabase()
+        ///     Global.ExportSourceDataToDVBViewerChannelDatabase()
         /// </summary>
         /// <param name="strLocalDVBViewerChannelDatabaseFilename"></param>
         public static void ExportSourceDataToDVBViewerChannelDatabase(string? strLocalDVBViewerChannelDatabaseFilename)
@@ -602,12 +637,10 @@ namespace KON.Liwest.ChannelFactory
                     }
                 }
             }
-
-            
         }
 
         /// <summary>
-        /// Global.DumpDVBViewerChannelDatabase()
+        ///     Global.DumpDVBViewerChannelDatabase()
         /// </summary>
         /// <param name="strLocalDVBViewerChannelDatabaseFilename"></param>
         public static unsafe void DumpDVBViewerChannelDatabase(string? strLocalDVBViewerChannelDatabaseFilename)
@@ -656,7 +689,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.ExportSourceDataToDVBViewerTransponderFile()
+        ///     Global.ExportSourceDataToDVBViewerTransponderFile()
         /// </summary>
         /// <param name="strLocalExcelFilename"></param>
         public static void ExportSourceDataToExcelExportFile(string? strLocalExcelFilename)
@@ -723,7 +756,7 @@ namespace KON.Liwest.ChannelFactory
                             }
                         }
 
-                        wsCurrentWorksheet.SetColumnWidth(Convert.ToString(iCurrentColumnNumber), Convert.ToSingle(fCurrentMaximumLengthValuesWithHeader));
+                        wsCurrentWorksheet.SetColumnWidth(GetExcelColumnName(iCurrentColumnNumber + 1), Convert.ToSingle(fCurrentMaximumLengthValuesWithHeader));
                     }
 
                     wsCurrentWorksheet.SetAutoFilter(0, wsCurrentWorksheet.GetLastColumnNumber());
@@ -733,120 +766,160 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.ExportSourceDataToEnigmaDBFileTransponders()
+        ///     Global.ExportSourceDataToEnigmaGlobal()
         /// </summary>
-        /// <param name="sioLocalSettingsIO"></param>
-        /// <param name="isLocalISettings"></param>
-        public static void ExportSourceDataToEnigmaDBFileTransponders(ref SettingsIO sioLocalSettingsIO, ref ISettings isLocalISettings)
+        /// <param name="femLocalFlagExportMode"></param>
+        /// <param name="strLocalFilename"></param>
+        /// <param name="fefLocalExportFilenameFormat"></param>
+
+        public static void ExportSourceDataToEnigmaSelector(FlagExportMode femLocalFlagExportMode, string? strLocalFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat)
         {
-            lCurrentLogger.Trace("Global.ExportSourceDataToEnigmaDBFileTransponders()".Pastel(ConsoleColor.Cyan));
-            lCurrentLogger.Info("-» Export source data to enigma database transponders cables.xml file".Pastel(ConsoleColor.Green));
-
-            var strTransponderRootElementName = $"LIWEST ({DateTime.Now:yyyy-MM-dd HH:mm})";
-            XmlCable xcCurrentXMLCable = new XmlCable { Name = strTransponderRootElementName, SatFeed = Convert.ToString(ciSatFeed), Flags = Convert.ToString(ciFEC), CountryCode = ciCountryCode };
-
-            var dtLocalSourceDataTable = dtSourceDataTable.DefaultView.ToTable(true, "ChannelFrequency", "TSID", "ONID");
-            dtLocalSourceDataTable.DefaultView.Sort = "ChannelFrequency";
-            dtLocalSourceDataTable = dtLocalSourceDataTable.DefaultView.ToTable();
-
-            foreach (DataRow drCurrentDataRow in dtLocalSourceDataTable.Rows)
+            switch (femLocalFlagExportMode)
             {
-                xcCurrentXMLCable.Transponders.Add(new XmlTransponder
+                case FlagExportMode.EnigmaTransponderList:
                 {
-                    Frequency = Convert.ToString(drCurrentDataRow["ChannelFrequency"]),
-                    SymbolRate = Convert.ToString(ciSymbolRate * 1000),
-                    FEC = Convert.ToString(ciFEC),
-                    Modulation = Convert.ToString(ciModulation)
-                });
+                    ExportSourceDataToEnigma(strLocalFilename, fefLocalExportFilenameFormat, true, false, false);
 
-                isLocalISettings.Transponders.Add(sioLocalSettingsIO.Factory.InitNewTransponderDVBC($"{Convert.ToString("ffff0000")}:{Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte()}:{Convert.ToInt32(drCurrentDataRow["ONID"]).ToHexString4Byte()}", $"\tc {Convert.ToString(drCurrentDataRow["ChannelFrequency"])}:{Convert.ToString(ciSymbolRate * 1000)}:2:{Convert.ToString(ciModulation)}:{Convert.ToString(ciFEC)}:0:0"));
+                    break;
+                }
+                case FlagExportMode.EnigmaChannelDatabase:
+                {
+                    ExportSourceDataToEnigma(strLocalFilename, fefLocalExportFilenameFormat, false, true, false);
+
+                    break;
+                }
+                case FlagExportMode.EnigmaBouquetsFiles:
+                {
+                    ExportSourceDataToEnigma(strLocalFilename, fefLocalExportFilenameFormat, false, false, true);
+
+                    break;
+                }
             }
-
-            isLocalISettings.Cables.Add(xcCurrentXMLCable);
         }
 
         /// <summary>
-        /// Global.ExportSourceDataToEnigmaDBFile()
+        ///     Global.ExportSourceDataToEnigma()
         /// </summary>
-        /// <param name="strLocalEnigmaDBFilename"></param>
-        public static void ExportSourceDataToEnigmaDBFile(string? strLocalEnigmaDBFilename)
+        /// <param name="strLocalExportFilename"></param>
+        /// <param name="fefLocalExportFilenameFormat"></param>
+        /// <param name="bLocalExportTransponders"></param>
+        /// <param name="bLocalExportChannelDatabase"></param>
+        /// <param name="bLocalExportBouquetsFiles"></param>
+        public static void ExportSourceDataToEnigma(string? strLocalExportFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat, bool bLocalExportTransponders, bool bLocalExportChannelDatabase, bool bLocalExportBouquetsFiles)
         {
             SettingsIO settingsIO = new SettingsIO { EditorName = "KON.Liwest.ChannelFactory", Log = new NullLogger() };
+            string strLocalExportFolderAbsolutePath = Path.GetFullPath(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty);
 
-            if (!string.IsNullOrEmpty(strLocalEnigmaDBFilename))
+            if (!string.IsNullOrEmpty(strLocalExportFolderAbsolutePath))
             {
-                string strLocalEnigmaDBFilenameFullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, strLocalEnigmaDBFilename));
-                string strLocalEnigmaTemplateDBFilenameFullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, "./resources/lamedb"));
+                ISettings isCurrentISettings = settingsIO.Factory.InitNewSettings();
+                isCurrentISettings.Log = settingsIO.Log;
+                isCurrentISettings.SettingsFileName = strLocalExportFilename;
+                isCurrentISettings.SettingsDirectory = strLocalExportFolderAbsolutePath;
 
-                if (!File.Exists(strLocalEnigmaDBFilenameFullPath) || new FileInfo(strLocalEnigmaDBFilenameFullPath).Length == 0)
+                switch (fefLocalExportFilenameFormat)
                 {
-                    File.Create(strLocalEnigmaDBFilenameFullPath).Dispose();
-                    File.WriteAllText(strLocalEnigmaDBFilenameFullPath, File.Exists(strLocalEnigmaTemplateDBFilenameFullPath) ? File.ReadAllText(strLocalEnigmaTemplateDBFilenameFullPath) : "eDVB services /4/\ntransponders\nend\nservices\nend\nKON.Liwest.ChannelFactory\n");
+                    case FlagExportEnigmaFormat.Engima2Ver1:
+                    {
+                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver1;
+                        break;
+                    }
+                    case FlagExportEnigmaFormat.Engima2Ver2:
+                    {
+                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver2;
+                        break;
+                    }
+                    case FlagExportEnigmaFormat.Engima2Ver3:
+                    {
+                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver3;
+                        break;
+                    }
+                    case FlagExportEnigmaFormat.Engima2Ver4:
+                    {
+                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver4;
+                        break;
+                    }
+                    case FlagExportEnigmaFormat.Engima2Ver5:
+                    {
+                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver5;
+                        break;
+                    }
                 }
 
-                ISettings settings = settingsIO.Load(strLocalEnigmaDBFilenameFullPath);
-                settings.Log = new NullLogger();
+                lCurrentLogger.Trace("Global.ExportSourceDataToEnigma()".Pastel(ConsoleColor.Cyan));
+                lCurrentLogger.Info($"-» Export source data to enigma Transponders:{bLocalExportTransponders} - ChannelDatabase:{bLocalExportChannelDatabase} - BouquetFiles:{bLocalExportBouquetsFiles}".Pastel(ConsoleColor.Green));
 
-                lCurrentLogger.Trace("Global.ExportSourceDataToEnigmaDBFile()".Pastel(ConsoleColor.Cyan));
-                lCurrentLogger.Info("-» Export source data to enigma database file".Pastel(ConsoleColor.Green));
+                DataTable dtCurrentExportSourceData = dtSourceDataTable.Copy();
 
-                DataTable dtLocalExportSourceData = dtSourceDataTable.Copy();
-
-                if (dtLocalExportSourceData.Rows.Count > 0)
+                if (dtCurrentExportSourceData.Rows.Count > 0)
                 {
-                    settings.RemoveAllTransponders();
-                    settings.RemoveAllSatellites();
-                    settings.RemoveAllCables();
+                    var strTransponderRootElementName = $"LIWEST ({DateTime.Now:yyyy-MM-dd HH:mm})";
 
-                    ExportSourceDataToEnigmaDBFileTransponders(ref settingsIO, ref settings);
+                    IXmlCable ixcCurrentIXmlCable = settingsIO.Factory.InitNewXmlCable();
+                    ixcCurrentIXmlCable.Name = strTransponderRootElementName;
+                    ixcCurrentIXmlCable.SatFeed = Convert.ToString(ciSatFeed);
+                    ixcCurrentIXmlCable.Flags = Convert.ToString(ciFEC);
+                    ixcCurrentIXmlCable.CountryCode = ciCountryCode;
 
-                    IFileBouquet ifbCurrentIFileBouquetTV;
-                    if (settings.Bouquets.Cast<IFileBouquet>().Any(x => x.FileName == "userbouquet.favourites.tv"))
-                        ifbCurrentIFileBouquetTV = settings.Bouquets.Cast<IFileBouquet>().First(x => x.FileName == "userbouquet.favourites.tv");
-                    else
+                    var dtCurrentSourceDataTable = dtSourceDataTable.DefaultView.ToTable(true, "ChannelFrequency", "TSID", "ONID");
+                    dtCurrentSourceDataTable.DefaultView.Sort = "ChannelFrequency";
+                    dtCurrentSourceDataTable = dtCurrentSourceDataTable.DefaultView.ToTable();
+
+                    foreach (DataRow drCurrentDataRow in dtCurrentSourceDataTable.Rows)
                     {
-                        ifbCurrentIFileBouquetTV = settingsIO.Factory.InitNewFileBouquet();
-                        ifbCurrentIFileBouquetTV.Name = "TV";
-                        ifbCurrentIFileBouquetTV.FileName = "userbouquet.favourites.tv";
+                        ixcCurrentIXmlCable.Transponders.Add(new XmlTransponder
+                        {
+                            Frequency = Convert.ToString(drCurrentDataRow["ChannelFrequency"]),
+                            SymbolRate = Convert.ToString(ciSymbolRate * 1000),
+                            FEC = Convert.ToString(ciFEC),
+                            Modulation = Convert.ToString(ciModulation)
+                        });
+
+                        isCurrentISettings.Transponders.Add(settingsIO.Factory.InitNewTransponderDVBC($"{Convert.ToString("ffff0000")}:{Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte()}:{Convert.ToInt32(drCurrentDataRow["ONID"]).ToHexString4Byte()}", $"\tc {Convert.ToString(drCurrentDataRow["ChannelFrequency"])}:{Convert.ToString(ciSymbolRate * 1000)}:2:{Convert.ToString(ciModulation)}:{Convert.ToString(ciFEC)}:0:0"));
                     }
 
-                    IFileBouquet ifbCurrentIFileBouquetRadio;
-                    if (settings.Bouquets.Cast<IFileBouquet>().Any(x => x.FileName == "userbouquet.favourites.radio"))
-                        ifbCurrentIFileBouquetRadio = settings.Bouquets.Cast<IFileBouquet>().First(x => x.FileName == "userbouquet.favourites.radio");
-                    else
+                    isCurrentISettings.Cables.Add(ixcCurrentIXmlCable);
+                    IXmlCablesIO cablesIO = settingsIO.Factory.InitNewXmlCableIO(settingsIO._fileHelper);
+
+                    if (bLocalExportTransponders)
+                        if (!string.IsNullOrEmpty(strLocalExportFilename))
+                             cablesIO.SaveCablesToFile(Path.Combine(strLocalExportFolderAbsolutePath, strLocalExportFilename), isCurrentISettings);
+                    
+                    if (bLocalExportChannelDatabase || bLocalExportBouquetsFiles)
                     {
-                        ifbCurrentIFileBouquetRadio = settingsIO.Factory.InitNewFileBouquet();
-                        ifbCurrentIFileBouquetRadio.Name = "Radio";
-                        ifbCurrentIFileBouquetRadio.FileName = "userbouquet.favourites.radio";
+                        IFileBouquet ifbCurrentIFileBouquetTV = settingsIO.Factory.InitNewFileBouquet("TV", "userbouquet.favourites.tv");
+                        IFileBouquet ifbCurrentIFileBouquetRadio = settingsIO.Factory.InitNewFileBouquet("Radio", "userbouquet.favourites.radio");
+
+                        foreach (DataRow drCurrentDataRow in dtCurrentExportSourceData.Rows)
+                        {
+                            IService isCurrentIService = settingsIO.Factory.InitNewService($"{Convert.ToInt32(drCurrentDataRow["SID"]).ToHexString4Byte()}:{ciDefaultDVBCNamespace}:{Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte()}:{Convert.ToInt32(drCurrentDataRow["ONID"]).ToHexString4Byte()}:{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? "1" : "2")}:{Convert.ToString(drCurrentDataRow["ChannelNumber"])}:0", Convert.ToString(drCurrentDataRow["ChannelName"]) ?? string.Empty, $"p:{Convert.ToString(drCurrentDataRow["ProviderName"]) ?? string.Empty}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? ",c:00" + Convert.ToInt32(drCurrentDataRow["VPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["TPID"])) && Convert.ToString(drCurrentDataRow["TPID"]) != "0" ? ",c:02" + Convert.ToInt32(drCurrentDataRow["TPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["PCRPID"])) && Convert.ToString(drCurrentDataRow["PCRPID"]) != "0" ? ",c:03" + Convert.ToInt32(drCurrentDataRow["PCRPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? ",c:050001" : string.Empty)}{(Convert.ToBoolean(drCurrentDataRow["CAM"]) ? ",C:0000" : string.Empty)},f:08");
+                            isCurrentIService.Transponder = isCurrentISettings.Transponders.FirstOrDefault(x => x.TSID == Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte());
+                            isCurrentISettings.Services.Add(isCurrentIService);
+
+                            if (!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0")
+                                ifbCurrentIFileBouquetTV.BouquetItems.Add(new BouquetItemService(isCurrentIService));
+                            else
+                                ifbCurrentIFileBouquetRadio.BouquetItems.Add(new BouquetItemService(isCurrentIService));
+                        }
+
+                        isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetTV);
+                        isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetRadio);
+
+                        if (!string.IsNullOrEmpty(strLocalExportFolderAbsolutePath))
+                        {
+                            if (bLocalExportChannelDatabase)
+                                settingsIO.Save(strLocalExportFolderAbsolutePath, isCurrentISettings, strLocalExportFilename, bLocalExportChannelDatabase, false, bLocalExportTransponders, bLocalExportBouquetsFiles);
+
+                            if (bLocalExportBouquetsFiles)
+                                settingsIO.Save(strLocalExportFolderAbsolutePath, isCurrentISettings, strLocalExportFilename, bLocalExportChannelDatabase, false, bLocalExportTransponders, bLocalExportBouquetsFiles);
+                        }
                     }
-
-                    foreach (DataRow drCurrentDataRow in dtLocalExportSourceData.Rows)
-                    {
-                        IService isCurrentIService = settingsIO.Factory.InitNewService($"{Convert.ToInt32(drCurrentDataRow["SID"]).ToHexString4Byte()}:{ciDefaultDVBCNamespace}:{Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte()}:{Convert.ToInt32(drCurrentDataRow["ONID"]).ToHexString4Byte()}:{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? "1" : "2")}:{Convert.ToString(drCurrentDataRow["ChannelNumber"])}:0", Convert.ToString(drCurrentDataRow["ChannelName"]) ?? string.Empty, $"p:{Convert.ToString(drCurrentDataRow["ProviderName"]) ?? string.Empty}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? ",c:00" + Convert.ToInt32(drCurrentDataRow["VPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["TPID"])) && Convert.ToString(drCurrentDataRow["TPID"]) != "0" ? ",c:02" + Convert.ToInt32(drCurrentDataRow["TPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["PCRPID"])) && Convert.ToString(drCurrentDataRow["PCRPID"]) != "0" ? ",c:03" + Convert.ToInt32(drCurrentDataRow["PCRPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? ",c:050001" : string.Empty)}{(Convert.ToBoolean(drCurrentDataRow["CAM"]) ? ",C:0000" : string.Empty)},f:08");
-                        settings.Services.Add(isCurrentIService);
-
-                        if (!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0")
-                            ifbCurrentIFileBouquetTV.BouquetItems.Add(new BouquetItemService(isCurrentIService));
-                        else
-                            ifbCurrentIFileBouquetRadio.BouquetItems.Add(new BouquetItemService(isCurrentIService));
-                    }
-
-                    if (settings.Bouquets.Cast<IFileBouquet>().Any(x => x.FileName == "userbouquet.favourites.tv"))
-                        settings.Bouquets.Remove(ifbCurrentIFileBouquetTV);
-
-                    if (settings.Bouquets.Cast<IFileBouquet>().Any(x => x.FileName == "userbouquet.favourites.radio"))
-                        settings.Bouquets.Remove(ifbCurrentIFileBouquetRadio);
-
-                    settings.Bouquets.Add(ifbCurrentIFileBouquetTV);
-                    settings.Bouquets.Add(ifbCurrentIFileBouquetRadio);
-
-                    settingsIO.Save(Path.Combine(Path.GetDirectoryName(strLocalEnigmaDBFilenameFullPath) ?? string.Empty), settings);
                 }
             }
         }
 
         /// <summary>
-        /// Global.ModifyDataRemoveChannels()
+        ///     Global.ModifyDataRemoveChannels()
         /// </summary>
         /// <param name="strLocalChannelRemovalFile"></param>
         public static void ModifyDataRemoveChannels(string? strLocalChannelRemovalFile)
@@ -872,7 +945,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.ModifyDataSortChannels()
+        ///     Global.ModifyDataSortChannels()
         /// </summary>
         /// <param name="strLocalChannelSortingFile"></param>
         public static void ModifyDataSortChannels(string? strLocalChannelSortingFile)
@@ -902,10 +975,9 @@ namespace KON.Liwest.ChannelFactory
         }
         
         /// <summary>
-        /// Global.CleanupSourceData()
+        ///     Global.CleanupSourceData()
         /// </summary>
         /// <param name="fscLocalFlagSourceCleanup"></param>
-        /// <returns></returns>
         public static DataTable CleanupSourceData(FlagSourceCleanup fscLocalFlagSourceCleanup)
         {
             lCurrentLogger.Trace("Global.CleanupSourceData()".Pastel(ConsoleColor.Cyan));
@@ -927,10 +999,9 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.CleanupSourceData_RemoveInvalidSIDs()
+        ///     Global.CleanupSourceData_RemoveInvalidSIDs()
         /// </summary>
         /// <param name="dtLocalDataTable"></param>
-        /// <returns></returns>
         public static DataTable CleanupSourceData_RemoveInvalidSIDs(DataTable dtLocalDataTable)
         {
             lCurrentLogger.Trace("Global.CleanupSourceData_RemoveInvalidSIDs()".Pastel(ConsoleColor.Cyan));
@@ -940,10 +1011,9 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.CleanupSourceData_GroupAndInvalidate()
+        ///     Global.CleanupSourceData_GroupAndInvalidate()
         /// </summary>
         /// <param name="dtLocalDataTable"></param>
-        /// <returns></returns>
         public static DataTable CleanupSourceData_GroupAndInvalidate(DataTable dtLocalDataTable)
         {
             lCurrentLogger.Trace("Global.CleanupSourceData_GroupAndInvalidate()".Pastel(ConsoleColor.Cyan));
@@ -1012,12 +1082,11 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.ConvertLiwestChannelListCSVtoDataTable()
+        ///     Global.ConvertLiwestChannelListCSVtoDataTable()
         /// </summary>
         /// <param name="sLocalStream"></param>
         /// <param name="bLocalParseHeader"></param>
         /// <param name="bLocalSkipEmptyLines"></param>
-        /// <returns></returns>
         public static DataTable ConvertLiwestChannelListCSVtoDataTable(Stream sLocalStream, bool bLocalParseHeader, bool bLocalSkipEmptyLines)
         {
             var dtCurrentDataTable = new DataTable();
@@ -1084,9 +1153,8 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Global.CreateFirewallRule()
+        ///     Global.CreateFirewallRule()
         /// </summary>
-        /// <returns></returns>
         public static bool CreateFirewallRule()
         {
             lCurrentLogger.Trace("Global.CreateFirewallRule()".Pastel(ConsoleColor.Cyan));
@@ -1171,6 +1239,20 @@ namespace KON.Liwest.ChannelFactory
             }
 
             return false;
+        }
+
+        private static string GetExcelColumnName(int columnNumber)
+        {
+            string columnName = "";
+
+            while (columnNumber > 0)
+            {
+                int modulo = (columnNumber - 1) % 26;
+                columnName = Convert.ToChar('A' + modulo) + columnName;
+                columnNumber = (columnNumber - modulo) / 26;
+            }
+
+            return columnName;
         }
     }
 }

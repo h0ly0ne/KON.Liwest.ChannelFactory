@@ -1,4 +1,7 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Data;
+using System.Text.RegularExpressions;
+
+using DataTablePrettyPrinter;
 
 namespace KON.Liwest.ChannelFactory
 {
@@ -94,6 +97,19 @@ namespace KON.Liwest.ChannelFactory
         public static string ToHexString4Byte(this int strLocalValue)
         {
             return Convert.ToString(strLocalValue, 16).PadLeft(4, '0').ToLowerInvariant();
+        }
+
+        public static DataTable SetColumnWidthToColumnCaption(this DataTable dtCurrentDataTable)
+        {
+            foreach (DataColumn dcCurrentDataColumn in dtCurrentDataTable.Columns)
+            {
+                if (dcCurrentDataColumn.ColumnName.Length > 0)
+                    dcCurrentDataColumn.SetWidth(dcCurrentDataColumn.ColumnName.Length + 2);
+                else
+                    dcCurrentDataColumn.SetWidth(3);
+            }
+
+            return dtCurrentDataTable;
         }
     }
 }

@@ -15,37 +15,7 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_0AC8733AFDEA4A088743A15BBF9C7E14"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_17357E8AAF6E4FD19E1A64D3F8526243"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_1E2F22D73E8649CE82A0DF37BD104141"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_341022A237F34067A52B7CB43D49A6C8"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_3520ABD8AD544F3EB923CDA309B84CEB"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_3A5AC135FBEE489EB5CEB516791980C6"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -63,31 +33,7 @@
         }
         "Entry"
         {
-        "MsmKey" = "8:_7A9514DDE1E047CD929E034983685278"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_848F6BBB798E4F62878EE9AA77601211"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_A237129106C04786AC5219384A9F4526"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
         "MsmKey" = "8:_EFAEE5C279AD42DEB3313E23B9060899"
-        "OwnerKey" = "8:_UNDEFINED"
-        "MsmSig" = "8:_UNDEFINED"
-        }
-        "Entry"
-        {
-        "MsmKey" = "8:_FE2AC571EC0F44D6B1E9D1552C742BB6"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -148,6 +94,14 @@
             "PrerequisitesLocation" = "2:1"
             "Url" = "8:"
             "ComponentsUrl" = "8:"
+                "Items"
+                {
+                    "{EDC2488A-8267-493A-A98E-7D9C3B36CDF3}:.NETFramework,Version=v4.7.2"
+                    {
+                    "Name" = "8:Microsoft .NET Framework 4.7.2 (x86 and x64)"
+                    "ProductCode" = "8:.NETFramework,Version=v4.7.2"
+                    }
+                }
             }
         }
     }
@@ -180,112 +134,12 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_0AC8733AFDEA4A088743A15BBF9C7E14"
-            {
-            "SourcePath" = "8:..\\resources\\userbouquet.favourites.radio"
-            "TargetName" = "8:userbouquet.favourites.radio"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_17357E8AAF6E4FD19E1A64D3F8526243"
-            {
-            "SourcePath" = "8:..\\resources\\satellites.xml"
-            "TargetName" = "8:satellites.xml"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1E2F22D73E8649CE82A0DF37BD104141"
-            {
-            "SourcePath" = "8:..\\resources\\bouquets.tv"
-            "TargetName" = "8:bouquets.tv"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_341022A237F34067A52B7CB43D49A6C8"
-            {
-            "SourcePath" = "8:..\\resources\\blacklist"
-            "TargetName" = "8:blacklist"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3520ABD8AD544F3EB923CDA309B84CEB"
             {
             "SourcePath" = "8:..\\bin\\Debug\\net10.0\\win-x64\\publish\\KON.Liwest.ChannelFactory.exe"
             "TargetName" = "8:KON.Liwest.ChannelFactory.exe"
             "Tag" = "8:"
             "Folder" = "8:_F819CC512AF14F6B8A07ADA5A89833F7"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3A5AC135FBEE489EB5CEB516791980C6"
-            {
-            "SourcePath" = "8:..\\resources\\whitelist"
-            "TargetName" = "8:whitelist"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -340,90 +194,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7A9514DDE1E047CD929E034983685278"
-            {
-            "SourcePath" = "8:..\\resources\\lamedb"
-            "TargetName" = "8:lamedb"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_848F6BBB798E4F62878EE9AA77601211"
-            {
-            "SourcePath" = "8:..\\resources\\userbouquet.favourites.tv"
-            "TargetName" = "8:userbouquet.favourites.tv"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_A237129106C04786AC5219384A9F4526"
-            {
-            "SourcePath" = "8:..\\resources\\bouquets.radio"
-            "TargetName" = "8:bouquets.radio"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EFAEE5C279AD42DEB3313E23B9060899"
             {
             "SourcePath" = "8:..\\resources\\ChannelRemoval.json"
             "TargetName" = "8:ChannelRemoval.json"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_FE2AC571EC0F44D6B1E9D1552C742BB6"
-            {
-            "SourcePath" = "8:..\\resources\\cables.xml"
-            "TargetName" = "8:cables.xml"
             "Tag" = "8:"
             "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
             "Condition" = "8:"

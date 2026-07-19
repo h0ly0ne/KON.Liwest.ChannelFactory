@@ -2,6 +2,9 @@
 {
     public static class Constants
     {
+        public const string cstrCurrentProjectName = "KON.Liwest.ChannelFactory";
+        public const string cstrCurrentProjectCopyright = "Copyright (C) 2024-2026 Oswald Oliver";
+
         public const string FIREWALL_RULE_APP_NAME = "KON.Liwest.ChannelFactory";
 
         public const float EXCEL_PIXEL_TO_WIDTH_CONSTANT = (float)(8.43 / 64);
