@@ -1,12 +1,17 @@
 ﻿using System.Data;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 using DataTablePrettyPrinter;
+using static KON.Liwest.ChannelFactory.Constants;
 
 namespace KON.Liwest.ChannelFactory
 {
-    public static class Extensions
+    public static partial class Extensions
     {
+        [GeneratedRegex(@"\d+(?:[.,]\d+)?")]
+        private static partial Regex rxFrequencyValue();
+
         public static bool? ToBoolean(this string strLocalString)
         {
             return string.IsNullOrEmpty(strLocalString) switch
@@ -29,6 +34,88 @@ namespace KON.Liwest.ChannelFactory
         public static int ToInt32(this string? strLocalString)
         {
             return int.TryParse(strLocalString, out var result) ? result : 0;
+        }
+
+        public static int? ToNullableInt32(this string? strLocalString)
+        {
+            return int.TryParse(strLocalString?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : null;
+        }
+
+        /// <summary>
+        /// Parses a frequency (e.g. "578000", "578", "578.00 MHz", "578,5") and normalizes it to kHz.
+        /// Values below ciFrequencyMHzUpperLimit are interpreted as MHz, values above ciFrequencyHzLowerLimit as Hz.
+        /// </summary>
+        public static int? ToFrequencyKHz(this string? strLocalString)
+        {
+            if (string.IsNullOrWhiteSpace(strLocalString))
+                return null;
+
+            var mCurrentMatch = rxFrequencyValue().Match(strLocalString);
+            if (!mCurrentMatch.Success || !decimal.TryParse(mCurrentMatch.Value.Replace(',', '.'), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var decCurrentFrequency) || decCurrentFrequency <= 0)
+                return null;
+
+            if (decCurrentFrequency < ciFrequencyMHzUpperLimit)
+                decCurrentFrequency *= 1000;
+            else if (decCurrentFrequency > ciFrequencyHzLowerLimit)
+                decCurrentFrequency /= 1000;
+
+            return decCurrentFrequency <= int.MaxValue ? (int)Math.Round(decCurrentFrequency, MidpointRounding.AwayFromZero) : null;
+        }
+
+        public static bool IsNullOrEmptyValue(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            var oCurrentValue = drLocalDataRow[strLocalColumnName];
+            return oCurrentValue == DBNull.Value || string.IsNullOrWhiteSpace(Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture));
+        }
+
+        public static int? GetNullableInt32(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            return drLocalDataRow[strLocalColumnName] switch
+            {
+                DBNull => null,
+                int iCurrentValue => iCurrentValue,
+                var oCurrentValue => Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture).ToNullableInt32()
+            };
+        }
+
+        public static int GetInt32OrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            return drLocalDataRow.GetNullableInt32(strLocalColumnName) ?? 0;
+        }
+
+        public static ushort GetUInt16OrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            return drLocalDataRow.GetNullableInt32(strLocalColumnName) is { } iCurrentValue and >= ushort.MinValue and <= ushort.MaxValue ? (ushort)iCurrentValue : (ushort)0;
+        }
+
+        public static uint GetUInt32OrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            return drLocalDataRow.GetNullableInt32(strLocalColumnName) is { } iCurrentValue and >= 0 ? (uint)iCurrentValue : 0;
+        }
+
+        public static bool GetBooleanOrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            return drLocalDataRow[strLocalColumnName] switch
+            {
+                DBNull => false,
+                bool bCurrentValue => bCurrentValue,
+                var oCurrentValue => (Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture) ?? string.Empty).ToBoolean() ?? false
+            };
+        }
+
+        public static string GetStringOrEmpty(this DataRow drLocalDataRow, string strLocalColumnName)
+        {
+            var oCurrentValue = drLocalDataRow[strLocalColumnName];
+            return oCurrentValue == DBNull.Value ? string.Empty : Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture) ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Same as CopyToDataTable(), but returns an empty clone of the template table instead of throwing on an empty sequence.
+        /// </summary>
+        public static DataTable CopyToDataTableOrEmpty(this IEnumerable<DataRow> iedrLocalDataRows, DataTable dtLocalTemplateDataTable)
+        {
+            var ldrCurrentDataRows = iedrLocalDataRows.ToList();
+            return ldrCurrentDataRows.Count > 0 ? ldrCurrentDataRows.CopyToDataTable() : dtLocalTemplateDataTable.Clone();
         }
 
         public static string RepairEncoding(this string? strLocalString)
@@ -59,12 +146,12 @@ namespace KON.Liwest.ChannelFactory
 
         public static string? CheckVariationForPrimary(this string? strLocalString)
         {
-            if (Global.svdChannelVariationDictionary != null)
+            if (Global.svdChannelVariationDictionary == null || strLocalString == null) 
+                return strLocalString;
+            
+            foreach (var kvpCurrentKeyValuePair in Global.svdChannelVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString, StringComparer.OrdinalIgnoreCase)))
             {
-                foreach (var kvpCurrentKeyValuePair in Global.svdChannelVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString)))
-                {
-                    return kvpCurrentKeyValuePair.Key;
-                }
+                return kvpCurrentKeyValuePair.Key;
             }
 
             return strLocalString;

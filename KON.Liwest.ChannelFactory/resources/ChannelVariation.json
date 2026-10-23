@@ -75,10 +75,6 @@
     "LL TV",
     "LLTV"
   ],
-  "HITRADIO Ö3 TV": [
-    "Hitradio Ö3",
-    "Hitradio Ö3 TV"
-  ],
   "DELUXE MUSIC": [
     "Deluxe Music",
     "DELUXE MUSIC"
@@ -217,11 +213,13 @@
   ],
   "SKY SPORT4 HD ÖSTERREICH": [
     "Sky Sport Austria 4 HD",
-    "Sky Sport Aut 4 HD"
+    "Sky Sport Aut 4 HD",
+    "SKY SPORT4 HD ÖSTERREICH"
   ],
   "SKY SPORT5 HD ÖSTERREICH": [
     "Sky Sport Austria 5 HD",
-    "Sky Sport Aut 5 HD"
+    "Sky Sport Aut 5 HD",
+    "SKY SPORT5 HD ÖSTERREICH"
   ],
   "SKY SPORT BUNDESLIGA9 HD": [
     "Sky Sport Bundesliga 9 HD",
@@ -267,7 +265,8 @@
   ],
   "SKY SPORT7 HD ÖSTERREICH": [
     "Sky Sport Austria 7 HD",
-    "Sky Sport Aut 7 HD"
+    "Sky Sport Aut 7 HD",
+    "SKY SPORT7 HD ÖSTERREICH"
   ],
   "SKY CINEMA PREMIERE": [
     "Sky Cinema Premiere",
@@ -284,10 +283,6 @@
   "Ö2 OÖ": [
     "Radio OÖ",
     "OE2 O"
-  ],
-  "Ö3": [
-    "Ö3",
-    "OE3"
   ],
   "Ö2 W": [
     "Radio Wien",
@@ -440,11 +435,8 @@
   ],
   "DLF": [
     "Deutschlandfunk",
-    "DLF"
-  ],
-  "DRADIO WISSEN": [
-    "DRadio Wissen",
-    "DRadioWissen"
+    "DLF",
+    "Dlf"
   ],
   "TRT RADYO HABER": [
     "Radyo 4",
@@ -520,10 +512,11 @@
     "Classic Rock",
     "Classic Rock Stingray"
   ],
-  "ROCK'N'ROLL": [
+  "ROCK 'N' ROLL": [
     "Rock n Roll",
     "Rock`n` Roll",
-    "ROCK'N'ROLL"
+    "ROCK'N'ROLL",
+    "Rock 'n' Roll"
   ],
   "THE ALTERNATIVE": [
     "The Alternative (Germany)",
@@ -593,7 +586,7 @@
     "BR24 Live",
     "BR24live"
   ],
-  "PULS4 HD": [
+  "PULS4 HD ÖSTERREICH": [
     "PULS 4 HD",
     "PULS 4 HD Austria"
   ],
@@ -639,10 +632,14 @@
   ],
   "AXN BLACK": [
     "AXN HD",
-    "AXN Black"
+    "AXN Black",
+    "Sky AXN Black"
   ],
   "BN": [
     "BN"
+  ],
+  "BN HD": [
+    "BN HD"
   ],
   "BN2": [
     "BN 2"
@@ -658,11 +655,12 @@
     "Crime+ Investigation",
     "Crime+Investigation"
   ],
-  "DUCK TV": [
+  "DUCKTV": [
     "duckTV",
     "duck TV"
   ],
-  "DUCK TV HD": [
+  "DUCKTV HD": [
+    "duckTV HD",
     "duck TV HD"
   ],
   "DUNA1 HD": [
@@ -674,7 +672,8 @@
     "Extrem Sports"
   ],
   "EXTREME SPORTS HD": [
-    "Extrem Sports HD"
+    "Extrem Sports HD",
+    "Extreme Sports HD"
   ],
   "HAYAT FOLK": [
     "Hayat Folk",
@@ -788,7 +787,8 @@
     "National Geographic HD",
     "NatGeo HD",
     "NatGeo",
-    "Discovery HD"
+    "Discovery HD",
+    "Sky NatGeo HD"
   ],
   "DISCOVERY CHANNEL HD": [
     "Discovery Channel HD"
@@ -839,7 +839,8 @@
     "atv avrupa HD"
   ],
   "AXN WHITE": [
-    "AXN White"
+    "AXN White",
+    "Sky AXN White"
   ],
   "BAYERN1": [
     "Bayern 1",
@@ -885,7 +886,8 @@
     "Bremen Eins"
   ],
   "BREMEN NEXT": [
-    "Bremen Next"
+    "Bremen Next",
+    "Bremen NEXT"
   ],
   "BREMEN VIER": [
     "Bremen Vier"
@@ -1009,7 +1011,8 @@
     "Indie Classics"
   ],
   "INFORADIO": [
-    "InfoRadio"
+    "InfoRadio",
+    "Inforadio"
   ],
   "JUKEBOX": [
     "Jukebox"
@@ -1043,9 +1046,6 @@
   ],
   "MDR JUMP": [
     "MDR Jump"
-  ],
-  "MDR KLASSIK": [
-    "MDR Klassik"
   ],
   "MDR KULTUR": [
     "MDR Kultur"
@@ -1139,7 +1139,8 @@
     "Radio Beograd"
   ],
   "RADIO FRO": [
-    "Radio FRO"
+    "Radio FRO",
+    "Radio Fro"
   ],
   "RADIO HOREB": [
     "Radio Horeb"
@@ -1273,7 +1274,8 @@
     "Sky Sport 8 HD"
   ],
   "SKY SPORT9 HD": [
-    "Sky Sport 9 HD"
+    "Sky Sport 9 HD",
+    "SKY SPORT9 HD"
   ],
   "SKY SPORT F1 HD": [
     "Sky Sport F1 HD"
@@ -1309,7 +1311,8 @@
     "SRF Info HD"
   ],
   "SUNSHINE LIVE": [
-    "Sunshine live"
+    "Sunshine live",
+    "sunshine live"
   ],
   "SWR AKTUELL": [
     "SWR Aktuell"
@@ -1317,12 +1320,15 @@
   "SWR HD BW": [
     "SWR BW HD"
   ],
-  "SYFY HD": [
+  "SKY SCI-FI HD": [
+    "Syfy",
     "Syfy HD",
-    "Sky Sci-Fi"
+    "Sky Sci-Fi",
+    "Sky Sci-Fi HD"
   ],
   "TAGESSCHAU24 HD": [
-    "Tagesschau24 HD"
+    "Tagesschau24 HD",
+    "tagesschau24 HD"
   ],
   "TELE5 HD": [
     "TELE 5 HD",
@@ -1355,7 +1361,12 @@
     "TGCOM24"
   ],
   "TLC ÖSTERREICH": [
-    "TLC Austria"
+    "TLC Austria",
+    "TLC"
+  ],
+  "TLC HD ÖSTERREICH": [
+    "TLC Austria HD",
+    "TLC HD"
   ],
   "TOTAL HITS AUSTRIA": [
     "Total Hits Austria"
@@ -1366,14 +1377,23 @@
   "TRT1": [
     "TRT 1"
   ],
+  "TRT1 HD": [
+    "TRT 1 HD"
+  ],
   "TV8 INT": [
     "TV 8 INT"
+  ],
+  "TV8 INT HD": [
+    "TV 8 INT HD"
   ],
   "TV REGIONAL": [
     "TV Regional"
   ],
   "VESTI": [
     "Vesti"
+  ],
+  "VESTI HD": [
+    "Vesti HD"
   ],
   "WARNER TV SERIE HD": [
     "Warner TV Serie HD"
@@ -1402,7 +1422,8 @@
     "HT 1"
   ],
   "STIMMUNGSGARTEN TV": [
-    "Stimmungsgarten"
+    "Stimmungsgarten",
+    "Stimmungs- garten TV"
   ],
   "CGTN HD": [
     "CGTN HD"
@@ -1411,27 +1432,97 @@
     "CGTN"
   ],
   "DLF KULTUR": [
-    "Dlf Kultur"
+    "Dlf Kultur",
+    "DKULTUR"
   ],
   "DLF NOVA": [
-    "Dlf Nova"
+    "Dlf Nova",
+    "DRadio Wissen",
+    "DRadioWissen"
   ],
-  "OE24 RADIO": [
-    "oe24 Radio"
+  "OÖ24 RADIO": [
+    "oe24 Radio",
+    "ooe24 Radio"
   ],
-  "88.6": [
-    "* 88.6 *"
+  "RADIO 88.6": [
+    "88.6",
+    "* 88.6 *",
+    "Radio 88.6"
   ],
-  "MUSEUMRADIO": [
-    "Museumradio"
-  ],
-  "SKY AXN WHITE": [
-    "Sky AXN White"
-  ],
-  "SKY AXN BLACK": [
-    "Sky AXN Black"
+  "MUSEUMSRADIO": [
+    "Museumradio",
+    "Museumsradio"
   ],
   "SERVICE": [
     "Service 61058"
+  ],
+  "CNN TÜRK HD": [
+    "CNN TÜRK HD"
+  ],
+  "EURO D HD": [
+    "EURO D HD"
+  ],
+  "EUROSTAR HD": [
+    "EUROSTAR HD"
+  ],
+  "HABERTURK HD": [
+    "HABERTURK HD"
+  ],
+  "SHOW TURK HD": [
+    "SHOW TURK HD"
+  ],
+  "TRT COCUK HD": [
+    "TRT COCUK HD"
+  ],
+  "TRT HABER HD": [
+    "TRT HABER HD"
+  ],
+  "TRT MUZIK HD": [
+    "TRT MUZIK HD"
+  ],
+  "TRT SPOR HD": [
+    "TRT SPOR HD"
+  ],
+  "TRT TURK HD": [
+    "TRT TURK HD"
+  ],
+  "TV2 HD": [
+    "TV2 HD"
+  ],
+  "HITRADIO Ö3": [
+    "Hitradio Ö3",
+    "Hitradio OE3",
+    "Ö3"
+  ],
+  "HITRADIO Ö3 TV HD": [
+    "Hitradio Ö3 TV",
+    "Hitradio OE3 HD"
+  ],
+  "OÖ NOW": [
+    "OÖNow"
+  ],
+  "DORCEL TV HD": [
+    "Dorcel TV HD"
+  ],
+  "FBTV": [
+    "FB TV"
+  ],
+  "BEYAZ TV HD": [
+    "BEYAZ TV HD"
+  ],
+  "MTV HD": [
+    "MTV HD"
+  ],
+  "DM SAT": [
+    "DM SAT"
+  ],
+  "RTVI": [
+    "RTVi"
+  ],
+  "ARTE HD": [
+    "arte HD"
+  ],
+  "HISTORY HD": [
+    "History HD"
   ]
 }

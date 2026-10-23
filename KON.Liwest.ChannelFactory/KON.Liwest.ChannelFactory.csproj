@@ -11,7 +11,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>none</DebugType>
+    <DebugType>full</DebugType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>none</DebugType>
+    <DebugType>full</DebugType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -39,24 +39,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <COMReference Include="NetFwTypeLib">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>58fbcf7c-e7a9-467c-80b3-fc65e8fcca08</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="DataTablePrettyPrinter" Version="0.2.0" />
-    <PackageReference Include="NanoXLSX" Version="3.1.0" />
+    <PackageReference Include="NanoXLSX" Version="3.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="NLog" Version="6.1.4" />
+    <PackageReference Include="NLog" Version="6.2.2" />
     <PackageReference Include="Pastel" Version="8.0.0" />
   </ItemGroup>
 
@@ -76,17 +64,13 @@
     <Folder Include="examples\" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="resources\ChannelRemoval.json.old">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-    <Target Name="PostBuildPublish" AfterTargets="PostBuildEvent" Condition="'$(PUBLISHING)' == ''">
+	<!--
+	<Target Name="PostBuildPublish" AfterTargets="PostBuildEvent" Condition="'$(PUBLISHING)' == ''">
         <Message Importance="high" Text="====================================" />
         <Message Importance="high" Text="Running publishing as PostBuildEvent" />
         <Message Importance="high" Text="====================================" />
         <Exec Command="if $(ConfigurationName) == Debug ( $(ProjectDir)Publish.Debug.bat ) else ( $(ProjectDir)Publish.Release.bat )" IgnoreExitCode="false" />
     </Target>
+	-->
 
 </Project>

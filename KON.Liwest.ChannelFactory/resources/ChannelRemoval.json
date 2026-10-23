@@ -1,187 +1,63 @@
 [
   {
-    "ChannelName": "ATV AVRUPA HD",
-    "ChannelFrequency": "786000"
+    "ChannelName": "SKY SPORT4 HD ÖSTERREICH",
+    "ChannelFrequency": "538000"
   },
   {
-    "ChannelName": "AUTO MOTOR SPORT CHANNEL",
-    "ChannelFrequency": "762000"
+    "ChannelName": "SKY SPORT10 HD",
+    "ChannelFrequency": "538000"
   },
   {
-    "ChannelName": "AXN BLACK",
-    "ChannelFrequency": "658000"
+    "ChannelName": "SKY SPORT BUNDESLIGA10 HD",
+    "ChannelFrequency": "538000"
   },
   {
-    "ChannelName": "AXN WHITE",
-    "ChannelFrequency": "778000"
+    "ChannelName": "SKY SPORT BUNDESLIGA9 HD",
+    "ChannelFrequency": "538000"
   },
   {
-    "ChannelName": "BEYAZ TV HD",
-    "ChannelFrequency": "714000"
+    "ChannelName": "SKY SPORT9 HD",
+    "ChannelFrequency": "538000"
   },
   {
-    "ChannelName": "BN",
-    "ChannelFrequency": "714000"
+    "ChannelName": "SKY SPORT5 HD ÖSTERREICH",
+    "ChannelFrequency": "538000"
   },
   {
-    "ChannelName": "BN MUSIC HD",
-    "ChannelFrequency": "714000"
+    "ChannelName": "SKY SPORT BUNDESLIGA8 HD",
+    "ChannelFrequency": "546000"
   },
   {
-    "ChannelName": "CNN TÜRK",
-    "ChannelFrequency": "786000"
+    "ChannelName": "SKY SPORT8 HD",
+    "ChannelFrequency": "546000"
   },
   {
-    "ChannelName": "COMEDY C. HD ÖSTERREICH",
-    "ChannelFrequency": "786000"
-  },
-  {
-    "ChannelName": "CRIME + INVESTIGATION HD",
-    "ChannelFrequency": "778000"
-  },
-  {
-    "ChannelName": "DELUXE MUSIC HD",
-    "ChannelFrequency": "530000"
-  },
-  {
-    "ChannelName": "DISNEY CHANNEL HD",
-    "ChannelFrequency": "530000"
-  },
-  {
-    "ChannelName": "DM SAT",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "DMAX HD ÖSTERREICH",
-    "ChannelFrequency": "786000"
-  },
-  {
-    "ChannelName": "DORCEL TV HD",
-    "ChannelFrequency": "706000"
-  },
-  {
-    "ChannelName": "DUCK TV HD",
-    "ChannelFrequency": "754000"
-  },
-  {
-    "ChannelName": "DUSK",
-    "ChannelFrequency": "754000"
-  },
-  {
-    "ChannelName": "EURO D",
-    "ChannelFrequency": "786000"
-  },
-  {
-    "ChannelName": "EUROSPORT1 HD",
-    "ChannelFrequency": "610000"
-  },
-  {
-    "ChannelName": "EUROSPORT2 HD",
-    "ChannelFrequency": "602000"
-  },
-  {
-    "ChannelName": "EUROSTAR",
-    "ChannelFrequency": "786000"
-  },
-  {
-    "ChannelName": "EXTREME SPORTS HD",
-    "ChannelFrequency": "698000"
-  },
-  {
-    "ChannelName": "FB TV",
-    "ChannelFrequency": "714000"
-  },
-  {
-    "ChannelName": "FIX AND FOXI",
-    "ChannelFrequency": "778000"
-  },
-  {
-    "ChannelName": "GEO HD",
-    "ChannelFrequency": "586000"
-  },
-  {
-    "ChannelName": "GUTE LAUNE TV",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "HABERTURK",
-    "ChannelFrequency": "602000"
-  },
-  {
-    "ChannelName": "HAYAT FOLK",
-    "ChannelFrequency": "762000"
-  },
-  {
-    "ChannelName": "HAYAT MUSIC",
-    "ChannelFrequency": "762000"
-  },
-  {
-    "ChannelName": "HAYAT TV",
-    "ChannelFrequency": "762000"
-  },
-  {
-    "ChannelName": "HAYAT2",
-    "ChannelFrequency": "762000"
-  },
-  {
-    "ChannelName": "HUSTLER TV",
-    "ChannelFrequency": "578000"
+    "ChannelName": "SKY SPORT6 HD ÖSTERREICH",
+    "ChannelFrequency": "546000"
   },
   {
     "ChannelName": "INFOKANAL ASAK",
     "ChannelFrequency": "554000"
   },
   {
-    "ChannelName": "INFOKANAL ASAK",
-    "ChannelFrequency": "618000"
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "554000"
   },
   {
-    "ChannelName": "KABEL1 HD ÖSTERREICH",
-    "ChannelFrequency": "658000"
+    "ChannelName": "SKY CINEMA ACTION",
+    "ChannelFrequency": "562000"
   },
   {
-    "ChannelName": "KANAL7 HD AVRUPA",
-    "ChannelFrequency": "730000"
-  },
-  {
-    "ChannelName": "KINOWELT TV",
-    "ChannelFrequency": "786000"
+    "ChannelName": "SKY CINEMA PREMIERE",
+    "ChannelFrequency": "562000"
   },
   {
     "ChannelName": "MARCO POLO TV",
     "ChannelFrequency": "562000"
   },
   {
-    "ChannelName": "MOTORVISION TV",
-    "ChannelFrequency": "714000"
-  },
-  {
-    "ChannelName": "MTV HD",
-    "ChannelFrequency": "714000"
-  },
-  {
-    "ChannelName": "NATGEO HD",
-    "ChannelFrequency": "778000"
-  },
-  {
-    "ChannelName": "NATGEO WILD HD",
-    "ChannelFrequency": "778000"
-  },
-  {
-    "ChannelName": "NAUTICAL CHANNEL HD",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "NICKELODEON HD",
-    "ChannelFrequency": "530000"
-  },
-  {
-    "ChannelName": "NITRO HD ÖSTERREICH",
-    "ChannelFrequency": "666000"
-  },
-  {
-    "ChannelName": "NTV HD ÖSTERREICH",
-    "ChannelFrequency": "666000"
+    "ChannelName": "HUSTLER TV",
+    "ChannelFrequency": "578000"
   },
   {
     "ChannelName": "ORF2 HD NÖ",
@@ -192,44 +68,76 @@
     "ChannelFrequency": "578000"
   },
   {
-    "ChannelName": "PENTHOUSE HD",
-    "ChannelFrequency": "698000"
+    "ChannelName": "GEO HD",
+    "ChannelFrequency": "586000"
   },
   {
-    "ChannelName": "PINK EXTRA",
-    "ChannelFrequency": "722000"
+    "ChannelName": "RTL CRIME HD",
+    "ChannelFrequency": "586000"
+  },
+  {
+    "ChannelName": "REDLIGHT HD",
+    "ChannelFrequency": "586000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "586000"
+  },
+  {
+    "ChannelName": "SKY CINEMA CLASSICS HD",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "ChannelName": "SKY SPORT BUNDESLIGA3 HD",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "ChannelName": "SKY SPORT3 HD",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "ChannelName": "SKY SPORT7 HD ÖSTERREICH",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "ChannelName": "SKY SPORT BUNDESLIGA7 HD",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "ChannelName": "SKY SPORT7 HD",
+    "ChannelFrequency": "594000"
   },
   {
     "ChannelName": "PINK FILM",
     "ChannelFrequency": "602000"
   },
   {
-    "ChannelName": "PINK FOLK 1",
-    "ChannelFrequency": "610000"
+    "ChannelName": "EUROSPORT2 HD",
+    "ChannelFrequency": "602000"
   },
   {
-    "ChannelName": "PINK FOLK 2",
-    "ChannelFrequency": "610000"
+    "ChannelName": "TRT MUZIK HD",
+    "ChannelFrequency": "602000"
   },
   {
-    "ChannelName": "PINK HITS 2",
-    "ChannelFrequency": "610000"
+    "ChannelName": "HABERTURK HD",
+    "ChannelFrequency": "602000"
+  },
+  {
+    "ChannelName": "VESTI",
+    "ChannelFrequency": "602000"
+  },
+  {
+    "ChannelName": "VESTI HD",
+    "ChannelFrequency": "602000"
   },
   {
     "ChannelName": "PINK KIDS",
     "ChannelFrequency": "602000"
   },
   {
-    "ChannelName": "PINK KONCERT",
+    "ChannelName": "EUROSPORT1 HD",
     "ChannelFrequency": "610000"
-  },
-  {
-    "ChannelName": "PINK MUSIC",
-    "ChannelFrequency": "722000"
-  },
-  {
-    "ChannelName": "PINK PLUS",
-    "ChannelFrequency": "722000"
   },
   {
     "ChannelName": "PINK REALITY",
@@ -240,119 +148,67 @@
     "ChannelFrequency": "610000"
   },
   {
-    "ChannelName": "PRIVATE TV HD",
-    "ChannelFrequency": "754000"
-  },
-  {
-    "ChannelName": "PROSIEBEN HD ÖSTERREICH",
-    "ChannelFrequency": "658000"
-  },
-  {
-    "ChannelName": "PULS4 HD",
-    "ChannelFrequency": "658000"
-  },
-  {
-    "ChannelName": "REDLIGHT HD",
-    "ChannelFrequency": "586000"
-  },
-  {
-    "ChannelName": "ROMANCE TV",
-    "ChannelFrequency": "778000"
-  },
-  {
-    "ChannelName": "RTL CRIME HD",
-    "ChannelFrequency": "586000"
-  },
-  {
-    "ChannelName": "RTL HD ÖSTERREICH",
-    "ChannelFrequency": "530000"
-  },
-  {
-    "ChannelName": "RTL2 HD ÖSTERREICH",
-    "ChannelFrequency": "530000"
-  },
-  {
-    "ChannelName": "RTLUP HD ÖSTERREICH",
-    "ChannelFrequency": "666000"
-  },
-  {
-    "ChannelName": "RTSH1 HD",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "RTVI",
-    "ChannelFrequency": "786000"
-  },
-  {
-    "ChannelName": "SAT1 HD ÖSTERREICH",
-    "ChannelFrequency": "658000"
-  },
-  {
-    "ChannelName": "SERVICE",
+    "ChannelName": "PINK HITS 2",
     "ChannelFrequency": "610000"
   },
   {
-    "ChannelName": "SHOW TURK",
-    "ChannelFrequency": "786000"
+    "ChannelName": "PINK KONCERT",
+    "ChannelFrequency": "610000"
   },
   {
-    "ChannelName": "SKY CINEMA ACTION",
-    "ChannelFrequency": "562000"
+    "ChannelName": "PINK FOLK 1",
+    "ChannelFrequency": "610000"
   },
   {
-    "ChannelName": "SKY CINEMA ACTION HD",
-    "ChannelFrequency": "522000"
+    "ChannelName": "PINK FOLK 2",
+    "ChannelFrequency": "610000"
   },
   {
-    "ChannelName": "SKY CINEMA ACTION HD",
-    "ChannelFrequency": "650000"
+    "ChannelName": "TELE5 HD",
+    "ChannelFrequency": "618000"
   },
   {
-    "ChannelName": "SKY CINEMA BLOCKBUSTER HD",
-    "ChannelFrequency": "634000"
-  },
-  {
-    "ChannelName": "SKY CINEMA CLASSICS HD",
-    "ChannelFrequency": "594000"
+    "ChannelName": "INFOKANAL ASAK",
+    "ChannelFrequency": "618000"
   },
   {
     "ChannelName": "SKY CINEMA FEELGOOD HD",
     "ChannelFrequency": "626000"
   },
   {
-    "ChannelName": "SKY CINEMA PREMIERE",
-    "ChannelFrequency": "562000"
-  },
-  {
-    "ChannelName": "SKY CINEMA PREMIERE HD",
-    "ChannelFrequency": "690000"
-  },
-  {
-    "ChannelName": "SKY SHOWCASE HD",
-    "ChannelFrequency": "538000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA1 HD",
-    "ChannelFrequency": "594000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA1 HD",
-    "ChannelFrequency": "690000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA10 HD",
-    "ChannelFrequency": "538000"
+    "ChannelName": "SKY SPORT MIX HD",
+    "ChannelFrequency": "626000"
   },
   {
     "ChannelName": "SKY SPORT BUNDESLIGA2 HD",
     "ChannelFrequency": "626000"
   },
   {
-    "ChannelName": "SKY SPORT BUNDESLIGA3 HD",
-    "ChannelFrequency": "594000"
+    "ChannelName": "SKY SPORT2 HD",
+    "ChannelFrequency": "626000"
   },
   {
-    "ChannelName": "SKY SPORT BUNDESLIGA4 HD",
+    "ChannelName": "SKY SPORT3 HD ÖSTERREICH",
+    "ChannelFrequency": "626000"
+  },
+  {
+    "ChannelName": "SKY CINEMA BLOCKBUSTER HD",
+    "ChannelFrequency": "634000"
+  },
+  {
+    "ChannelName": "SKY SPORT TENNIS HD",
+    "ChannelFrequency": "634000"
+  },
+  {
+    "ChannelName": "SKY SPORT GOLF HD",
+    "ChannelFrequency": "634000"
+  },
+  {
+    "ChannelName": "SKY SPORT2 HD ÖSTERREICH",
+    "ChannelFrequency": "634000"
+  },
+  {
+    "ChannelName": "WARNER TV FILM HD",
     "ChannelFrequency": "650000"
   },
   {
@@ -360,128 +216,212 @@
     "ChannelFrequency": "650000"
   },
   {
-    "ChannelName": "SKY SPORT BUNDESLIGA6 HD",
-    "ChannelFrequency": "522000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA6 HD",
-    "ChannelFrequency": "690000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA7 HD",
-    "ChannelFrequency": "522000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA7 HD",
-    "ChannelFrequency": "594000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA8 HD",
-    "ChannelFrequency": "546000"
-  },
-  {
-    "ChannelName": "SKY SPORT BUNDESLIGA9 HD",
-    "ChannelFrequency": "538000"
-  },
-  {
-    "ChannelName": "SKY SPORT F1 HD",
-    "ChannelFrequency": "690000"
-  },
-  {
-    "ChannelName": "SKY SPORT GOLF HD",
-    "ChannelFrequency": "634000"
-  },
-  {
-    "ChannelName": "SKY SPORT MIX HD",
-    "ChannelFrequency": "626000"
-  },
-  {
-    "ChannelName": "SKY SPORT PREMIER LEAGUE HD",
+    "ChannelName": "SKY SPORT5 HD",
     "ChannelFrequency": "650000"
-  },
-  {
-    "ChannelName": "SKY SPORT TENNIS HD",
-    "ChannelFrequency": "634000"
-  },
-  {
-    "ChannelName": "SKY SPORT1 HD",
-    "ChannelFrequency": "690000"
   },
   {
     "ChannelName": "SKY SPORT1 HD ÖSTERREICH",
     "ChannelFrequency": "650000"
   },
   {
-    "ChannelName": "SKY SPORT2 HD",
-    "ChannelFrequency": "626000"
+    "ChannelName": "SKY SPORT PREMIER LEAGUE HD",
+    "ChannelFrequency": "650000"
   },
   {
-    "ChannelName": "SKY SPORT2 HD ÖSTERREICH",
-    "ChannelFrequency": "634000"
-  },
-  {
-    "ChannelName": "SKY SPORT3 HD",
-    "ChannelFrequency": "594000"
-  },
-  {
-    "ChannelName": "SKY SPORT3 HD ÖSTERREICH",
-    "ChannelFrequency": "626000"
+    "ChannelName": "SKY SPORT BUNDESLIGA4 HD",
+    "ChannelFrequency": "650000"
   },
   {
     "ChannelName": "SKY SPORT4 HD",
     "ChannelFrequency": "650000"
   },
   {
-    "ChannelName": "SKY SPORT5 HD",
+    "ChannelName": "SKY CINEMA ACTION HD",
     "ChannelFrequency": "650000"
   },
   {
-    "ChannelName": "SKY SPORT6 HD",
-    "ChannelFrequency": "690000"
+    "ChannelName": "KABEL1 HD ÖSTERREICH",
+    "ChannelFrequency": "658000"
   },
   {
-    "ChannelName": "SKY SPORT6 HD ÖSTERREICH",
-    "ChannelFrequency": "546000"
+    "ChannelName": "PROSIEBEN HD ÖSTERREICH",
+    "ChannelFrequency": "658000"
   },
   {
-    "ChannelName": "SKY SPORT8 HD",
-    "ChannelFrequency": "546000"
+    "ChannelName": "SAT1 HD ÖSTERREICH",
+    "ChannelFrequency": "658000"
   },
   {
-    "ChannelName": "SKY SPORT8 HD ÖSTERREICH",
-    "ChannelFrequency": "690000"
+    "ChannelName": "PULS4 HD ÖSTERREICH",
+    "ChannelFrequency": "658000"
   },
   {
-    "ChannelName": "SPORTDIGITAL HD",
-    "ChannelFrequency": "770000"
+    "ChannelName": "AXN BLACK",
+    "ChannelFrequency": "658000"
+  },
+  {
+    "ChannelName": "NTV HD ÖSTERREICH",
+    "ChannelFrequency": "666000"
   },
   {
     "ChannelName": "SUPER RTL HD ÖSTERREICH",
     "ChannelFrequency": "666000"
   },
   {
-    "ChannelName": "TELE5 HD",
-    "ChannelFrequency": "618000"
+    "ChannelName": "RTLUP HD ÖSTERREICH",
+    "ChannelFrequency": "666000"
+  },
+  {
+    "ChannelName": "NITRO HD ÖSTERREICH",
+    "ChannelFrequency": "666000"
+  },
+  {
+    "ChannelName": "SKY CINEMA PREMIERE HD",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "SKY SPORT F1 HD",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "SKY SPORT BUNDESLIGA1 HD",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "SKY SPORT BUNDESLIGA1 HD",
+    "ChannelFrequency": "594000"
+  },
+  {
+    "ChannelName": "SKY SPORT1 HD",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "SKY SPORT8 HD ÖSTERREICH",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "SKY SPORT BUNDESLIGA6 HD",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "SKY SPORT6 HD",
+    "ChannelFrequency": "690000"
+  },
+  {
+    "ChannelName": "EXTREME SPORTS HD",
+    "ChannelFrequency": "698000"
+  },
+  {
+    "ChannelName": "EXTREME SPORTS CHANNEL",
+    "ChannelFrequency": "698000"
+  },
+  {
+    "ChannelName": "PENTHOUSE HD",
+    "ChannelFrequency": "698000"
+  },
+  {
+    "ChannelName": "DORCEL TV HD",
+    "ChannelFrequency": "706000"
+  },
+  {
+    "ChannelName": "TLC HD ÖSTERREICH",
+    "ChannelFrequency": "706000"
+  },
+  {
+    "ChannelName": "BN MUSIC HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "FBTV",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "TV8 INT HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "TRT1 HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "TV2 HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "BEYAZ TV HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "MOTORVISION TV",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "BN",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "BN HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "MTV HD",
+    "ChannelFrequency": "714000"
+  },
+  {
+    "ChannelName": "PINK PLUS",
+    "ChannelFrequency": "722000"
+  },
+  {
+    "ChannelName": "PINK EXTRA",
+    "ChannelFrequency": "722000"
+  },
+  {
+    "ChannelName": "PINK MUSIC",
+    "ChannelFrequency": "722000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "722000"
+  },
+  {
+    "ChannelName": "KANAL7 HD AVRUPA",
+    "ChannelFrequency": "730000"
   },
   {
     "ChannelName": "TESTKANAL",
     "ChannelFrequency": "730000"
   },
   {
-    "ChannelName": "TESTKANAL",
-    "ChannelFrequency": "586000"
+    "ChannelName": "TRT TURK HD",
+    "ChannelFrequency": "746000"
   },
   {
-    "ChannelName": "TESTKANAL",
-    "ChannelFrequency": "554000"
+    "ChannelName": "GUTE LAUNE TV",
+    "ChannelFrequency": "746000"
   },
   {
-    "ChannelName": "TESTKANAL",
-    "ChannelFrequency": "570000"
+    "ChannelName": "TRT HABER HD",
+    "ChannelFrequency": "746000"
   },
   {
-    "ChannelName": "TESTKANAL",
-    "ChannelFrequency": "722000"
+    "ChannelName": "TRT SPOR HD",
+    "ChannelFrequency": "746000"
+  },
+  {
+    "ChannelName": "TRT COCUK HD",
+    "ChannelFrequency": "746000"
+  },
+  {
+    "ChannelName": "DM SAT",
+    "ChannelFrequency": "746000"
+  },
+  {
+    "ChannelName": "RTSH1 HD",
+    "ChannelFrequency": "746000"
+  },
+  {
+    "ChannelName": "NAUTICAL CHANNEL HD",
+    "ChannelFrequency": "746000"
   },
   {
     "ChannelName": "TESTKANAL",
@@ -493,78 +433,210 @@
   },
   {
     "ChannelName": "TESTKANAL",
-    "ChannelFrequency": "762000"
+    "ChannelFrequency": "754000"
   },
   {
     "ChannelName": "TESTKANAL",
-    "ChannelFrequency": "786000"
+    "ChannelFrequency": "754000"
   },
   {
-    "ChannelName": "TEVE2",
-    "ChannelFrequency": "714000"
+    "ChannelName": "DUSK",
+    "ChannelFrequency": "754000"
   },
   {
-    "ChannelName": "TLC HD",
-    "ChannelFrequency": "706000"
+    "ChannelName": "PRIVATE TV HD",
+    "ChannelFrequency": "754000"
   },
   {
-    "ChannelName": "TNT RUSSIA",
-    "ChannelFrequency": "786000"
-  },
-  {
-    "ChannelName": "TRT COCUK",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "TRT HABER",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "TRT MUZIK",
-    "ChannelFrequency": "602000"
-  },
-  {
-    "ChannelName": "TRT SPOR",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "TRT TURK",
-    "ChannelFrequency": "746000"
-  },
-  {
-    "ChannelName": "TRT1",
-    "ChannelFrequency": "714000"
+    "ChannelName": "HAYAT2",
+    "ChannelFrequency": "762000"
   },
   {
     "ChannelName": "TV POLONIA",
     "ChannelFrequency": "762000"
   },
   {
-    "ChannelName": "TV1 HD SALZKAMMERGUT",
-    "ChannelFrequency": "554000"
+    "ChannelName": "HAYAT TV",
+    "ChannelFrequency": "762000"
   },
   {
-    "ChannelName": "TV8 INT",
-    "ChannelFrequency": "714000"
+    "ChannelName": "HAYAT FOLK",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "HAYAT MUSIC",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "AUTO MOTOR SPORT CHANNEL",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "762000"
+  },
+  {
+    "ChannelName": "ROMANCE TV",
+    "ChannelFrequency": "778000"
   },
   {
     "ChannelName": "UNIVERSAL TV HD",
     "ChannelFrequency": "778000"
   },
   {
-    "ChannelName": "VESTI",
-    "ChannelFrequency": "602000"
+    "ChannelName": "NATGEO HD",
+    "ChannelFrequency": "778000"
+  },
+  {
+    "ChannelName": "AXN WHITE",
+    "ChannelFrequency": "778000"
+  },
+  {
+    "ChannelName": "CRIME + INVESTIGATION HD",
+    "ChannelFrequency": "778000"
+  },
+  {
+    "ChannelName": "FIX AND FOXI",
+    "ChannelFrequency": "778000"
+  },
+  {
+    "ChannelName": "NATGEO WILD HD",
+    "ChannelFrequency": "778000"
+  },
+  {
+    "ChannelName": "NATGEO HD",
+    "ChannelFrequency": "778000"
+  },
+  {
+    "ChannelName": "CNN TÜRK HD",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "EURO D HD",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "ATV AVRUPA HD",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "EUROSTAR HD",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "SHOW TURK HD",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "RTVI",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "TNT RUSSIA",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "KINOWELT TV",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "DMAX HD ÖSTERREICH",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "COMEDY C. HD ÖSTERREICH",
+    "ChannelFrequency": "786000"
+  },
+  {
+    "ChannelName": "NICKELODEON HD",
+    "ChannelFrequency": "530000"
+  },
+  {
+    "ChannelName": "DELUXE MUSIC HD",
+    "ChannelFrequency": "530000"
+  },
+  {
+    "ChannelName": "DISNEY CHANNEL HD",
+    "ChannelFrequency": "530000"
+  },
+  {
+    "ChannelName": "RTL HD ÖSTERREICH",
+    "ChannelFrequency": "530000"
   },
   {
     "ChannelName": "VOX HD ÖSTERREICH",
     "ChannelFrequency": "530000"
   },
   {
-    "ChannelName": "WARNER TV FILM HD",
-    "ChannelFrequency": "650000"
+    "ChannelName": "RTL2 HD ÖSTERREICH",
+    "ChannelFrequency": "530000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "570000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "570000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "570000"
+  },
+  {
+    "ChannelName": "TESTKANAL",
+    "ChannelFrequency": "570000"
+  },
+  {
+    "ChannelName": "SERVICE",
+    "ChannelFrequency": "610000"
+  },
+  {
+    "ChannelName": "CBA",
+    "ChannelFrequency": "618000"
   },
   {
     "ChannelName": "PINK RADIO",
+    "ChannelFrequency": "722000"
+  },
+  {
+    "ChannelName": "SPORTDIGITAL HD",
+    "ChannelFrequency": "770000"
+  },
+  {
+    "ChannelName": "DUCKTV HD",
+    "ChannelFrequency": "754000"
+  },
+  {
+    "ChannelName": "TV1 HD SALZKAMMERGUT",
+    "ChannelFrequency": "554000"
+  },
+  {
+    "ChannelName": "SKY REPLAY HD",
+    "ChannelFrequency": ""
+  },
+  {
+    "ChannelName": "RADIO ARABELLA OÖ",
     "ChannelFrequency": "722000"
   }
 ]

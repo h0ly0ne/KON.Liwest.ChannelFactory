@@ -1,26 +1,23 @@
 ﻿using System.Data;
 using System.Diagnostics;
 using System.Globalization;
-using System.Net.Http.Headers;
-using System.Net.Mime;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
+using KON.OctoScan.NET;
+using static KON.Liwest.ChannelFactory.Constants;
+using static KON.Liwest.ChannelFactory.DVBViewer;
+
 using CsvHelper;
 using CsvHelper.Configuration;
 using DataTablePrettyPrinter;
-using KON.OctoScan.NET;
 using Krkadoni.EnigmaSettings;
-using Krkadoni.EnigmaSettings.Interfaces;
 using NanoXLSX;
-using NetFwTypeLib;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using NLog;
 using Pastel;
-
-using static KON.Liwest.ChannelFactory.Constants;
-using static KON.Liwest.ChannelFactory.DVBViewer;
 using NullLogger = Krkadoni.EnigmaSettings.NullLogger;
 
 namespace KON.Liwest.ChannelFactory
@@ -33,36 +30,93 @@ namespace KON.Liwest.ChannelFactory
         public static DataTable dtSourceDataTable = new("SourceDataTable");
         public static ChannelVariationDictionary? svdChannelVariationDictionary = new();
 
+        [JsonConverter(typeof(NestedJsonPropertyConverter))]
         public class SourceDataTable
         {
-            public int? ChannelNumber { get; set; }          // CL, SC
-            public string? ChannelName { get; set; }         // CL, SC, BS
-            public int? ChannelFrequency { get; set; }       // CL, SC, BS
-            public string? Package { get; set; }             // CL, SC
-            public bool? Dolby { get; set; }                 // CL  
-            public bool? VoD { get; set; }                   // CL  
-            public string? Language { get; set; }            // CL  
-            public bool? Stingray { get; set; }              // CL  
-            public bool? Free { get; set; }                  // SC  
-            public string? Pairing { get; set; }             // SC  
-            public string? Issues { get; set; }              // SC  
-            public string? Codec { get; set; }               // SC  
-            public string? ProviderName { get; set; }        // BS  
-            public bool? CAM { get; set; }                   // BS  
-            public int? SID { get; set; }                    // BS  
-            public int? TSID { get; set; }                   // BS  
-            public int? ONID { get; set; }                   // BS
-            public int? PMT { get; set; }                    // BS
-            public int? PCRPID { get; set; }                 // BS
-            public int? VPID { get; set; }                   // BS
-            public string? VPIDST { get; set; }              // BS
-            public string? APIDS { get; set; }               // BS
-            public string? APIDSST { get; set; }             // BS
-            public string? APIDSLANG { get; set; }           // BS
-            public int? SPID { get; set; }                   // BS
-            public int? TPID { get; set; }                   // BS
-        }
+            [JsonProperty("program_number")]
+            public int? ChannelNumber { get; set; }                         // CL, SC
+            [JsonProperty("program_name")]
+            public string? ChannelName                                      // CL, SC, BS
+            {
+                get => string.IsNullOrEmpty(ChannelNameAsString) ? null : ChannelNameAsString.TrimAdvanced().CheckVariationForPrimary();
+                set => ChannelNameAsString = Convert.ToString(value).TrimAdvanced().CheckVariationForPrimary();
+            }
+            private string? ChannelNameAsString { get; set; }               // <HIDDEN>
+            public int? ChannelFrequency                                    // CL, SC, BS
+            {
+                get => ChannelFrequencyAsString.ToFrequencyKHz();
+                set => ChannelFrequencyAsString = Convert.ToString(value);
+            }
+            [JsonProperty("frequency.value")]
+            private string? ChannelFrequencyAsString { get; set; }          // <HIDDEN>
+            [JsonProperty("package.nav_pack")]
+            public string? Package { get; set; }                            // CL, SC
+            public bool? Dolby { get; set; }                                // CL  
+            public bool? VoD { get; set; }                                  // CL  
+            public string? Language { get; set; }                           // CL  
+            public bool? Stingray { get; set; }                             // CL  
+            public bool? Free                                               // SC
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(Package))
+                        return null;
 
+                    try
+                    {
+                        if (Package.Contains(csSmartcardPackageFreeMarker))
+                            return true;
+
+                        return null;
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+            }
+            [JsonProperty("authorization.authorized")]
+            public bool? Authorized { get; set; }                           // SC
+            public bool? Pairing                                            // SC
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(PairingString))
+                        return null;
+
+                    try
+                    {
+                        return !PairingString.Contains(csSmartcardPairingNotRequired);
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                set => PairingString = value == null ? PairingString = string.Empty : (bool)value ? csSmartcardPairingRequired : csSmartcardPairingNotRequired;
+            }
+            [JsonProperty("pairing.text")]
+            private string? PairingString { get; set; }                     // <HIDDEN>
+            [JsonProperty("disruption.text")]
+            public string? Issues { get; set; }                             // SC  
+            [JsonProperty("codec.value")]
+            public string? Codec { get; set; }                              // SC  
+            public string? ProviderName { get; set; }                       // BS  
+            public bool? CAM { get; set; }                                  // BS  
+            public int? SID { get; set; }                                   // BS  
+            public int? TSID { get; set; }                                  // BS
+            public int? ONID { get; set; }                                  // BS
+            public int? PMT { get; set; }                                   // BS
+            public int? PCRPID { get; set; }                                // BS
+            public int? VPID { get; set; }                                  // BS
+            public string? VPIDST { get; set; }                             // BS
+            public string? APIDS { get; set; }                              // BS
+            public string? APIDSST { get; set; }                            // BS
+            public string? APIDSLANG { get; set; }                          // BS
+            public int? SPID { get; set; }                                  // BS
+            public int? TPID { get; set; }                                  // BS
+            public int? RunningStatus { get; set; }                         // BS
+        }
         public class ChannelVariationDictionary : Dictionary<string, string[]>;
         public class ChannelRemovalDictionary
         {
@@ -76,14 +130,27 @@ namespace KON.Liwest.ChannelFactory
             public string? ChannelFrequency { get; set; }
         }
 
+        private const int NET_FW_IP_PROTOCOL_TCP = 6;
+        private const int NET_FW_IP_PROTOCOL_UDP = 17;
+        private const int NET_FW_RULE_DIR_IN = 1;
+        private const int NET_FW_RULE_DIR_OUT = 2;
+        private const int NET_FW_ACTION_ALLOW = 1;
+
         public enum FlagMode
         {
             GenerateData = 0,
             ModifyData = 1,
             ExportData = 2,
-            DumpData = 3
+            DumpData = 3,
+            AutomaticData = 9
         }
-
+        public enum FlagSubMode
+        {
+            None = 0,
+            SubModeCustom1 = 1,
+            SubModeCustom2 = 2,
+            SubModeCustom3 = 3
+        }
         public enum FlagSource
         {
             ChannelList = 0,
@@ -99,14 +166,12 @@ namespace KON.Liwest.ChannelFactory
             ConsoleList = 1,
             FileList = 2
         }
-
         public enum FlagSourceCleanup
         {
             None = 0,
             RemoveInvalidSIDs = 1,
             GroupAndInvalidate = 2
         }
-
         public enum FlagExportMode
         {
             None = 0,
@@ -117,7 +182,6 @@ namespace KON.Liwest.ChannelFactory
             EnigmaChannelDatabase = 5,
             EnigmaBouquetsFiles = 6
         }
-
         public enum FlagExportEnigmaFormat
         {
             None = 0,
@@ -127,46 +191,125 @@ namespace KON.Liwest.ChannelFactory
             Engima2Ver4 = 4, 
             Engima2Ver5 = 5
         }
-
         public enum FlagDumpDataMode
         {
             None = 0,
             DVBViewerChannelDatabase = 1
         }
 
-        public static void InitDataContainers(ref DataTable dtLocalDataTable)
+        /// <summary>
+        /// Global.LogTrace()
+        /// </summary>
+        /// <param name="strLocalMessage"></param>
+        public static void LogTrace(string strLocalMessage)
         {
-            dtLocalDataTable.Columns.Clear();
-            dtLocalDataTable.Columns.Add(new DataColumn("ChannelNumber", typeof(int)) { AllowDBNull = true });     // CL, SC
-            dtLocalDataTable.Columns.Add(new DataColumn("ChannelName", typeof(string)) { AllowDBNull = true });    // CL, SC, BS
-            dtLocalDataTable.Columns.Add(new DataColumn("ChannelFrequency", typeof(int)) { AllowDBNull = true });  // CL, SC, BS
-            dtLocalDataTable.Columns.Add(new DataColumn("Package", typeof(string)) { AllowDBNull = true });        // CL, SC
-            dtLocalDataTable.Columns.Add(new DataColumn("Dolby", typeof(bool)) { AllowDBNull = true });            // CL
-            dtLocalDataTable.Columns.Add(new DataColumn("VoD", typeof(bool)) { AllowDBNull = true });              // CL
-            dtLocalDataTable.Columns.Add(new DataColumn("Language", typeof(string)) { AllowDBNull = true });       // CL
-            dtLocalDataTable.Columns.Add(new DataColumn("Stingray", typeof(bool)) { AllowDBNull = true });         // CL
-            dtLocalDataTable.Columns.Add(new DataColumn("Free", typeof(bool)) { AllowDBNull = true });             // SC
-            dtLocalDataTable.Columns.Add(new DataColumn("Pairing", typeof(string)) { AllowDBNull = true });        // SC
-            dtLocalDataTable.Columns.Add(new DataColumn("Issues", typeof(string)) { AllowDBNull = true });         // SC
-            dtLocalDataTable.Columns.Add(new DataColumn("Codec", typeof(string)) { AllowDBNull = true });          // SC
-            dtLocalDataTable.Columns.Add(new DataColumn("ProviderName", typeof(string)) { AllowDBNull = true });   // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("CAM", typeof(bool)) { AllowDBNull = true });              // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("SID", typeof(int)) { AllowDBNull = true });               // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("TSID", typeof(int)) { AllowDBNull = true });              // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("ONID", typeof(int)) { AllowDBNull = true });              // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("PMT", typeof(int)) { AllowDBNull = true });               // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("PCRPID", typeof(int)) { AllowDBNull = true });            // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("VPID", typeof(int)) { AllowDBNull = true });              // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("VPIDST", typeof(string)) { AllowDBNull = true });         // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("APIDS", typeof(string)) { AllowDBNull = true });          // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("APIDSST", typeof(string)) { AllowDBNull = true });        // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("APIDSLANG", typeof(string)) { AllowDBNull = true });      // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("SPID", typeof(int)) { AllowDBNull = true });              // BS
-            dtLocalDataTable.Columns.Add(new DataColumn("TPID", typeof(int)) { AllowDBNull = true });              // BS
+            if (lCurrentLogger.IsTraceEnabled)
+                lCurrentLogger.Trace(strLocalMessage.Pastel(ConsoleColor.Cyan));
         }
 
         /// <summary>
-        ///     Global.GetSourceDataFromChannelList()
+        /// Global.CreateFirewallRule()
+        /// </summary>
+        /// <returns>bool</returns>
+        public static bool CreateFirewallRule()
+        {
+            LogTrace("Global.CreateFirewallRule()");
+
+            if (!OperatingSystem.IsWindows())
+            {
+                lCurrentLogger.Warn("-» No windows operating system - cannot create firewall rules.".Pastel(ConsoleColor.Yellow));
+                return false;
+            }
+
+            var tCurrentFwPolicyType = Type.GetTypeFromProgID("HNetCfg.FwPolicy2", false);
+            var tCurrentFwRuleType = Type.GetTypeFromProgID("HNetCfg.FWRule", false);
+
+            if (tCurrentFwPolicyType == null || tCurrentFwRuleType == null)
+                return false;
+
+            (string strName, int iProtocol, int iDirection)[] taCurrentRules =
+            [
+                (FIREWALL_RULE_APP_NAME + "_OUT_TCP", NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_OUT),
+                (FIREWALL_RULE_APP_NAME + "_IN_TCP", NET_FW_IP_PROTOCOL_TCP, NET_FW_RULE_DIR_IN),
+                (FIREWALL_RULE_APP_NAME + "_OUT_UDP", NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_OUT),
+                (FIREWALL_RULE_APP_NAME + "_IN_UDP", NET_FW_IP_PROTOCOL_UDP, NET_FW_RULE_DIR_IN)
+            ];
+
+            try
+            {
+                dynamic dCurrentFwPolicy = Activator.CreateInstance(tCurrentFwPolicyType)!;
+                var dCurrentFwRules = dCurrentFwPolicy.Rules;
+
+                if (taCurrentRules.All(tCurrentRule => FirewallRuleExists(dCurrentFwRules, tCurrentRule.strName)))
+                    return true;
+
+                foreach (var tCurrentRule in taCurrentRules)
+                {
+                    dCurrentFwRules.Remove(tCurrentRule.strName);
+
+                    dynamic dCurrentFwRule = Activator.CreateInstance(tCurrentFwRuleType)!;
+                    dCurrentFwRule.Name = tCurrentRule.strName;
+                    dCurrentFwRule.Description = tCurrentRule.strName;
+                    dCurrentFwRule.Protocol = tCurrentRule.iProtocol;
+                    dCurrentFwRule.Action = NET_FW_ACTION_ALLOW;
+                    dCurrentFwRule.Direction = tCurrentRule.iDirection;
+                    dCurrentFwRule.ApplicationName = Environment.ProcessPath;
+                    dCurrentFwRule.Enabled = true;
+                    dCurrentFwRule.InterfaceTypes = "All";
+                    dCurrentFwRules.Add(dCurrentFwRule);
+                }
+
+                return true;
+            }
+            catch (Exception excCurrentException)
+            {
+                lCurrentLogger.Error($"-» Error on creating firewall rules: {excCurrentException.Message}.".Pastel(ConsoleColor.Red));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Global.FirewallRuleExists()
+        /// </summary>
+        /// <param name="dLocalFwRules"></param>
+        /// <param name="strLocalRuleName"></param>
+        /// <returns>bool</returns>
+        private static bool FirewallRuleExists(dynamic dLocalFwRules, string strLocalRuleName)
+        {
+            LogTrace("Global.FirewallRuleExists()");
+
+            try
+            {
+                var dCurrentFwRule = dLocalFwRules.Item(strLocalRuleName);
+                return (bool)dCurrentFwRule.Enabled && string.Equals((string)dCurrentFwRule.ApplicationName, Environment.ProcessPath, StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        ///     Global.InitDataContainers()
+        /// </summary>
+        /// <param name="dtLocalDataTable"></param>
+        public static void InitDataContainers(ref DataTable dtLocalDataTable)
+        {
+            dtLocalDataTable.Columns.Clear();
+
+            var piaCurrentPropertyInfos = typeof(SourceDataTable).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+            foreach (var piCurrentPropertyInfo in piaCurrentPropertyInfos)
+            {
+                if (!piCurrentPropertyInfo.CanRead)
+                    continue;
+
+                dtLocalDataTable.Columns.Add(new DataColumn(piCurrentPropertyInfo.Name, Nullable.GetUnderlyingType(piCurrentPropertyInfo.PropertyType) ?? piCurrentPropertyInfo.PropertyType) { AllowDBNull = true });
+            }
+        }
+
+        /// <summary>
+        /// Global.GetSourceDataFromChannelList()
         /// </summary>
         public static void GetSourceDataFromChannelList()
         {
@@ -176,46 +319,64 @@ namespace KON.Liwest.ChannelFactory
             lCurrentLogger.Trace("Global.GetSourceDataFromChannelList()".Pastel(ConsoleColor.Cyan));
             lCurrentLogger.Info("-» Get source data from channel list".Pastel(ConsoleColor.Green));
 
-            var strWebRequestUrlTV = "https://www.liwest.at/produkte/fernsehen-radio/kanalbelegung?tx_liwestchannels_search[action]=csvAll&tx_liwestchannels_search[controller]=Channel&tx_liwestchannels_search[product]=tv&tx_liwestchannels_search[type][digital]=digital";
-            var strWebRequestUrlRadio = "https://www.liwest.at/produkte/fernsehen-radio/kanalbelegung?tx_liwestchannels_search[action]=csv&tx_liwestchannels_search[controller]=Channel&tx_liwestchannels_search[product]=radio&tx_liwestchannels_search[type][digital]=digital";
-
-            var hrmHttpResponseMessageTV = hcCurrentHttpClient.GetAsync(strWebRequestUrlTV).ConfigureAwait(false).GetAwaiter().GetResult();
-            using (var sCurrentStream = hrmHttpResponseMessageTV.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult())
+            var piaCurrentPropertyInfo = typeof(SourceDataTable).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            var oaCurrentWebRequests = new[]
             {
-                var dtCurrentRequestDataTable = ConvertLiwestChannelListCSVtoDataTable(sCurrentStream, true, true);
+                (Url: csLiwestChannelListUrlTV, IsRadio: false),
+                (Url: csLiwestChannelListUrlRadio, IsRadio: true)
+            };
 
-                foreach (DataRow drCurrentRequestDataRow in dtCurrentRequestDataTable.Rows)
+            foreach (var oCurrentWebRequest in oaCurrentWebRequests)
+            {
+                DataTable dtCurrentRequestDataTable;
+
+                try
                 {
-                    var drModifiedDataRow = dtLocalProviderChannels.NewRow();
-                    drModifiedDataRow["ChannelNumber"] = Convert.ToInt32(drCurrentRequestDataRow[0]);
-                    drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[1])?.TrimAdvanced().CheckVariationForPrimary();
-                    drModifiedDataRow["ChannelFrequency"] = Convert.ToInt32(drCurrentRequestDataRow[3]);
-                    drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[2])?.TrimAdvanced();
-                    drModifiedDataRow["Dolby"] = Convert.ToString(drCurrentRequestDataRow[4])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[4])?.ToBoolean() : DBNull.Value;
-                    drModifiedDataRow["VoD"] = Convert.ToString(drCurrentRequestDataRow[5])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[5])?.ToBoolean() : DBNull.Value;
-                    drModifiedDataRow["Language"] = Convert.ToString(drCurrentRequestDataRow[6])?.TrimAdvanced();
-                    drModifiedDataRow["Stingray"] = DBNull.Value;
-                    dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
+                    using var hrmHttpResponseMessage = hcCurrentHttpClient.GetAsync(oCurrentWebRequest.Url).ConfigureAwait(false).GetAwaiter().GetResult();
+                    hrmHttpResponseMessage.EnsureSuccessStatusCode();
+
+                    using var sCurrentStream = hrmHttpResponseMessage.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                    dtCurrentRequestDataTable = ConvertLiwestChannelListCSVtoDataTable(sCurrentStream, true, true);
                 }
-            }
+                catch (Exception excCurrentException) when (excCurrentException is HttpRequestException or TaskCanceledException or CsvHelperException)
+                {
+                    lCurrentLogger.Error($"-» Error on getting {(oCurrentWebRequest.IsRadio ? "radio" : "tv")} channel list: {excCurrentException.Message}".Pastel(ConsoleColor.Red));
+                    continue;
+                }
 
-            var hrmHttpResponseMessageRadio = hcCurrentHttpClient.GetAsync(strWebRequestUrlRadio).ConfigureAwait(false).GetAwaiter().GetResult();
-            using (var sCurrentStream = hrmHttpResponseMessageRadio.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult())
-            {
-                var dtCurrentRequestDataTable = ConvertLiwestChannelListCSVtoDataTable(sCurrentStream, true, true);
+                if (dtCurrentRequestDataTable.Columns.Count < (oCurrentWebRequest.IsRadio ? 4 : 7))
+                {
+                    lCurrentLogger.Error($"-» Unexpected format of {(oCurrentWebRequest.IsRadio ? "radio" : "tv")} channel list ({dtCurrentRequestDataTable.Columns.Count} columns)".Pastel(ConsoleColor.Red));
+                    continue;
+                }
 
                 foreach (DataRow drCurrentRequestDataRow in dtCurrentRequestDataTable.Rows)
                 {
-                    var drModifiedDataRow = dtLocalProviderChannels.NewRow();
-                    drModifiedDataRow["ChannelNumber"] = Convert.ToInt32(drCurrentRequestDataRow[0]);
-                    drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[1])?.TrimAdvanced().CheckVariationForPrimary();
-                    drModifiedDataRow["ChannelFrequency"] = Convert.ToInt32(drCurrentRequestDataRow[3]);
-                    drModifiedDataRow["Package"] = DBNull.Value;
-                    drModifiedDataRow["Dolby"] = DBNull.Value;
-                    drModifiedDataRow["VoD"] = DBNull.Value;
-                    drModifiedDataRow["Language"] = DBNull.Value;
-                    drModifiedDataRow["Stingray"] = Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() : DBNull.Value;
-                    dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
+                    var sdtCurrentSourceDataTableItem = new SourceDataTable
+                    {
+                        ChannelNumber = Convert.ToString(drCurrentRequestDataRow[0]).ToNullableInt32(),
+                        ChannelName = Convert.ToString(drCurrentRequestDataRow[1]),
+                        ChannelFrequency = Convert.ToString(drCurrentRequestDataRow[3]).ToFrequencyKHz()
+                    };
+
+                    if (!oCurrentWebRequest.IsRadio)
+                    {
+                        sdtCurrentSourceDataTableItem.Package = Convert.ToString(drCurrentRequestDataRow[2])?.TrimAdvanced();
+                        sdtCurrentSourceDataTableItem.Dolby = Convert.ToString(drCurrentRequestDataRow[4])?.ToBoolean();
+                        sdtCurrentSourceDataTableItem.VoD = Convert.ToString(drCurrentRequestDataRow[5])?.ToBoolean();
+                        sdtCurrentSourceDataTableItem.Language = Convert.ToString(drCurrentRequestDataRow[6])?.TrimAdvanced();
+                    }
+                    else
+                        sdtCurrentSourceDataTableItem.Stingray = Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean();
+
+                    var sdtCurrentSourceDataTableRow = new object?[piaCurrentPropertyInfo.Length];
+
+                    for (var iCurrentSourceDataTableColumn = 0; iCurrentSourceDataTableColumn < piaCurrentPropertyInfo.Length; iCurrentSourceDataTableColumn++)
+                    {
+                        sdtCurrentSourceDataTableRow[iCurrentSourceDataTableColumn] = piaCurrentPropertyInfo[iCurrentSourceDataTableColumn].GetValue(sdtCurrentSourceDataTableItem) ?? DBNull.Value;
+                    }
+
+                    dtLocalProviderChannels.Rows.Add(sdtCurrentSourceDataTableRow);
                 }
             }
 
@@ -228,80 +389,134 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="strLocalSmartcardId"></param>
         public static void GetSourceDataFromSmartcard(string? strLocalSmartcardId)
         {
-            if (!string.IsNullOrEmpty(strLocalSmartcardId))
+            if (string.IsNullOrEmpty(strLocalSmartcardId))
+                return;
+
+            DataTable dtLocalProviderChannels = new("SourceData");
+            InitDataContainers(ref dtLocalProviderChannels);
+
+            lCurrentLogger.Trace("Global.GetSourceDataFromSmartcard()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info("-» Get source data from smartcard".Pastel(ConsoleColor.Green));
+
+            try
             {
-                DataTable dtLocalProviderChannels = new("SourceData");
-                InitDataContainers(ref dtLocalProviderChannels);
+                var joCurrentResponse = SendSmartcardApiRequest(HttpMethod.Post, csSmartcardApiCheckUrl, new FormUrlEncodedContent(new Dictionary<string, string> { { "smartcard_id", strLocalSmartcardId } }));
+                var strCurrentStatus = joCurrentResponse?["status"]?.ToString();
 
-                lCurrentLogger.Trace("Global.GetSourceDataFromSmartcard()".Pastel(ConsoleColor.Cyan));
-                lCurrentLogger.Info("-» Get source data from smartcard".Pastel(ConsoleColor.Green));
-
-                var hrmCurrentHttpRequestMessage = new HttpRequestMessage(HttpMethod.Post, $"https://auskunft.liwest.at/index.php?scID={strLocalSmartcardId}#smartcard-abfrage");
-                var mfdcCurrentMultipartFormDataContent = new MultipartFormDataContent { { new StringContent(strLocalSmartcardId, Encoding.UTF8, MediaTypeNames.Text.Plain), "scID" }, { new StringContent("» Jetzt anzeigen", Encoding.UTF8, MediaTypeNames.Text.Plain), "action" } };
-                hrmCurrentHttpRequestMessage.Content = mfdcCurrentMultipartFormDataContent;
-
-                var cdhvCurrentContentDispositionHeaderValue = new ContentDispositionHeaderValue("form-data");
-                hrmCurrentHttpRequestMessage.Content.Headers.ContentDisposition = cdhvCurrentContentDispositionHeaderValue;
-                var hrmCurrentHttpResponseMessage = hcCurrentHttpClient.PostAsync(hrmCurrentHttpRequestMessage.RequestUri?.ToString(), hrmCurrentHttpRequestMessage.Content).ConfigureAwait(false).GetAwaiter().GetResult();
-                _ = hrmCurrentHttpResponseMessage.Content.ReadAsStringAsync().Result;
-
-                Thread.Sleep(new TimeSpan(0, 0, 30));
-
-                if (hrmCurrentHttpResponseMessage.IsSuccessStatusCode)
+                if (strCurrentStatus != csSmartcardApiStatusAccepted)
                 {
-                    var hrmHttpResponseMessageTV = hcCurrentHttpClient.GetAsync($"https://auskunft.liwest.at/sc_query_result.php?scID={strLocalSmartcardId}&pType=TV").ConfigureAwait(false).GetAwaiter().GetResult();
-                    _ = hrmHttpResponseMessageTV.Content.ReadAsStringAsync().Result;
+                    lCurrentLogger.Error($"-» Smartcard check has not been accepted (status: '{strCurrentStatus ?? "<none>"}')".Pastel(ConsoleColor.Red));
+                    return;
+                }
+            }
+            catch (Exception excCurrentException) when (excCurrentException is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
+            {
+                lCurrentLogger.Error($"-» Error on requesting smartcard check: {excCurrentException.Message}".Pastel(ConsoleColor.Red));
+                return;
+            }
 
-                    if (hrmHttpResponseMessageTV.IsSuccessStatusCode)
+            foreach (var strCurrentType in new[] { csSmartcardApiTypeTV, csSmartcardApiTypeRadio })
+            {
+                var lsdtCurrentSourceDataTableList = GetSmartcardPrograms(strLocalSmartcardId, strCurrentType);
+                if (lsdtCurrentSourceDataTableList == null)
+                    continue;
+
+                var piaCurrentPropertyInfo = typeof(SourceDataTable).GetProperties();
+                foreach (var sdtiCurrentSourceDataTableItem in lsdtCurrentSourceDataTableList)
+                {
+                    var drCurrentDataRow = dtLocalProviderChannels.NewRow();
+                    foreach (var piCurrentPropertyInfo in piaCurrentPropertyInfo)
                     {
-                        var hrmHttpResponseMessageTVFile = hcCurrentHttpClient.GetAsync($"https://auskunft.liwest.at/files/{strLocalSmartcardId}_{DateTime.Now:yyyyMMdd}.csv").ConfigureAwait(false).GetAwaiter().GetResult();
-                        using var sCurrentStream = hrmHttpResponseMessageTVFile.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                        var dtCurrentRequestDataTable = new DataTable();
-                        dtCurrentRequestDataTable.Load(new CsvDataReader(new CsvReader(new StreamReader(sCurrentStream), new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" })));
+                        if (piCurrentPropertyInfo.CanRead && dtLocalProviderChannels.Columns.Contains(piCurrentPropertyInfo.Name))
+                            drCurrentDataRow[piCurrentPropertyInfo.Name] = piCurrentPropertyInfo.GetValue(sdtiCurrentSourceDataTableItem) ?? DBNull.Value;
+                    }
+                    dtLocalProviderChannels.Rows.Add(drCurrentDataRow);
+                }
+            }
 
-                        foreach (DataRow drCurrentRequestDataRow in dtCurrentRequestDataTable.Rows)
-                        {
-                            var drModifiedDataRow = dtLocalProviderChannels.NewRow();
-                            drModifiedDataRow["ChannelNumber"] = Convert.ToInt32(drCurrentRequestDataRow[0]);
-                            drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[1]).RepairEncoding().TrimAdvanced().CheckVariationForPrimary();
-                            drModifiedDataRow["ChannelFrequency"] = Convert.ToString(drCurrentRequestDataRow[6])?.Replace(".00 MHz", string.Empty).ToInt32() * 1000;
-                            drModifiedDataRow["Free"] = Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() : DBNull.Value;
-                            drModifiedDataRow["Pairing"] = Convert.ToString(drCurrentRequestDataRow[3]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            drModifiedDataRow["Issues"] = Convert.ToString(drCurrentRequestDataRow[4]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[5]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            drModifiedDataRow["Codec"] = Convert.ToString(drCurrentRequestDataRow[7]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
-                        }
+            dtSourceDataTable.Merge(dtLocalProviderChannels);
+        }
+
+        /// <summary>
+        ///     Global.GetSmartcardPrograms()
+        /// </summary>
+        /// <param name="strLocalSmartcardId"></param>
+        /// <param name="strLocalType"></param>
+        /// <returns>List of programs or null on error / timeout</returns>
+        private static List<SourceDataTable>? GetSmartcardPrograms(string strLocalSmartcardId, string strLocalType)
+        {
+            LogTrace("Global.GetSmartcardPrograms()");
+
+            var strCurrentUrl = string.Format(csSmartcardApiResultUrlFormat, Uri.EscapeDataString(strLocalSmartcardId), strLocalType);
+            var swCurrentStopwatch = Stopwatch.StartNew();
+
+            try
+            {
+                while (true)
+                {
+                    var joCurrentResponse = SendSmartcardApiRequest(HttpMethod.Get, strCurrentUrl);
+                    var strCurrentStatus = joCurrentResponse?["data"]?["status"]?.ToString();
+
+                    if (strCurrentStatus == csSmartcardApiStatusCompleted)
+                        return joCurrentResponse!["data"]!["programs"]?.ToObject<List<SourceDataTable>>() ?? [];
+
+                    if (strCurrentStatus != csSmartcardApiStatusProcessing)
+                    {
+                        lCurrentLogger.Error($"-» Smartcard check for type '{strLocalType}' returned unexpected status '{strCurrentStatus ?? "<none>"}'".Pastel(ConsoleColor.Red));
+                        return null;
                     }
 
-                    var hrmHttpResponseMessageRADIO = hcCurrentHttpClient.GetAsync($"https://auskunft.liwest.at/sc_query_result.php?scID={strLocalSmartcardId}&pType=Radio").ConfigureAwait(false).GetAwaiter().GetResult();
-                    _ = hrmHttpResponseMessageRADIO.Content.ReadAsStringAsync().Result;
-
-                    if (hrmHttpResponseMessageRADIO.IsSuccessStatusCode)
+                    if (swCurrentStopwatch.Elapsed >= TimeSpan.FromSeconds(ciSmartcardApiPollingTimeoutSeconds))
                     {
-                        var hrmHttpResponseMessageRADIOFile = hcCurrentHttpClient.GetAsync($"https://auskunft.liwest.at/files/{strLocalSmartcardId}_{DateTime.Now:yyyyMMdd}.csv").ConfigureAwait(false).GetAwaiter().GetResult();
-                        using var sCurrentStream = hrmHttpResponseMessageRADIOFile.Content.ReadAsStreamAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                        var dtCurrentRequestDataTable = new DataTable();
-                        dtCurrentRequestDataTable.Load(new CsvDataReader(new CsvReader(new StreamReader(sCurrentStream), new CsvConfiguration(CultureInfo.InvariantCulture) { Delimiter = ";" })));
-
-                        foreach (DataRow drCurrentRequestDataRow in dtCurrentRequestDataTable.Rows)
-                        {
-                            var drModifiedDataRow = dtLocalProviderChannels.NewRow();
-                            drModifiedDataRow["ChannelNumber"] = Convert.ToInt32(drCurrentRequestDataRow[0]);
-                            drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[1]).RepairEncoding().TrimAdvanced().CheckVariationForPrimary();
-                            drModifiedDataRow["ChannelFrequency"] = Convert.ToString(drCurrentRequestDataRow[6])?.Replace(".00 MHz", string.Empty).ToInt32() * 1000;
-                            drModifiedDataRow["Free"] = Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[2])?.ToBoolean() : DBNull.Value;
-                            drModifiedDataRow["Pairing"] = Convert.ToString(drCurrentRequestDataRow[3]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            drModifiedDataRow["Issues"] = Convert.ToString(drCurrentRequestDataRow[4]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            drModifiedDataRow["Package"] = Convert.ToString(drCurrentRequestDataRow[5]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            drModifiedDataRow["Codec"] = Convert.ToString(drCurrentRequestDataRow[7]).RepairEncoding().TrimAdvanced().Replace("'", string.Empty);
-                            dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
-                        }
+                        lCurrentLogger.Error($"-» Smartcard check for type '{strLocalType}' has not been completed within {ciSmartcardApiPollingTimeoutSeconds} seconds".Pastel(ConsoleColor.Red));
+                        return null;
                     }
+
+                    Thread.Sleep(TimeSpan.FromMilliseconds(ciSmartcardApiPollingIntervalMilliseconds));
+                }
+            }
+            catch (Exception excCurrentException) when (excCurrentException is HttpRequestException or TaskCanceledException or JsonException or InvalidOperationException)
+            {
+                lCurrentLogger.Error($"-» Error on getting smartcard programs for type '{strLocalType}': {excCurrentException.Message}".Pastel(ConsoleColor.Red));
+                return null;
+            }
+        }
+
+        /// <summary>
+        ///     Global.SendSmartcardApiRequest()
+        /// </summary>
+        /// <param name="hmLocalHttpMethod"></param>
+        /// <param name="strLocalUrl"></param>
+        /// <param name="hcLocalHttpContent"></param>
+        /// <returns>JObject or null on empty response</returns>
+        private static JObject? SendSmartcardApiRequest(HttpMethod hmLocalHttpMethod, string strLocalUrl, HttpContent? hcLocalHttpContent = null)
+        {
+            using var hrqCurrentHttpRequestMessage = new HttpRequestMessage(hmLocalHttpMethod, strLocalUrl);
+            hrqCurrentHttpRequestMessage.Headers.Add(csSmartcardApiKeyHeader, csSmartcardApiKey);
+            hrqCurrentHttpRequestMessage.Content = hcLocalHttpContent;
+
+            using var hrmCurrentHttpResponseMessage = hcCurrentHttpClient.SendAsync(hrqCurrentHttpRequestMessage).ConfigureAwait(false).GetAwaiter().GetResult();
+            var strCurrentContent = hrmCurrentHttpResponseMessage.Content.ReadAsStringAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+
+            // The api returns its error details (e.g. maintenance window, validation) as json body - pass them on instead of the bare status code
+            if (!hrmCurrentHttpResponseMessage.IsSuccessStatusCode)
+            {
+                string? strCurrentApiMessage = null;
+
+                try
+                {
+                    var joCurrentErrorResponse = string.IsNullOrWhiteSpace(strCurrentContent) ? null : JObject.Parse(strCurrentContent);
+                    strCurrentApiMessage = joCurrentErrorResponse?["message"]?.ToString() ?? joCurrentErrorResponse?["error"]?.ToString();
+                }
+                catch (JsonException)
+                {
+                    // Body is no json - fall back to the status code only
                 }
 
-                dtSourceDataTable.Merge(dtLocalProviderChannels);
+                throw new HttpRequestException($"HTTP {(int)hrmCurrentHttpResponseMessage.StatusCode} ({hrmCurrentHttpResponseMessage.ReasonPhrase}){(string.IsNullOrEmpty(strCurrentApiMessage) ? string.Empty : $" - {strCurrentApiMessage}")}", null, hrmCurrentHttpResponseMessage.StatusCode);
             }
+
+            return string.IsNullOrWhiteSpace(strCurrentContent) ? null : JObject.Parse(strCurrentContent);
         }
 
         /// <summary>
@@ -311,95 +526,67 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="strLocalFrequencies"></param>
         public static void GetSourceDataFromBlindscan(string? strLocalServerIP, string? strLocalFrequencies)
         {
-            if (!string.IsNullOrEmpty(strLocalServerIP) && !string.IsNullOrEmpty(strLocalFrequencies))
+            if (string.IsNullOrEmpty(strLocalServerIP) || string.IsNullOrEmpty(strLocalFrequencies))
+                return;
+
+            DataTable dtLocalProviderChannels = new("SourceData");
+            InitDataContainers(ref dtLocalProviderChannels);
+
+            lCurrentLogger.Trace("Global.GetSourceDataFromBlindscan()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info("-» Get source data from blindscan (octoscan)".Pastel(ConsoleColor.Green));
+
+            DataTable dtCurrentRequestDataTable;
+            using (var osiCurrentOSScanIP = new OSScanIP())
             {
-                DataTable dtLocalProviderChannels = new("SourceData");
-                InitDataContainers(ref dtLocalProviderChannels);
-
-                lCurrentLogger.Trace("Global.GetSourceDataFromBlindscan()".Pastel(ConsoleColor.Cyan));
-                lCurrentLogger.Info("-» Get source data from blindscan (octoscan)".Pastel(ConsoleColor.Green));
-
-                using var osiCurrentOSScanIP = new OSScanIP();
                 osiCurrentOSScanIP.Init(strLocalServerIP);
 
-                var saFrequencies = strLocalFrequencies.Split(',');
-                var lsFrequencies = new List<string>();
+                foreach (var iCurrentFrequency in OctoScan.NET.Global.ParseFrequencies(strLocalFrequencies!))
+                    osiCurrentOSScanIP.AddTransponderInfo(OctoScan.NET.Global.CreateTransponderInfo(iCurrentFrequency, ciModulationSystem, ciSymbolRate, ciModulation));
 
-                foreach (var strFrequency in saFrequencies)
-                {
-                    if (strFrequency.Contains('-') && strFrequency[^2] == ':')
-                    {
-                        var saFrequenciesRange = strFrequency.Split('-');
+                osiCurrentOSScanIP.Scan(ciBlindscanRetries, ciBlindscanTunerLockGraceTime, csBlindscanServerPort, cbBlindscanIPv6);
+                OctoScan.NET.Global.bDone = true;
 
-                        if (saFrequenciesRange.Length == 2)
-                        {
-                            var iFrequenciesRangeStart = Convert.ToInt32(saFrequenciesRange[0]);
-                            var iFrequenciesRangeEnd = Convert.ToInt32(saFrequenciesRange[1].Split(':')[0]);
-                            var iFrequenciesRangeStep = Convert.ToInt32(saFrequenciesRange[1].Split(':')[1]);
+                dtCurrentRequestDataTable = osiCurrentOSScanIP.ExportServicesToDataTable();
+            }
 
-                            if (iFrequenciesRangeEnd > iFrequenciesRangeStart && (iFrequenciesRangeEnd - iFrequenciesRangeStart) % iFrequenciesRangeStep == 0)
-                            {
-                                for (var iCurrentFrequency = iFrequenciesRangeStart; iCurrentFrequency <= iFrequenciesRangeEnd; iCurrentFrequency += iFrequenciesRangeStep)
-                                {
-                                    lsFrequencies.Add(Convert.ToString(iCurrentFrequency));
-                                }
-                            }
-                            else
-                            {
-                                if (iFrequenciesRangeStart == iFrequenciesRangeEnd)
-                                    lsFrequencies.Add(Convert.ToString(iFrequenciesRangeStart));
-                                else
-                                    lCurrentLogger.Warn("-» Invalid frequency start/end/step".Pastel(ConsoleColor.Yellow));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        lsFrequencies.Add(strFrequency);
-                    }
-                }
+            if (dtCurrentRequestDataTable is { Rows.Count: > 0 })
+            {
+                var piaCurrentPropertyInfo = typeof(SourceDataTable).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var sdtCurrentSourceDataTableRow = new object?[piaCurrentPropertyInfo.Length];
 
-                foreach (var lsFrequency in lsFrequencies)
-                {
-                    var otiCurrentOSTransponderInfo = new OSTransponderInfo
-                    {
-                        iFrequency = Convert.ToInt32(lsFrequency),
-                        iModulationSystem = ciModulationSystem,
-                        iSymbolRate = ciSymbolRate,
-                        iModulationType = ciModulation,
-                        bUseNetworkInformationTable = true
-                    };
-
-                    osiCurrentOSScanIP.AddTransponderInfo(otiCurrentOSTransponderInfo);
-                }
-
-                osiCurrentOSScanIP.Scan(lLocalTimeout: 10, iLocalScanRetries: 1, iLocalTransponderRetries: 3);
-
-                var dtCurrentRequestDataTable = osiCurrentOSScanIP.ExportServicesToDataTable();
                 foreach (DataRow drCurrentRequestDataRow in dtCurrentRequestDataTable.Rows)
                 {
-                    var drModifiedDataRow = dtLocalProviderChannels.NewRow();
-                    drModifiedDataRow["ChannelName"] = Convert.ToString(drCurrentRequestDataRow[2]).TrimAdvanced().CheckVariationForPrimary();
-                    drModifiedDataRow["ChannelFrequency"] = Convert.ToString(drCurrentRequestDataRow[0]).ToInt32() * 1000;
-                    drModifiedDataRow["ProviderName"] = Convert.ToString(drCurrentRequestDataRow[1]).TrimAdvanced();
-                    drModifiedDataRow["CAM"] = Convert.ToString(drCurrentRequestDataRow[3])?.ToBoolean() != null ? Convert.ToString(drCurrentRequestDataRow[3])?.ToBoolean() : DBNull.Value;
-                    drModifiedDataRow["SID"] = Convert.ToString(drCurrentRequestDataRow[4]).ToInt32();
-                    drModifiedDataRow["TSID"] = Convert.ToString(drCurrentRequestDataRow[5]).ToInt32();
-                    drModifiedDataRow["ONID"] = Convert.ToString(drCurrentRequestDataRow[6]).ToInt32();
-                    drModifiedDataRow["PMT"] = Convert.ToString(drCurrentRequestDataRow[7]).ToInt32();
-                    drModifiedDataRow["PCRPID"] = Convert.ToString(drCurrentRequestDataRow[8]).ToInt32();
-                    drModifiedDataRow["VPID"] = Convert.ToString(drCurrentRequestDataRow[9]).ToInt32();
-                    drModifiedDataRow["VPIDST"] = Convert.ToString(drCurrentRequestDataRow[10]).TrimAdvanced();
-                    drModifiedDataRow["APIDS"] = Convert.ToString(drCurrentRequestDataRow[11]).TrimAdvanced();
-                    drModifiedDataRow["APIDSST"] = Convert.ToString(drCurrentRequestDataRow[12]).TrimAdvanced();
-                    drModifiedDataRow["APIDSLANG"] = Convert.ToString(drCurrentRequestDataRow[13]).TrimAdvanced();
-                    drModifiedDataRow["SPID"] = Convert.ToString(drCurrentRequestDataRow[14]).ToInt32();
-                    drModifiedDataRow["TPID"] = Convert.ToString(drCurrentRequestDataRow[15]).ToInt32();
-                    dtLocalProviderChannels.Rows.Add(drModifiedDataRow);
-                }
+                    var sdtiCurrentSourceDataTableItem = new SourceDataTable
+                    {
+                        ChannelName = Convert.ToString(drCurrentRequestDataRow[2]),
+                        ChannelFrequency = Convert.ToString(drCurrentRequestDataRow[0]).ToFrequencyKHz(),
+                        ProviderName = Convert.ToString(drCurrentRequestDataRow[1]).TrimAdvanced(),
+                        CAM = Convert.ToString(drCurrentRequestDataRow[4])?.ToBoolean(),
+                        SID = Convert.ToString(drCurrentRequestDataRow[3]).ToInt32(),
+                        TSID = Convert.ToString(drCurrentRequestDataRow[6]).ToInt32(),
+                        ONID = Convert.ToString(drCurrentRequestDataRow[7]).ToInt32(),
+                        PMT = Convert.ToString(drCurrentRequestDataRow[8]).ToInt32(),
+                        PCRPID = Convert.ToString(drCurrentRequestDataRow[9]).ToInt32(),
+                        VPID = Convert.ToString(drCurrentRequestDataRow[10]).ToInt32(),
+                        VPIDST = Convert.ToString(drCurrentRequestDataRow[11]).TrimAdvanced(),
+                        APIDS = Convert.ToString(drCurrentRequestDataRow[12]).TrimAdvanced(),
+                        APIDSST = Convert.ToString(drCurrentRequestDataRow[13]).TrimAdvanced(),
+                        APIDSLANG = Convert.ToString(drCurrentRequestDataRow[14]).TrimAdvanced(),
+                        SPID = Convert.ToString(drCurrentRequestDataRow[15]).ToInt32(),
+                        TPID = Convert.ToString(drCurrentRequestDataRow[16]).ToInt32(),
+                        RunningStatus = Convert.ToString(drCurrentRequestDataRow[5]).ToInt32()
+                    };
 
-                dtSourceDataTable.Merge(dtLocalProviderChannels);
+                    for (var iCurrentPropertyInfoCounter = 0; iCurrentPropertyInfoCounter < piaCurrentPropertyInfo.Length; iCurrentPropertyInfoCounter++)
+                    {
+                        sdtCurrentSourceDataTableRow[iCurrentPropertyInfoCounter] = piaCurrentPropertyInfo[iCurrentPropertyInfoCounter].GetValue(sdtiCurrentSourceDataTableItem) ?? DBNull.Value;
+                    }
+
+                    dtLocalProviderChannels.Rows.Add(sdtCurrentSourceDataTableRow);
+                }
             }
+
+            dtSourceDataTable.Merge(dtLocalProviderChannels);
         }
 
         /// <summary>
@@ -414,7 +601,7 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        ///     Global.SaveSourceDataToFile()
+        ///     TODO - Test changes after revamp! - Global.SaveSourceDataToFile()
         /// </summary>
         /// <param name="strLocalSourceDataFilename"></param>
         public static void SaveSourceDataToFile(string? strLocalSourceDataFilename)
@@ -424,12 +611,12 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Trace("Global.SaveSourceDataToFile()".Pastel(ConsoleColor.Cyan));
                 lCurrentLogger.Info("-» Save source data to file".Pastel(ConsoleColor.Green));
 
-                File.WriteAllText(strLocalSourceDataFilename, JsonConvert.SerializeObject(dtSourceDataTable, Formatting.Indented), Encoding.UTF8);
+                File.WriteAllText(GetOutputFilePath(strLocalSourceDataFilename), JsonConvert.SerializeObject(dtSourceDataTable, Formatting.Indented), Encoding.UTF8);
             }
         }
 
         /// <summary>
-        ///     Global.LoadSourceDataFromFile()
+        ///     TODO - Test changes after revamp! - Global.LoadSourceDataFromFile()
         /// </summary>
         /// <param name="strLocalSourceDataFilename"></param>
         public static void LoadSourceDataFromFile(string? strLocalSourceDataFilename)
@@ -439,14 +626,14 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Trace("Global.LoadSourceDataFromFile()".Pastel(ConsoleColor.Cyan));
                 lCurrentLogger.Info("-» Load source data from file".Pastel(ConsoleColor.Green));
 
-                List<SourceDataTable>? lsdtCurrentListSourceDataTable = JsonConvert.DeserializeObject<List<SourceDataTable>>(File.ReadAllText(strLocalSourceDataFilename, Encoding.UTF8));
+                var lsdtCurrentListSourceDataTable = JsonConvert.DeserializeObject<List<SourceDataTable>>(File.ReadAllText(strLocalSourceDataFilename, Encoding.UTF8));
                 if (lsdtCurrentListSourceDataTable is { Count: > 0 })
                 {
-                    PropertyInfo[] piaSourceDataTablePropertyInfo = typeof(SourceDataTable).GetProperties();
+                    var piaSourceDataTablePropertyInfo = typeof(SourceDataTable).GetProperties();
 
-                    foreach (SourceDataTable sdtCurrentSourceDataTable in lsdtCurrentListSourceDataTable)
+                    foreach (var sdtCurrentSourceDataTable in lsdtCurrentListSourceDataTable)
                     {
-                        DataRow drNewDataRow = dtSourceDataTable.NewRow();
+                        var drNewDataRow = dtSourceDataTable.NewRow();
                         foreach (var piSourceDataTablePropertyInfo in piaSourceDataTablePropertyInfo)
                         {
                             if (piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable) == null)
@@ -454,7 +641,7 @@ namespace KON.Liwest.ChannelFactory
                             else
                             {
                                 if (piSourceDataTablePropertyInfo.Name == "ChannelName")
-                                    drNewDataRow[piSourceDataTablePropertyInfo.Name] = Convert.ToString(piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable)).TrimAdvanced().CheckVariationForPrimary();
+                                    drNewDataRow[piSourceDataTablePropertyInfo.Name] = Convert.ToString(piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable));
                                 else
                                     drNewDataRow[piSourceDataTablePropertyInfo.Name] = piSourceDataTablePropertyInfo.GetValue(sdtCurrentSourceDataTable);
                             }
@@ -491,13 +678,14 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Trace("Global.ExportSourceDataToDVBViewerTransponderFile()".Pastel(ConsoleColor.Cyan));
                 lCurrentLogger.Info("-» Export source data to DVBViewer transponder file".Pastel(ConsoleColor.Green));
 
-                var strTransponderRootElementName = $"LIWEST ({DateTime.Now:yyyy-MM-dd HH:mm})";
+                var strTransponderRootElementName = string.Format(csTransponderRootElementNameFormat, DateTime.Now);
 
                 var dtLocalSourceDataTable = dtSourceDataTable.DefaultView.ToTable(true, "ChannelFrequency");
+                dtLocalSourceDataTable = dtLocalSourceDataTable.AsEnumerable().Where(drCurrentDataRow => drCurrentDataRow.GetNullableInt32("ChannelFrequency") is > 0).CopyToDataTableOrEmpty(dtLocalSourceDataTable);
                 dtLocalSourceDataTable.DefaultView.Sort = "ChannelFrequency";
                 dtLocalSourceDataTable = dtLocalSourceDataTable.DefaultView.ToTable();
 
-                using var swCurrentStreamWriter = new StreamWriter(File.Open(Path.Combine(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty, strLocalDVBViewerTransponderFilename), FileMode.Create));
+                using var swCurrentStreamWriter = new StreamWriter(File.Open(GetOutputFilePath(strLocalDVBViewerTransponderFilename), FileMode.Create));
                 swCurrentStreamWriter.WriteLine("[SATTYPE]");
                 swCurrentStreamWriter.WriteLine("1={0}", ciOrbitalPosition);
                 swCurrentStreamWriter.WriteLine("2={0}", strTransponderRootElementName);
@@ -520,128 +708,90 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="strLocalDVBViewerChannelDatabaseFilename"></param>
         public static void ExportSourceDataToDVBViewerChannelDatabase(string? strLocalDVBViewerChannelDatabaseFilename)
         {
-            if (!string.IsNullOrEmpty(strLocalDVBViewerChannelDatabaseFilename))
+            if (string.IsNullOrEmpty(strLocalDVBViewerChannelDatabaseFilename)) 
+                return;
+
+            lCurrentLogger.Trace("Global.ExportSourceDataToDVBViewerChannelDatabase()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info("-» Export source data to DVBViewer channel database file".Pastel(ConsoleColor.Green));
+
+            if (dtSourceDataTable.Rows.Count == 0) 
+                return;
+
+            var ldrCurrentExportableDataRows = GetExportableServiceRows("DVBViewer channel database");
+            if (ldrCurrentExportableDataRows.Count == 0)
+                return;
+
+            using BinaryWriter bwCurrentBinaryWriter = new BinaryWriter(File.Open(GetOutputFilePath(strLocalDVBViewerChannelDatabaseFilename), FileMode.Create));
+            var cdhCurrentChannelDatabaseHeader = new ChannelDatabaseHeader
             {
-                lCurrentLogger.Trace("Global.ExportSourceDataToDVBViewerChannelDatabase()".Pastel(ConsoleColor.Cyan));
-                lCurrentLogger.Info("-» Export source data to DVBViewer channel database file".Pastel(ConsoleColor.Green));
+                IDLength = (byte)csDefaultDVBViewerChannelDatabaseID.Length,
+                ID = csDefaultDVBViewerChannelDatabaseID.ToCharArray(),
+                VersionHi = csDefaultDVBViewerChannelDatabaseVersionHi,
+                VersionLo = csDefaultDVBViewerChannelDatabaseVersionLo
+            };
+            bwCurrentBinaryWriter.Write(Binarize(cdhCurrentChannelDatabaseHeader));
 
-                var dtLocalExportSourceData = dtSourceDataTable.Copy();
+            foreach (var drCurrentDataRow in ldrCurrentExportableDataRows)
+            {
+                var strCurrentAPIDS = drCurrentDataRow.GetStringOrEmpty("APIDS");
+                var strCurrentAPIDSStreamType = drCurrentDataRow.GetStringOrEmpty("APIDSST");
+                var strCurrentAPIDSLanguage = drCurrentDataRow.GetStringOrEmpty("APIDSLANG");
+                var saCurrentAPIDS = !string.IsNullOrEmpty(strCurrentAPIDS) ? strCurrentAPIDS.Split(',') : [string.Empty];
+                var saCurrentAPIDSStreamType = !string.IsNullOrEmpty(strCurrentAPIDSStreamType) ? strCurrentAPIDSStreamType.Split(',') : [string.Empty];
+                var saCurrentAPIDSLanguage = !string.IsNullOrEmpty(strCurrentAPIDSLanguage) ? strCurrentAPIDSLanguage.Split(',') : [string.Empty];
+                var bParentAPID = true;
 
-                using BinaryWriter bwCurrentBinaryWriter = new BinaryWriter(File.Open(strLocalDVBViewerChannelDatabaseFilename, FileMode.Create));
-                var cdhCurrentChannelDatabaseHeader = new ChannelDatabaseHeader { IDLength = (byte)csDefaultDVBViewerChannelDatabaseID.Length, ID = csDefaultDVBViewerChannelDatabaseID.ToCharArray(), VersionHi = csDefaultDVBViewerChannelDatabaseVersionHi, VersionLo = csDefaultDVBViewerChannelDatabaseVersionLo };
-                bwCurrentBinaryWriter.Write(Binarize(cdhCurrentChannelDatabaseHeader));
-
-                if (dtLocalExportSourceData.Rows.Count > 0)
+                for (var iCurrentCounter = 0; iCurrentCounter < saCurrentAPIDS.Length; iCurrentCounter++)
                 {
-                    foreach (DataRow drCurrentDataRow in dtLocalExportSourceData.Rows)
+                    var strCurrentAPID = saCurrentAPIDS[iCurrentCounter];
+                    var strCurrentAPIDStreamType = iCurrentCounter < saCurrentAPIDSStreamType.Length ? saCurrentAPIDSStreamType[iCurrentCounter] : string.Empty;
+                    var strCurrentAPIDLanguage = iCurrentCounter < saCurrentAPIDSLanguage.Length && !string.IsNullOrEmpty(saCurrentAPIDSLanguage[iCurrentCounter]) ? saCurrentAPIDSLanguage[iCurrentCounter] : csDefaultAudioLanguage;
+                    var uiAudioPID = ushort.TryParse(strCurrentAPID.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var uiCurrentAudioPID) ? uiCurrentAudioPID : (ushort)0;
+
+                    var cdcCurrentChannelDatabaseChannel = new ChannelDatabaseChannel
                     {
-                        var strCurrentAPIDS = Convert.ToString(drCurrentDataRow["APIDS"]);
-                        var strCurrentAPIDSST = Convert.ToString(drCurrentDataRow["APIDSST"]);
-                        var strCurrentAPIDSLANG = Convert.ToString(drCurrentDataRow["APIDSLANG"]);
-
-                        ChannelDatabaseChannel cdcCurrentChannelDatabaseChannel;
-                        if (!string.IsNullOrEmpty(strCurrentAPIDS) && !string.IsNullOrEmpty(strCurrentAPIDSST))
+                        TunerData = new ChannelDatabaseTuner
                         {
-                            var bParentAPID = true;
-                            var iCurrentAPIDCounter = 0;
-                            foreach (var iCurrentAPID in strCurrentAPIDS.Split(','))
-                            {
-                                var strCurrentAPIDC = strCurrentAPIDSST.Split(',')[iCurrentAPIDCounter];
+                            TunerType = ciTunerType,
+                            ChannelFlags = GenerateChannelFlags(drCurrentDataRow.GetBooleanOrDefault("CAM"), false, false, drCurrentDataRow.GetUInt16OrDefault("VPID") > 0, uiAudioPID > 0, !bParentAPID && uiAudioPID > 0),
+                            Frequency = drCurrentDataRow.GetUInt32OrDefault("ChannelFrequency"),
+                            Symbolrate = ciSymbolRate,
+                            PMT_PID = drCurrentDataRow.GetUInt16OrDefault("PMT"),
+                            ChannelAVFormat = GenerateChannelAVFormat(strCurrentAPIDStreamType, drCurrentDataRow.GetStringOrEmpty("VPIDST")),
+                            ChannelNumber = drCurrentDataRow.GetUInt16OrDefault("ChannelNumber"),
+                            PolarityOrModulation = ciModulation,
+                            FEC = ciFEC,
+                            OrbitalPosition = ciOrbitalPosition,
+                            Language = strCurrentAPIDLanguage.ToCharArray(),
+                            Audio_PID = uiAudioPID,
+                            Video_PID = drCurrentDataRow.GetUInt16OrDefault("VPID"),
+                            TransportStream_ID = drCurrentDataRow.GetUInt16OrDefault("TSID"),
+                            Teletext_PID = drCurrentDataRow.GetUInt16OrDefault("TPID"),
+                            OriginalNetwork_ID = drCurrentDataRow.GetUInt16OrDefault("ONID"),
+                            Service_ID = drCurrentDataRow.GetUInt16OrDefault("SID"),
+                            PCR_PID = drCurrentDataRow.GetUInt16OrDefault("PCRPID"),
+                            ChannelGroup = 0,
+                            SatModulation = 0,
+                            SatModulationSystem = 0,
+                            LNB_LOF = 0,
+                            DiSEqCExt = 0,
+                            DiSEqC = 0,
+                            Tone = 0,
+                            Reserved1 = 0,
+                            Reserved2 = 0,
+                            Reserved4 = 0,
+                            Reserved6 = 0,
+                            Reserved9 = 0
+                        },
+                        Root = csCategory.ToBinary25CharArray(),
+                        ChannelName = drCurrentDataRow.GetStringOrEmpty("ChannelName").ToBinary25CharArray(),
+                        Category = csCategory.ToBinary25CharArray(),
+                        Encrypted = drCurrentDataRow.GetBooleanOrDefault("CAM") ? (byte)1 : (byte)0,
+                        Reserved = 0
+                    };
 
-                                cdcCurrentChannelDatabaseChannel = new ChannelDatabaseChannel
-                                {
-                                    TunerData = new ChannelDatabaseTuner
-                                    {
-                                        TunerType = ciTunerType,
-                                        ChannelFlags = GenerateChannelFlags(Convert.ToBoolean(drCurrentDataRow["CAM"]), false, false, Convert.ToUInt16(drCurrentDataRow["VPID"]) > 0, Convert.ToUInt16(iCurrentAPID) > 0, !bParentAPID),
-                                        Frequency = Convert.ToUInt32(drCurrentDataRow["ChannelFrequency"]),
-                                        Symbolrate = ciSymbolRate,
-                                        PMT_PID = Convert.ToUInt16(drCurrentDataRow["PMT"]),
-                                        //ChannelAVFormat = GenerateChannelAVFormat(drCurrentDataRow["Dolby"] != DBNull.Value && Convert.ToBoolean(drCurrentDataRow["Dolby"]) ? AVFormat.AUDIO_AC3 : AVFormat.AUDIO_MPEG, Convert.ToString(drCurrentDataRow["Codec"]) == "MPEG4" ? AVFormat.VIDEO_H264 : AVFormat.VIDEO_MPEG2),
-                                        ChannelAVFormat = GenerateChannelAVFormat(strCurrentAPIDC, Convert.ToString(drCurrentDataRow["VPIDST"]) ?? string.Empty),
-                                        ChannelNumber = drCurrentDataRow["ChannelNumber"] != DBNull.Value ? Convert.ToUInt16(drCurrentDataRow["ChannelNumber"]) : Convert.ToUInt16(0),
-                                        PolarityOrModulation = ciModulation,
-                                        FEC = ciFEC,
-                                        OrbitalPosition = ciOrbitalPosition,
-                                        Language = "mis".ToCharArray(),
-                                        Audio_PID = Convert.ToUInt16(iCurrentAPID),
-                                        Video_PID = Convert.ToUInt16(drCurrentDataRow["VPID"]),
-                                        TransportStream_ID = Convert.ToUInt16(drCurrentDataRow["TSID"]),
-                                        Teletext_PID = Convert.ToUInt16(drCurrentDataRow["TPID"]),
-                                        OriginalNetwork_ID = Convert.ToUInt16(drCurrentDataRow["ONID"]),
-                                        Service_ID = Convert.ToUInt16(drCurrentDataRow["SID"]),
-                                        PCR_PID = Convert.ToUInt16(drCurrentDataRow["PCRPID"]),
-                                        ChannelGroup = 0,
-                                        SatModulation = 0,
-                                        SatModulationSystem = 0,
-                                        LNB_LOF = 0,
-                                        DiSEqCExt = 0,
-                                        DiSEqC = 0,
-                                        Tone = 0,
-                                        Reserved1 = 0,
-                                        Reserved2 = 0,
-                                        Reserved4 = 0,
-                                        Reserved6 = 0,
-                                        Reserved9 = 0
-                                    },
-                                    Root = csCategory.ToBinary25CharArray(),
-                                    ChannelName = drCurrentDataRow["ChannelName"].ToString().ToBinary25CharArray(),
-                                    Category = csCategory.ToBinary25CharArray(),
-                                    Encrypted = Convert.ToBoolean(drCurrentDataRow["CAM"]) ? (byte)1 : (byte)0,
-                                    Reserved = 0
-                                };
-                                bwCurrentBinaryWriter.Write(Binarize(cdcCurrentChannelDatabaseChannel));
-
-                                bParentAPID = false;
-                                iCurrentAPIDCounter++;
-                            }
-                        }
-                        else
-                        {
-                            cdcCurrentChannelDatabaseChannel = new ChannelDatabaseChannel
-                            {
-                                TunerData = new ChannelDatabaseTuner
-                                {
-                                    TunerType = ciTunerType,
-                                    ChannelFlags = GenerateChannelFlags(Convert.ToBoolean(drCurrentDataRow["CAM"]), false, false, Convert.ToUInt16(drCurrentDataRow["VPID"]) > 0, false, false),
-                                    Frequency = Convert.ToUInt32(drCurrentDataRow["ChannelFrequency"]),
-                                    Symbolrate = ciSymbolRate,
-                                    PMT_PID = Convert.ToUInt16(drCurrentDataRow["PMT"]),
-                                    //ChannelAVFormat = GenerateChannelAVFormat(drCurrentDataRow["Dolby"] != DBNull.Value && Convert.ToBoolean(drCurrentDataRow["Dolby"]) ? AVFormat.AUDIO_AC3 : AVFormat.AUDIO_MPEG, Convert.ToString(drCurrentDataRow["Codec"]) == "MPEG4" ? AVFormat.VIDEO_H264 : AVFormat.VIDEO_MPEG2),
-                                    ChannelAVFormat = GenerateChannelAVFormat(string.Empty, Convert.ToString(drCurrentDataRow["VPIDST"]) ?? string.Empty),
-                                    FEC = ciFEC,
-                                    ChannelNumber = drCurrentDataRow["ChannelNumber"] != DBNull.Value ? Convert.ToUInt16(drCurrentDataRow["ChannelNumber"]) : Convert.ToUInt16(0),
-                                    PolarityOrModulation = ciModulation,
-                                    OrbitalPosition = ciOrbitalPosition,
-                                    Language = "mis".ToCharArray(),
-                                    Video_PID = Convert.ToUInt16(drCurrentDataRow["VPID"]),
-                                    TransportStream_ID = Convert.ToUInt16(drCurrentDataRow["TSID"]),
-                                    Teletext_PID = Convert.ToUInt16(drCurrentDataRow["TPID"]),
-                                    OriginalNetwork_ID = Convert.ToUInt16(drCurrentDataRow["ONID"]),
-                                    Service_ID = Convert.ToUInt16(drCurrentDataRow["SID"]),
-                                    PCR_PID = Convert.ToUInt16(drCurrentDataRow["PCRPID"]),
-                                    ChannelGroup = 0,
-                                    SatModulation = 0,
-                                    SatModulationSystem = 0,
-                                    LNB_LOF = 0,
-                                    DiSEqCExt = 0,
-                                    DiSEqC = 0,
-                                    Tone = 0,
-                                    Reserved1 = 0,
-                                    Reserved2 = 0,
-                                    Reserved4 = 0,
-                                    Reserved6 = 0,
-                                    Reserved9 = 0
-                                },
-                                Root = csCategory.ToBinary25CharArray(),
-                                ChannelName = drCurrentDataRow["ChannelName"].ToString().ToBinary25CharArray(),
-                                Category = csCategory.ToBinary25CharArray(),
-                                Encrypted = Convert.ToByte(Convert.ToBoolean(drCurrentDataRow["CAM"])),
-                                Reserved = 0
-                            };
-                            bwCurrentBinaryWriter.Write(Binarize(cdcCurrentChannelDatabaseChannel));
-                        }
-                    }
+                    bwCurrentBinaryWriter.Write(Binarize(cdcCurrentChannelDatabaseChannel));
+                    bParentAPID = false;
                 }
             }
         }
@@ -654,12 +804,19 @@ namespace KON.Liwest.ChannelFactory
         {
             if (!string.IsNullOrEmpty(strLocalDVBViewerChannelDatabaseFilename) && File.Exists(strLocalDVBViewerChannelDatabaseFilename))
             {
-                lCurrentLogger.Trace("Global.ExportSourceDataToDVBViewerChannelDatabase()".Pastel(ConsoleColor.Cyan));
+                lCurrentLogger.Trace("Global.DumpDVBViewerChannelDatabase()".Pastel(ConsoleColor.Cyan));
                 lCurrentLogger.Info("-» Reading channel database file".Pastel(ConsoleColor.Green));
 
-                using BinaryReader brCurrentBinaryReader = new BinaryReader(File.Open(strLocalDVBViewerChannelDatabaseFilename, FileMode.Open));
+                using BinaryReader brCurrentBinaryReader = new BinaryReader(File.Open(strLocalDVBViewerChannelDatabaseFilename, FileMode.Open, FileAccess.Read, FileShare.Read));
 
-                fixed (byte* pCurrentHeaderBuffer = brCurrentBinaryReader.ReadBytes(Marshal.SizeOf(typeof(ChannelDatabaseHeader))))
+                var baCurrentHeaderBuffer = brCurrentBinaryReader.ReadBytes(Marshal.SizeOf(typeof(ChannelDatabaseHeader)));
+                if (baCurrentHeaderBuffer.Length < Marshal.SizeOf(typeof(ChannelDatabaseHeader)))
+                {
+                    lCurrentLogger.Error("-» Channel database file is too small to contain a valid header".Pastel(ConsoleColor.Red));
+                    return;
+                }
+
+                fixed (byte* pCurrentHeaderBuffer = baCurrentHeaderBuffer)
                 {
                     ChannelDatabaseHeader? dvbvHeader = Marshal.PtrToStructure<ChannelDatabaseHeader>(new IntPtr(pCurrentHeaderBuffer));
                     if (dvbvHeader != null)
@@ -672,10 +829,16 @@ namespace KON.Liwest.ChannelFactory
                         lCurrentLogger.Info(("VersionLo : " + dvbvHeader.VersionLo).Pastel(ConsoleColor.Yellow));
                         lCurrentLogger.Info("-----------------------------------------".Pastel(ConsoleColor.Yellow));
 
+                        var iCurrentChannelSize = Marshal.SizeOf(typeof(ChannelDatabaseChannel));
                         byte[] baCurrentChannelBuffer;
-                        do
+                        while ((baCurrentChannelBuffer = brCurrentBinaryReader.ReadBytes(iCurrentChannelSize)).Length > 0)
                         {
-                            baCurrentChannelBuffer = brCurrentBinaryReader.ReadBytes(Marshal.SizeOf(typeof(ChannelDatabaseChannel)));
+                            if (baCurrentChannelBuffer.Length < iCurrentChannelSize)
+                            {
+                                lCurrentLogger.Warn($"-» Ignored incomplete channel record at the end of the file ({baCurrentChannelBuffer.Length} of {iCurrentChannelSize} bytes)".Pastel(ConsoleColor.Yellow));
+                                break;
+                            }
+
                             fixed (byte* pCurrentChannelBuffer = baCurrentChannelBuffer)
                             {
                                 ChannelDatabaseChannel? dvbvChannel = Marshal.PtrToStructure<ChannelDatabaseChannel>(new IntPtr(pCurrentChannelBuffer));
@@ -689,14 +852,14 @@ namespace KON.Liwest.ChannelFactory
                                     lCurrentLogger.Info("-----------------------------------------".Pastel(ConsoleColor.Yellow));
                                 }
                             }
-                        } while (baCurrentChannelBuffer.Length > 0);
+                        }
                     }
                 }
             }
         }
 
         /// <summary>
-        ///     Global.ExportSourceDataToDVBViewerTransponderFile()
+        ///     Global.ExportSourceDataToExcelExportFile()
         /// </summary>
         /// <param name="strLocalExcelFilename"></param>
         public static void ExportSourceDataToExcelExportFile(string? strLocalExcelFilename)
@@ -706,12 +869,12 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Trace("Global.ExportSourceDataToExcelExportFile()".Pastel(ConsoleColor.Cyan));
                 lCurrentLogger.Info("-» Export source data to excel export file".Pastel(ConsoleColor.Green));
 
-                DataTable dtLocalExportSourceData = dtSourceDataTable.Copy();
+                var dtLocalExportSourceData = dtSourceDataTable.Copy();
 
                 if (dtLocalExportSourceData.Rows.Count > 0)
                 {
-                    var wbCurrentWorkbook = new Workbook(strLocalExcelFilename, "Channels");
-                    var wsCurrentWorksheet = wbCurrentWorkbook.GetWorksheet("Channels");
+                    var wbCurrentWorkbook = new Workbook(GetOutputFilePath(strLocalExcelFilename), csExcelWorksheetName);
+                    var wsCurrentWorksheet = wbCurrentWorkbook.GetWorksheet(csExcelWorksheetName);
 
                     wbCurrentWorkbook.SetCurrentWorksheet(wsCurrentWorksheet);
                     wsCurrentWorksheet.SetCurrentRowNumber(0);
@@ -731,7 +894,6 @@ namespace KON.Liwest.ChannelFactory
                         }
                     }
 
-                    var fCorrectionFactorForColumnFilter = 3 * EXCEL_CHARACTER_TO_WIDTH_CONSTANT;
                     float? fSenderFieldMaximumLength = 0;
                     float? fPaketFieldMaximumLength = 0;
 
@@ -745,7 +907,7 @@ namespace KON.Liwest.ChannelFactory
 
                     for (var iCurrentColumnNumber = 0; iCurrentColumnNumber <= wsCurrentWorksheet.GetLastColumnNumber(); iCurrentColumnNumber++)
                     {
-                        float? fCurrentMaximumLengthValuesWithHeader = Convert.ToSingle(Convert.ToString(wsCurrentWorksheet.GetCell(iCurrentColumnNumber, 0).Value)!.Length) * EXCEL_CHARACTER_TO_WIDTH_CONSTANT + fCorrectionFactorForColumnFilter;
+                        float? fCurrentMaximumLengthValuesWithHeader = Convert.ToSingle(Convert.ToString(wsCurrentWorksheet.GetCell(iCurrentColumnNumber, 0).Value)!.Length) * EXCEL_CHARACTER_TO_WIDTH_CONSTANT + EXCEL_CHARACTER_TO_WIDTH_CONSTANT_CF;
 
                         switch (iCurrentColumnNumber)
                         {
@@ -778,7 +940,6 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="femLocalFlagExportMode"></param>
         /// <param name="strLocalFilename"></param>
         /// <param name="fefLocalExportFilenameFormat"></param>
-
         public static void ExportSourceDataToEnigmaSelector(FlagExportMode femLocalFlagExportMode, string? strLocalFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat)
         {
             switch (femLocalFlagExportMode)
@@ -814,115 +975,103 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="bLocalExportBouquetsFiles"></param>
         public static void ExportSourceDataToEnigma(string? strLocalExportFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat, bool bLocalExportTransponders, bool bLocalExportChannelDatabase, bool bLocalExportBouquetsFiles)
         {
-            SettingsIO settingsIO = new SettingsIO { EditorName = "KON.Liwest.ChannelFactory", Log = new NullLogger() };
-            string strLocalExportFolderAbsolutePath = Path.GetFullPath(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule?.FileName) ?? string.Empty);
+            lCurrentLogger.Trace("Global.ExportSourceDataToEnigma()".Pastel(ConsoleColor.Cyan));
+            lCurrentLogger.Info($"-» Export source data to enigma Transponders:{bLocalExportTransponders} - ChannelDatabase:{bLocalExportChannelDatabase} - BouquetFiles:{bLocalExportBouquetsFiles}".Pastel(ConsoleColor.Green));
 
-            if (!string.IsNullOrEmpty(strLocalExportFolderAbsolutePath))
+            if (dtSourceDataTable.Rows.Count == 0)
+                return;
+
+            // Bouquet files are saved without explicit filename into the current directory, all other files next to the given filename
+            var strCurrentExportFilePath = string.IsNullOrEmpty(strLocalExportFilename) ? null : GetOutputFilePath(strLocalExportFilename);
+            var strCurrentExportFolderAbsolutePath = strCurrentExportFilePath != null ? Path.GetDirectoryName(strCurrentExportFilePath)! : Directory.GetCurrentDirectory();
+            var strCurrentExportFilename = strCurrentExportFilePath != null ? Path.GetFileName(strCurrentExportFilePath) : string.Empty;
+
+            var sioCurrentSettingsIO = new SettingsIO { EditorName = cstrCurrentProjectName, Log = new NullLogger() };
+            var isCurrentISettings = sioCurrentSettingsIO.Factory.InitNewSettings();
+            isCurrentISettings.Log = sioCurrentSettingsIO.Log;
+            isCurrentISettings.SettingsFileName = strCurrentExportFilename;
+            isCurrentISettings.SettingsDirectory = strCurrentExportFolderAbsolutePath;
+
+            isCurrentISettings.SettingsVersion = fefLocalExportFilenameFormat switch
             {
-                ISettings isCurrentISettings = settingsIO.Factory.InitNewSettings();
-                isCurrentISettings.Log = settingsIO.Log;
-                isCurrentISettings.SettingsFileName = strLocalExportFilename;
-                isCurrentISettings.SettingsDirectory = strLocalExportFolderAbsolutePath;
+                FlagExportEnigmaFormat.Engima2Ver1 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver1,
+                FlagExportEnigmaFormat.Engima2Ver2 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver2,
+                FlagExportEnigmaFormat.Engima2Ver3 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver3,
+                FlagExportEnigmaFormat.Engima2Ver4 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver4,
+                FlagExportEnigmaFormat.Engima2Ver5 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver5,
+                _ => isCurrentISettings.SettingsVersion
+            };
 
-                switch (fefLocalExportFilenameFormat)
+            var ixcCurrentIXmlCable = sioCurrentSettingsIO.Factory.InitNewXmlCable();
+            ixcCurrentIXmlCable.Name = string.Format(csTransponderRootElementNameFormat, DateTime.Now);
+            ixcCurrentIXmlCable.SatFeed = Convert.ToString(ciSatFeed);
+            ixcCurrentIXmlCable.Flags = Convert.ToString(ciFEC);
+            ixcCurrentIXmlCable.CountryCode = ciCountryCode;
+
+            // Transponders need a valid frequency, TSID and ONID
+            var dtCurrentTransponderDataTable = dtSourceDataTable.DefaultView.ToTable(true, "ChannelFrequency", "TSID", "ONID");
+            dtCurrentTransponderDataTable = dtCurrentTransponderDataTable.AsEnumerable().Where(drCurrentDataRow => drCurrentDataRow.GetNullableInt32("ChannelFrequency") is > 0 && !drCurrentDataRow.IsNullOrEmptyValue("TSID") && !drCurrentDataRow.IsNullOrEmptyValue("ONID")).CopyToDataTableOrEmpty(dtCurrentTransponderDataTable);
+            dtCurrentTransponderDataTable.DefaultView.Sort = "ChannelFrequency";
+            dtCurrentTransponderDataTable = dtCurrentTransponderDataTable.DefaultView.ToTable();
+
+            foreach (DataRow drCurrentDataRow in dtCurrentTransponderDataTable.Rows)
+            {
+                var strCurrentFrequency = drCurrentDataRow.GetStringOrEmpty("ChannelFrequency");
+
+                ixcCurrentIXmlCable.Transponders.Add(new XmlTransponder
                 {
-                    case FlagExportEnigmaFormat.Engima2Ver1:
-                    {
-                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver1;
-                        break;
-                    }
-                    case FlagExportEnigmaFormat.Engima2Ver2:
-                    {
-                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver2;
-                        break;
-                    }
-                    case FlagExportEnigmaFormat.Engima2Ver3:
-                    {
-                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver3;
-                        break;
-                    }
-                    case FlagExportEnigmaFormat.Engima2Ver4:
-                    {
-                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver4;
-                        break;
-                    }
-                    case FlagExportEnigmaFormat.Engima2Ver5:
-                    {
-                        isCurrentISettings.SettingsVersion = Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver5;
-                        break;
-                    }
-                }
+                    Frequency = strCurrentFrequency,
+                    SymbolRate = Convert.ToString(ciSymbolRate * 1000),
+                    FEC = Convert.ToString(ciFEC),
+                    Modulation = Convert.ToString(ciModulation)
+                });
 
-                lCurrentLogger.Trace("Global.ExportSourceDataToEnigma()".Pastel(ConsoleColor.Cyan));
-                lCurrentLogger.Info($"-» Export source data to enigma Transponders:{bLocalExportTransponders} - ChannelDatabase:{bLocalExportChannelDatabase} - BouquetFiles:{bLocalExportBouquetsFiles}".Pastel(ConsoleColor.Green));
-
-                DataTable dtCurrentExportSourceData = dtSourceDataTable.Copy();
-
-                if (dtCurrentExportSourceData.Rows.Count > 0)
-                {
-                    var strTransponderRootElementName = $"LIWEST ({DateTime.Now:yyyy-MM-dd HH:mm})";
-
-                    IXmlCable ixcCurrentIXmlCable = settingsIO.Factory.InitNewXmlCable();
-                    ixcCurrentIXmlCable.Name = strTransponderRootElementName;
-                    ixcCurrentIXmlCable.SatFeed = Convert.ToString(ciSatFeed);
-                    ixcCurrentIXmlCable.Flags = Convert.ToString(ciFEC);
-                    ixcCurrentIXmlCable.CountryCode = ciCountryCode;
-
-                    var dtCurrentSourceDataTable = dtSourceDataTable.DefaultView.ToTable(true, "ChannelFrequency", "TSID", "ONID");
-                    dtCurrentSourceDataTable.DefaultView.Sort = "ChannelFrequency";
-                    dtCurrentSourceDataTable = dtCurrentSourceDataTable.DefaultView.ToTable();
-
-                    foreach (DataRow drCurrentDataRow in dtCurrentSourceDataTable.Rows)
-                    {
-                        ixcCurrentIXmlCable.Transponders.Add(new XmlTransponder
-                        {
-                            Frequency = Convert.ToString(drCurrentDataRow["ChannelFrequency"]),
-                            SymbolRate = Convert.ToString(ciSymbolRate * 1000),
-                            FEC = Convert.ToString(ciFEC),
-                            Modulation = Convert.ToString(ciModulation)
-                        });
-
-                        isCurrentISettings.Transponders.Add(settingsIO.Factory.InitNewTransponderDVBC($"{Convert.ToString("ffff0000")}:{Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte()}:{Convert.ToInt32(drCurrentDataRow["ONID"]).ToHexString4Byte()}", $"\tc {Convert.ToString(drCurrentDataRow["ChannelFrequency"])}:{Convert.ToString(ciSymbolRate * 1000)}:2:{Convert.ToString(ciModulation)}:{Convert.ToString(ciFEC)}:0:0"));
-                    }
-
-                    isCurrentISettings.Cables.Add(ixcCurrentIXmlCable);
-                    IXmlCablesIO cablesIO = settingsIO.Factory.InitNewXmlCableIO(settingsIO._fileHelper);
-
-                    if (bLocalExportTransponders)
-                        if (!string.IsNullOrEmpty(strLocalExportFilename))
-                             cablesIO.SaveCablesToFile(Path.Combine(strLocalExportFolderAbsolutePath, strLocalExportFilename), isCurrentISettings);
-                    
-                    if (bLocalExportChannelDatabase || bLocalExportBouquetsFiles)
-                    {
-                        IFileBouquet ifbCurrentIFileBouquetTV = settingsIO.Factory.InitNewFileBouquet("TV", "userbouquet.favourites.tv");
-                        IFileBouquet ifbCurrentIFileBouquetRadio = settingsIO.Factory.InitNewFileBouquet("Radio", "userbouquet.favourites.radio");
-
-                        foreach (DataRow drCurrentDataRow in dtCurrentExportSourceData.Rows)
-                        {
-                            IService isCurrentIService = settingsIO.Factory.InitNewService($"{Convert.ToInt32(drCurrentDataRow["SID"]).ToHexString4Byte()}:{ciDefaultDVBCNamespace}:{Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte()}:{Convert.ToInt32(drCurrentDataRow["ONID"]).ToHexString4Byte()}:{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? "1" : "2")}:{Convert.ToString(drCurrentDataRow["ChannelNumber"])}:0", Convert.ToString(drCurrentDataRow["ChannelName"]) ?? string.Empty, $"p:{Convert.ToString(drCurrentDataRow["ProviderName"]) ?? string.Empty}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? ",c:00" + Convert.ToInt32(drCurrentDataRow["VPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["TPID"])) && Convert.ToString(drCurrentDataRow["TPID"]) != "0" ? ",c:02" + Convert.ToInt32(drCurrentDataRow["TPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["PCRPID"])) && Convert.ToString(drCurrentDataRow["PCRPID"]) != "0" ? ",c:03" + Convert.ToInt32(drCurrentDataRow["PCRPID"]).ToHexString4Byte() : string.Empty)}{(!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0" ? ",c:050001" : string.Empty)}{(Convert.ToBoolean(drCurrentDataRow["CAM"]) ? ",C:0000" : string.Empty)},f:08");
-                            isCurrentIService.Transponder = isCurrentISettings.Transponders.FirstOrDefault(x => x.TSID == Convert.ToInt32(drCurrentDataRow["TSID"]).ToHexString4Byte());
-                            isCurrentISettings.Services.Add(isCurrentIService);
-
-                            if (!string.IsNullOrEmpty(Convert.ToString(drCurrentDataRow["VPID"])) && Convert.ToString(drCurrentDataRow["VPID"]) != "0")
-                                ifbCurrentIFileBouquetTV.BouquetItems.Add(new BouquetItemService(isCurrentIService));
-                            else
-                                ifbCurrentIFileBouquetRadio.BouquetItems.Add(new BouquetItemService(isCurrentIService));
-                        }
-
-                        isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetTV);
-                        isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetRadio);
-
-                        if (!string.IsNullOrEmpty(strLocalExportFolderAbsolutePath))
-                        {
-                            if (bLocalExportChannelDatabase)
-                                settingsIO.Save(strLocalExportFolderAbsolutePath, isCurrentISettings, strLocalExportFilename, bLocalExportChannelDatabase, false, bLocalExportTransponders, bLocalExportBouquetsFiles);
-
-                            if (bLocalExportBouquetsFiles)
-                                settingsIO.Save(strLocalExportFolderAbsolutePath, isCurrentISettings, strLocalExportFilename, bLocalExportChannelDatabase, false, bLocalExportTransponders, bLocalExportBouquetsFiles);
-                        }
-                    }
-                }
+                isCurrentISettings.Transponders.Add(sioCurrentSettingsIO.Factory.InitNewTransponderDVBC($"{ciDefaultDVBCNamespace}:{drCurrentDataRow.GetInt32OrDefault("TSID").ToHexString4Byte()}:{drCurrentDataRow.GetInt32OrDefault("ONID").ToHexString4Byte()}", $"\tc {strCurrentFrequency}:{ciSymbolRate * 1000}:{ciEnigmaTransponderInversion}:{ciModulation}:{ciFEC}:0:0"));
             }
+
+            isCurrentISettings.Cables.Add(ixcCurrentIXmlCable);
+            var ixcioCurrentIXmlCablesIO = sioCurrentSettingsIO.Factory.InitNewXmlCableIO(sioCurrentSettingsIO._fileHelper);
+
+            if (bLocalExportTransponders && strCurrentExportFilePath != null)
+                ixcioCurrentIXmlCablesIO.SaveCablesToFile(strCurrentExportFilePath, isCurrentISettings);
+
+            if (!bLocalExportChannelDatabase && !bLocalExportBouquetsFiles)
+                return;
+
+            var ifbCurrentIFileBouquetTV = sioCurrentSettingsIO.Factory.InitNewFileBouquet(csEnigmaBouquetNameTV, csEnigmaBouquetFilenameTV);
+            var ifbCurrentIFileBouquetRadio = sioCurrentSettingsIO.Factory.InitNewFileBouquet(csEnigmaBouquetNameRadio, csEnigmaBouquetFilenameRadio);
+
+            foreach (var drCurrentDataRow in GetExportableServiceRows("enigma channel database / bouquets"))
+            {
+                var iCurrentVPID = drCurrentDataRow.GetInt32OrDefault("VPID");
+                var iCurrentTPID = drCurrentDataRow.GetInt32OrDefault("TPID");
+                var iCurrentPCRPID = drCurrentDataRow.GetInt32OrDefault("PCRPID");
+                var bCurrentIsVideoService = iCurrentVPID > 0;
+                var strCurrentTSID = drCurrentDataRow.GetInt32OrDefault("TSID").ToHexString4Byte();
+
+                var strCurrentServiceReference = $"{drCurrentDataRow.GetInt32OrDefault("SID").ToHexString4Byte()}:{ciDefaultDVBCNamespace}:{strCurrentTSID}:{drCurrentDataRow.GetInt32OrDefault("ONID").ToHexString4Byte()}:{(bCurrentIsVideoService ? ciEnigmaServiceTypeTV : ciEnigmaServiceTypeRadio)}:{drCurrentDataRow.GetStringOrEmpty("ChannelNumber")}:0";
+                var strCurrentServiceFlags = $"p:{drCurrentDataRow.GetStringOrEmpty("ProviderName")}" +
+                                             (bCurrentIsVideoService ? $",c:00{iCurrentVPID.ToHexString4Byte()}" : string.Empty) +
+                                             (iCurrentTPID > 0 ? $",c:02{iCurrentTPID.ToHexString4Byte()}" : string.Empty) +
+                                             (iCurrentPCRPID > 0 ? $",c:03{iCurrentPCRPID.ToHexString4Byte()}" : string.Empty) +
+                                             (bCurrentIsVideoService ? ",c:050001" : string.Empty) +
+                                             (drCurrentDataRow.GetBooleanOrDefault("CAM") ? ",C:0000" : string.Empty) +
+                                             $",{csEnigmaServiceFlags}";
+
+                var isCurrentIService = sioCurrentSettingsIO.Factory.InitNewService(strCurrentServiceReference, drCurrentDataRow.GetStringOrEmpty("ChannelName"), strCurrentServiceFlags);
+                isCurrentIService.Transponder = isCurrentISettings.Transponders.FirstOrDefault(x => x.TSID == strCurrentTSID);
+                isCurrentISettings.Services.Add(isCurrentIService);
+
+                if (bCurrentIsVideoService)
+                    ifbCurrentIFileBouquetTV.BouquetItems.Add(new BouquetItemService(isCurrentIService));
+                else
+                    ifbCurrentIFileBouquetRadio.BouquetItems.Add(new BouquetItemService(isCurrentIService));
+            }
+
+            isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetTV);
+            isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetRadio);
+
+            sioCurrentSettingsIO.Save(strCurrentExportFolderAbsolutePath, isCurrentISettings, strCurrentExportFilename, bLocalExportChannelDatabase, false, bLocalExportTransponders, bLocalExportBouquetsFiles);
         }
 
         /// <summary>
@@ -937,13 +1086,13 @@ namespace KON.Liwest.ChannelFactory
                 lCurrentLogger.Info("-» Remove channels by channelremoval file".Pastel(ConsoleColor.Green));
 
                 var crdCurrentChannelRemovalDictionary = JsonConvert.DeserializeObject<ChannelRemovalDictionary[]>(File.ReadAllText(strLocalChannelRemovalFile, Encoding.UTF8));
-                List<DataRow> ldrLocalRemovedChannels = [];
+                List<DataRow> ldrCurrentRemovedChannels = [];
 
                 if (dtSourceDataTable.Rows.Count > 0 && crdCurrentChannelRemovalDictionary?.Length > 0)
                 {
-                    ldrLocalRemovedChannels.AddRange(from DataRow drCurrentDataRow in dtSourceDataTable.Rows let iecrdCurrentChannelRemovalDictionary = crdCurrentChannelRemovalDictionary.Where(x => x.ChannelName == Convert.ToString(drCurrentDataRow["ChannelName"]) && x.ChannelFrequency == Convert.ToString(drCurrentDataRow["ChannelFrequency"])) where iecrdCurrentChannelRemovalDictionary.Any() select drCurrentDataRow);
+                    ldrCurrentRemovedChannels.AddRange(from DataRow drCurrentDataRow in dtSourceDataTable.Rows let iecrdCurrentChannelRemovalDictionary = crdCurrentChannelRemovalDictionary.Where(x => x.ChannelName == Convert.ToString(drCurrentDataRow["ChannelName"]) && x.ChannelFrequency.ToFrequencyKHz() == drCurrentDataRow.GetNullableInt32("ChannelFrequency")) where iecrdCurrentChannelRemovalDictionary.Any() select drCurrentDataRow);
 
-                    foreach (var drCurrentDataRow in ldrLocalRemovedChannels)
+                    foreach (var drCurrentDataRow in ldrCurrentRemovedChannels)
                     {
                         dtSourceDataTable.Rows.Remove(drCurrentDataRow);
                     }
@@ -970,22 +1119,22 @@ namespace KON.Liwest.ChannelFactory
                     {
                         drCurrentDataRow["ChannelNumber"] = DBNull.Value;
 
-                        var iecsdCurrentChannelSortingDictionary = csdCurrentChannelSortingDictionary.Where(x => x.ChannelName == Convert.ToString(drCurrentDataRow["ChannelName"]) && x.ChannelFrequency == Convert.ToString(drCurrentDataRow["ChannelFrequency"]));
-                        var currentChannelSortingDictionary = iecsdCurrentChannelSortingDictionary as ChannelSortingDictionary[] ?? iecsdCurrentChannelSortingDictionary.ToArray();
-                        if (currentChannelSortingDictionary.Any())
-                            drCurrentDataRow["ChannelNumber"] = currentChannelSortingDictionary.First().SortNumber;
+                        var csdCurrentChannelSortingEntry = csdCurrentChannelSortingDictionary.FirstOrDefault(x => x.ChannelName == Convert.ToString(drCurrentDataRow["ChannelName"]) && x.ChannelFrequency.ToFrequencyKHz() == drCurrentDataRow.GetNullableInt32("ChannelFrequency"));
+                        if (csdCurrentChannelSortingEntry?.SortNumber.ToNullableInt32() is { } iCurrentSortNumber)
+                            drCurrentDataRow["ChannelNumber"] = iCurrentSortNumber;
                     }
 
-                    dtSourceDataTable = dtSourceDataTable.AsEnumerable().OrderBy(r => r.Field<int?>("ChannelNumber")).ThenBy(r => r.Field<string>("ChannelName")).CopyToDataTable();
+                    // Unsorted channels (without sort number) are always placed in front of the sorted ones
+                    dtSourceDataTable = dtSourceDataTable.AsEnumerable().OrderBy(r => r.IsNull("ChannelNumber") ? 0 : 1).ThenBy(r => r.Field<int?>("ChannelNumber")).ThenBy(r => r.Field<string>("ChannelName")).CopyToDataTableOrEmpty(dtSourceDataTable);
                 }
             }
         }
-        
+
         /// <summary>
         ///     Global.CleanupSourceData()
         /// </summary>
         /// <param name="fscLocalFlagSourceCleanup"></param>
-        public static DataTable CleanupSourceData(FlagSourceCleanup fscLocalFlagSourceCleanup)
+        public static void CleanupSourceData(FlagSourceCleanup fscLocalFlagSourceCleanup)
         {
             lCurrentLogger.Trace("Global.CleanupSourceData()".Pastel(ConsoleColor.Cyan));
             lCurrentLogger.Info("-» Cleanup sourcedata by defined operation".Pastel(ConsoleColor.Green));
@@ -993,99 +1142,88 @@ namespace KON.Liwest.ChannelFactory
             switch (fscLocalFlagSourceCleanup)
             {
                 case FlagSourceCleanup.RemoveInvalidSIDs:
-                {
-                    return CleanupSourceData_RemoveInvalidSIDs(dtSourceDataTable);
-                }
+                    CleanupSourceData_RemoveInvalidSIDs();
+                    break;
                 case FlagSourceCleanup.GroupAndInvalidate:
-                {
-                    return CleanupSourceData_RemoveInvalidSIDs(CleanupSourceData_GroupAndInvalidate(dtSourceDataTable));
-                }
+                    CleanupSourceData_GroupAndInvalidate();
+                    CleanupSourceData_RemoveInvalidSIDs();
+                    break;
             }
-
-            return dtSourceDataTable;
         }
 
         /// <summary>
         ///     Global.CleanupSourceData_RemoveInvalidSIDs()
         /// </summary>
-        /// <param name="dtLocalDataTable"></param>
-        public static DataTable CleanupSourceData_RemoveInvalidSIDs(DataTable dtLocalDataTable)
+        public static void CleanupSourceData_RemoveInvalidSIDs()
         {
             lCurrentLogger.Trace("Global.CleanupSourceData_RemoveInvalidSIDs()".Pastel(ConsoleColor.Cyan));
             lCurrentLogger.Info("-» Cleanup sourcedata by removing invalid SIDs".Pastel(ConsoleColor.Green));
 
-            return dtLocalDataTable.Rows.Count > 0 ? dtLocalDataTable.Copy().Rows.Cast<DataRow>().Where(r => r["SID"] != DBNull.Value).CopyToDataTable() : dtLocalDataTable;
+            if (dtSourceDataTable is not { Rows.Count: > 0 }) 
+                return;
+
+            var iCurrentRowCount = dtSourceDataTable.Rows.Count;
+            dtSourceDataTable = dtSourceDataTable.AsEnumerable().Where(x => x.Field<int?>("SID") != null).CopyToDataTableOrEmpty(dtSourceDataTable);
+
+            if (dtSourceDataTable.Rows.Count == 0)
+                lCurrentLogger.Warn($"-» All {iCurrentRowCount} channels have been removed as none of them contains a SID (blindscan data required)".Pastel(ConsoleColor.Yellow));
         }
 
         /// <summary>
         ///     Global.CleanupSourceData_GroupAndInvalidate()
         /// </summary>
-        /// <param name="dtLocalDataTable"></param>
-        public static DataTable CleanupSourceData_GroupAndInvalidate(DataTable dtLocalDataTable)
+        public static void CleanupSourceData_GroupAndInvalidate()
         {
             lCurrentLogger.Trace("Global.CleanupSourceData_GroupAndInvalidate()".Pastel(ConsoleColor.Cyan));
             lCurrentLogger.Info("-» Cleanup sourcedata by grouping and invalidating".Pastel(ConsoleColor.Green));
+            
+            if (dtSourceDataTable is not { Rows.Count: > 0 })
+                return;
 
-            if (dtLocalDataTable.Rows.Count > 0)
+            var dtCurrentDataTable = dtSourceDataTable.Clone();
+            var saColumnNames = dtSourceDataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName).ToArray();
+            var iegGroupedRows = dtSourceDataTable.AsEnumerable().GroupBy(drCurrentDataRow => new
             {
-                IEnumerable<DataRow?> ercCurrentEnumerableRowCollection = dtLocalDataTable.Copy().AsEnumerable().GroupBy(gb => new { ChannelName = Convert.ToString(gb["ChannelName"])?.ToUpper(), ChannelFrequency = gb["ChannelFrequency"] }).Select(s =>
+                ChannelName = Convert.ToString(drCurrentDataRow["ChannelName"])?.ToUpperInvariant().Trim(),
+                ChannelFrequency = drCurrentDataRow["ChannelFrequency"] != DBNull.Value ? Convert.ToInt32(drCurrentDataRow["ChannelFrequency"]) : 0
+            });
+
+            foreach (var igCurrentGroupedRow in iegGroupedRows)
+            {
+                var drCurrentDataRow = dtCurrentDataTable.NewRow();
+                foreach (var sCurrentColumnName in saColumnNames)
                 {
-                    DataRow drNewDataRow = dtLocalDataTable.Clone().NewRow();
+                    object oFinalCellValue = DBNull.Value;
+                    foreach (var drCurrentGroupedDataRow in igCurrentGroupedRow)
+                    {
+                        if (!drCurrentGroupedDataRow.Table.Columns.Contains(sCurrentColumnName)) 
+                            continue;
 
-                    drNewDataRow["ChannelNumber"] = s.Where(w => w["ChannelNumber"] != DBNull.Value).Select(ss => ss["ChannelNumber"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ChannelName"] = s.Where(w => w["ChannelName"] != DBNull.Value).Select(ss => ss["ChannelName"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ChannelFrequency"] = s.Where(w => w["ChannelFrequency"] != DBNull.Value).Select(ss => ss["ChannelFrequency"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Package"] = s.Where(w => w["Package"] != DBNull.Value).Select(ss => ss["Package"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Dolby"] = s.Where(w => w["Dolby"] != DBNull.Value).Select(ss => ss["Dolby"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["VoD"] = s.Where(w => w["VoD"] != DBNull.Value).Select(ss => ss["VoD"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Language"] = s.Where(w => w["Language"] != DBNull.Value).Select(ss => ss["Language"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Stingray"] = s.Where(w => w["Stingray"] != DBNull.Value).Select(ss => ss["Stingray"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Free"] = s.Where(w => w["Free"] != DBNull.Value).Select(ss => ss["Free"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Pairing"] = s.Where(w => w["Pairing"] != DBNull.Value).Select(ss => ss["Pairing"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Issues"] = s.Where(w => w["Issues"] != DBNull.Value).Select(ss => ss["Issues"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["Codec"] = s.Where(w => w["Codec"] != DBNull.Value).Select(ss => ss["Codec"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ProviderName"] = s.Where(w => w["ProviderName"] != DBNull.Value).Select(ss => ss["ProviderName"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["CAM"] = s.Where(w => w["CAM"] != DBNull.Value).Select(ss => ss["CAM"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["SID"] = s.Where(w => w["SID"] != DBNull.Value).Select(ss => ss["SID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["TSID"] = s.Where(w => w["TSID"] != DBNull.Value).Select(ss => ss["TSID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["ONID"] = s.Where(w => w["ONID"] != DBNull.Value).Select(ss => ss["ONID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["PMT"] = s.Where(w => w["PMT"] != DBNull.Value).Select(ss => ss["PMT"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["PCRPID"] = s.Where(w => w["PCRPID"] != DBNull.Value).Select(ss => ss["PCRPID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["VPID"] = s.Where(w => w["VPID"] != DBNull.Value).Select(ss => ss["VPID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["VPIDST"] = s.Where(w => w["VPIDST"] != DBNull.Value).Select(ss => ss["VPIDST"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["APIDS"] = s.Where(w => w["APIDS"] != DBNull.Value).Select(ss => ss["APIDS"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["APIDSST"] = s.Where(w => w["APIDSST"] != DBNull.Value).Select(ss => ss["APIDSST"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["APIDSLANG"] = s.Where(w => w["APIDSLANG"] != DBNull.Value).Select(ss => ss["APIDSLANG"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["SPID"] = s.Where(w => w["SPID"] != DBNull.Value).Select(ss => ss["SPID"]).FirstOrDefault() ?? DBNull.Value;
-                    drNewDataRow["TPID"] = s.Where(w => w["TPID"] != DBNull.Value).Select(ss => ss["TPID"]).FirstOrDefault() ?? DBNull.Value;
+                        var oCurrentCellValue= drCurrentGroupedDataRow[sCurrentColumnName];
+                        if (oCurrentCellValue == DBNull.Value || (oCurrentCellValue is string s && string.IsNullOrWhiteSpace(s)))
+                            continue;
 
-                    if (drNewDataRow["VPID"] == DBNull.Value && drNewDataRow["APIDS"] == DBNull.Value)
-                        return null;
-                    if (drNewDataRow["VPID"] == DBNull.Value && Convert.ToString(drNewDataRow["APIDS"]) == "0")
-                        return null;
-                    if (drNewDataRow["VPID"] == DBNull.Value && string.IsNullOrEmpty(Convert.ToString(drNewDataRow["APIDS"])))
-                        return null;
-                    if (Convert.ToString(drNewDataRow["VPID"]) == "0" && Convert.ToString(drNewDataRow["APIDS"]) == "0")
-                        return null;
-                    if (Convert.ToString(drNewDataRow["VPID"]) == "0" && drNewDataRow["APIDS"] == DBNull.Value)
-                        return null;
-                    if (Convert.ToString(drNewDataRow["VPID"]) == "0" && string.IsNullOrEmpty(Convert.ToString(drNewDataRow["APIDS"])))
-                        return null;
-                    if (string.IsNullOrEmpty(Convert.ToString(drNewDataRow["VPID"])) && string.IsNullOrEmpty(Convert.ToString(drNewDataRow["APIDS"])))
-                        return null;
-                    if (string.IsNullOrEmpty(Convert.ToString(drNewDataRow["VPID"])) && drNewDataRow["APIDS"] == DBNull.Value)
-                        return null;
-                    if (string.IsNullOrEmpty(Convert.ToString(drNewDataRow["VPID"])) && Convert.ToString(drNewDataRow["APIDS"]) == "0")
-                        return null;
+                        oFinalCellValue = oCurrentCellValue;
+                        break;
+                    }
 
-                    return drNewDataRow;
-                }).Where(_ => true);
+                    drCurrentDataRow[sCurrentColumnName] = oFinalCellValue;
+                }
 
-                DataTable dtLocalCleanupSourceData = ercCurrentEnumerableRowCollection.Cast<DataRow>().Where(drCurrentDataRow => drCurrentDataRow != null).CopyToDataTable();
-                return dtLocalCleanupSourceData.Rows.Count > 0 ? dtLocalCleanupSourceData : dtLocalDataTable;
+                var oCurrentVPIDValue = drCurrentDataRow["VPID"];
+                var oCurrentAPIDValues = drCurrentDataRow["APIDS"];
+                var iCurrentVPIDValue = (oCurrentVPIDValue != DBNull.Value) ? Convert.ToInt32(oCurrentVPIDValue) : 0;
+                var strCurrentAPIDValues = (oCurrentAPIDValues != DBNull.Value) ? Convert.ToString(oCurrentAPIDValues) ?? string.Empty : string.Empty;
+                var bHasValidVideo = iCurrentVPIDValue > 0;
+                var bHasValidAudio = !string.IsNullOrEmpty(strCurrentAPIDValues) && strCurrentAPIDValues != "0" && !string.IsNullOrWhiteSpace(strCurrentAPIDValues);
+
+                if (!bHasValidVideo && !bHasValidAudio)
+                    continue;
+
+                dtCurrentDataTable.Rows.Add(drCurrentDataRow);
             }
 
-            return dtLocalDataTable;
+            dtSourceDataTable = dtCurrentDataTable;
         }
 
         /// <summary>
@@ -1096,170 +1234,78 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="bLocalSkipEmptyLines"></param>
         public static DataTable ConvertLiwestChannelListCSVtoDataTable(Stream sLocalStream, bool bLocalParseHeader, bool bLocalSkipEmptyLines)
         {
-            var dtCurrentDataTable = new DataTable();
-            string[]? saHeaders = null;
-            
-            using StreamReader srcCurrentStreamReader = new(sLocalStream);
-
-            while (!srcCurrentStreamReader.EndOfStream)
+            var ccCurrentCsvConfiguration = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                string? sCurrentRow;
-                if (bLocalParseHeader && saHeaders == null)
-                {
-                    sCurrentRow = srcCurrentStreamReader.ReadLine();
+                Delimiter = csLiwestChannelListDelimiter,
+                HasHeaderRecord = bLocalParseHeader,
+                IgnoreBlankLines = bLocalSkipEmptyLines,
+                BadDataFound = null,
+                MissingFieldFound = null
+            };
 
-                    if (!string.IsNullOrEmpty(sCurrentRow))
-                    {
-                        saHeaders = sCurrentRow.Split(',');
+            using var srCurrentStreamReader = new StreamReader(sLocalStream, Encoding.UTF8, true);
+            using var crCurrentCsvReader = new CsvReader(srCurrentStreamReader, ccCurrentCsvConfiguration);
+            using var cdrCurrentCsvDataReader = new CsvDataReader(crCurrentCsvReader);
 
-                        var iHeaderCounter = 0;
-                        foreach (var sHeader in saHeaders)
-                        {
-                            if (iHeaderCounter == 0)
-                                dtCurrentDataTable.Columns.Add("ProviderChannel", typeof(int));
-                            else
-                                dtCurrentDataTable.Columns.Add(sHeader);
-
-                            iHeaderCounter++;
-                        }
-                    }
-                    else
-                    {
-                        if (bLocalSkipEmptyLines)
-                            continue;
-                    }
-                }
-
-                sCurrentRow = srcCurrentStreamReader.ReadLine();
-
-                if (!string.IsNullOrEmpty(sCurrentRow) || (string.IsNullOrEmpty(sCurrentRow) && !bLocalSkipEmptyLines))
-                {
-                    var saRows = sCurrentRow?.Split(',');
-                    if (saRows != null)
-                    {
-                        if (!bLocalParseHeader && dtCurrentDataTable.Columns.Count < 1)
-                        {
-                            for (var i = 0; i < saRows.Length; i++)
-                            {
-                                dtCurrentDataTable.Columns.Add(Convert.ToString(i));
-                            }
-                        }
-
-                        var drCurrentDataRow = dtCurrentDataTable.NewRow();
-                        for (var i = 0; i < saRows.Length; i++)
-                        {
-                            drCurrentDataRow[i] = saRows[i];
-                        }
-
-                        dtCurrentDataTable.Rows.Add(drCurrentDataRow);
-                    }
-                }
-            }
+            var dtCurrentDataTable = new DataTable();
+            dtCurrentDataTable.Load(cdrCurrentCsvDataReader);
 
             return dtCurrentDataTable;
         }
 
         /// <summary>
-        ///     Global.CreateFirewallRule()
+        ///     Global.GetOutputFilePath()
+        ///     All output files are resolved relative to the current working directory (absolute paths are kept), missing directories are created.
         /// </summary>
-        public static bool CreateFirewallRule()
+        /// <param name="strLocalFilename"></param>
+        /// <returns>Absolute path of the output file</returns>
+        public static string GetOutputFilePath(string strLocalFilename)
         {
-            lCurrentLogger.Trace("Global.CreateFirewallRule()".Pastel(ConsoleColor.Cyan));
+            var strCurrentFilePath = Path.GetFullPath(strLocalFilename);
+            var strCurrentDirectory = Path.GetDirectoryName(strCurrentFilePath);
 
-            if (OperatingSystem.IsWindows())
-            {
-                var tCurrentFwPolicyType = Type.GetTypeFromProgID("HNetCfg.FwPolicy2", false);
-                var tCurrentFwRuleType = Type.GetTypeFromProgID("HNetCfg.FWRule", false);
+            if (!string.IsNullOrEmpty(strCurrentDirectory))
+                Directory.CreateDirectory(strCurrentDirectory);
 
-                if (tCurrentFwPolicyType != null && tCurrentFwRuleType != null)
-                {
-                    var oCurrentFwPolicyObject = Activator.CreateInstance(tCurrentFwPolicyType);
-                    var oCurrentFwRuleObject = Activator.CreateInstance(tCurrentFwRuleType);
-
-                    if (oCurrentFwPolicyObject != null && oCurrentFwRuleObject != null)
-                    {
-                        var infp2CurrentINetFwPolicy2 = (INetFwPolicy2)oCurrentFwPolicyObject;
-                        var infrCurrentINetFwRules = infp2CurrentINetFwPolicy2.Rules;
-
-                        if (infrCurrentINetFwRules != null)
-                        {
-                            try
-                            {
-                                infrCurrentINetFwRules.Remove(FIREWALL_RULE_APP_NAME + "_OUT_TCP");
-                                infrCurrentINetFwRules.Remove(FIREWALL_RULE_APP_NAME + "_OUT_UDP");
-                                infrCurrentINetFwRules.Remove(FIREWALL_RULE_APP_NAME + "_IN_TCP");
-                                infrCurrentINetFwRules.Remove(FIREWALL_RULE_APP_NAME + "_IN_UDP");
-
-                                var infrCurrentINetFwRule = (INetFwRule)Activator.CreateInstance(tCurrentFwRuleType)!;
-                                infrCurrentINetFwRule.Name = FIREWALL_RULE_APP_NAME + "_OUT_TCP";
-                                infrCurrentINetFwRule.Description = FIREWALL_RULE_APP_NAME + "_OUT_TCP";
-                                infrCurrentINetFwRule.Protocol = 6;
-                                infrCurrentINetFwRule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                                infrCurrentINetFwRule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                                infrCurrentINetFwRule.ApplicationName = Environment.ProcessPath;
-                                infrCurrentINetFwRule.Enabled = true;
-                                infrCurrentINetFwRule.InterfaceTypes = "All";
-                                infrCurrentINetFwRules.Add(infrCurrentINetFwRule);
-
-                                var infrCurrentINetFwRule2 = (INetFwRule)Activator.CreateInstance(tCurrentFwRuleType)!;
-                                infrCurrentINetFwRule2.Name = FIREWALL_RULE_APP_NAME + "_IN_TCP";
-                                infrCurrentINetFwRule2.Description = FIREWALL_RULE_APP_NAME + "_IN_TCP";
-                                infrCurrentINetFwRule2.Protocol = 6;
-                                infrCurrentINetFwRule2.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                                infrCurrentINetFwRule2.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN;
-                                infrCurrentINetFwRule2.ApplicationName = Environment.ProcessPath;
-                                infrCurrentINetFwRule2.Enabled = true;
-                                infrCurrentINetFwRule2.InterfaceTypes = "All";
-                                infrCurrentINetFwRules.Add(infrCurrentINetFwRule2);
-
-                                var infrCurrentINetFwRule3 = (INetFwRule)Activator.CreateInstance(tCurrentFwRuleType)!;
-                                infrCurrentINetFwRule3.Name = FIREWALL_RULE_APP_NAME + "_OUT_UDP";
-                                infrCurrentINetFwRule3.Description = FIREWALL_RULE_APP_NAME + "_OUT_UDP";
-                                infrCurrentINetFwRule3.Protocol = 17;
-                                infrCurrentINetFwRule3.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                                infrCurrentINetFwRule3.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                                infrCurrentINetFwRule3.ApplicationName = Environment.ProcessPath;
-                                infrCurrentINetFwRule3.Enabled = true;
-                                infrCurrentINetFwRule3.InterfaceTypes = "All";
-                                infrCurrentINetFwRules.Add(infrCurrentINetFwRule3);
-
-                                var infrCurrentINetFwRule4 = (INetFwRule)Activator.CreateInstance(tCurrentFwRuleType)!;
-                                infrCurrentINetFwRule4.Name = FIREWALL_RULE_APP_NAME + "_IN_UDP";
-                                infrCurrentINetFwRule4.Description = FIREWALL_RULE_APP_NAME + "_IN_UDP";
-                                infrCurrentINetFwRule4.Protocol = 17;
-                                infrCurrentINetFwRule4.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                                infrCurrentINetFwRule4.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN;
-                                infrCurrentINetFwRule4.ApplicationName = Environment.ProcessPath;
-                                infrCurrentINetFwRule4.Enabled = true;
-                                infrCurrentINetFwRule4.InterfaceTypes = "All";
-                                infrCurrentINetFwRules.Add(infrCurrentINetFwRule4);
-
-                                return true;
-                            }
-                            catch
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return false;
+            return strCurrentFilePath;
         }
 
-        private static string GetExcelColumnName(int columnNumber)
+        /// <summary>
+        ///     Global.GetExportableServiceRows()
+        ///     Returns all rows which contain the service data (SID, TSID, ONID, frequency) required for channel database exports.
+        /// </summary>
+        /// <param name="strLocalExportName"></param>
+        private static List<DataRow> GetExportableServiceRows(string strLocalExportName)
         {
-            string columnName = "";
+            var ldrCurrentExportableDataRows = dtSourceDataTable.AsEnumerable().Where(drCurrentDataRow => drCurrentDataRow.GetNullableInt32("SID") is > 0 && !drCurrentDataRow.IsNullOrEmptyValue("TSID") && !drCurrentDataRow.IsNullOrEmptyValue("ONID") && drCurrentDataRow.GetNullableInt32("ChannelFrequency") is > 0).ToList();
+            var iCurrentSkippedRows = dtSourceDataTable.Rows.Count - ldrCurrentExportableDataRows.Count;
 
-            while (columnNumber > 0)
+            if (iCurrentSkippedRows > 0)
+                lCurrentLogger.Warn($"-» Skipped {iCurrentSkippedRows} channel(s) without service data (SID/TSID/ONID/frequency) for {strLocalExportName} export".Pastel(ConsoleColor.Yellow));
+
+            return ldrCurrentExportableDataRows;
+        }
+
+        /// <summary>
+        ///    Global.GetExcelColumnName()
+        /// </summary>
+        /// <param name="iLocalColumnNumber"></param>
+        private static string GetExcelColumnName(int iLocalColumnNumber)
+        {
+            if (iLocalColumnNumber <= 0)
+                return string.Empty;
+
+            Span<char> scCurrentCharacterBuffer = stackalloc char[8];
+            var iCurrentPosition = scCurrentCharacterBuffer.Length;
+
+            while (iLocalColumnNumber > 0)
             {
-                int modulo = (columnNumber - 1) % 26;
-                columnName = Convert.ToChar('A' + modulo) + columnName;
-                columnNumber = (columnNumber - modulo) / 26;
+                var iCurrentModulo = (iLocalColumnNumber - 1) % 26;
+                scCurrentCharacterBuffer[--iCurrentPosition] = (char)('A' + iCurrentModulo);
+                iLocalColumnNumber = (iLocalColumnNumber - iCurrentModulo) / 26;
             }
 
-            return columnName;
+            return new string(scCurrentCharacterBuffer[iCurrentPosition..]);
         }
     }
 }

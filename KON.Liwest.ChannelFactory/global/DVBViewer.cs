@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace KON.Liwest.ChannelFactory
 {
@@ -31,6 +32,7 @@ namespace KON.Liwest.ChannelFactory
             VIDEO_MPEG4    = 0x10,
             VIDEO_H264     = 0x1B,
             VIDEO_HEVC     = 0x24,
+            VIDEO_VVC      = 0x33,
             VIDEO_CAVS     = 0x42,
             VIDEO_VC1      = 0xEA,
             VIDEO_DIRAC    = 0XD1
@@ -164,10 +166,10 @@ namespace KON.Liwest.ChannelFactory
             int cavfLocalChannelAudioFormat = 0;
             int cavfLocalChannelVideoFormat = 0;
 
-            if (!string.IsNullOrEmpty(strLocalChannelAudioFormat) && !string.IsNullOrEmpty(strLocalChannelVideoFormat))
+            if (byte.TryParse(strLocalChannelAudioFormat?.Trim(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var byCurrentChannelAudioFormat) && byte.TryParse(strLocalChannelVideoFormat?.Trim(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var byCurrentChannelVideoFormat))
             {
-                AVFormatM2TS avfm2tsCurrentChannelAudioFormat = (AVFormatM2TS)Enum.Parse(typeof(AVFormatM2TS), Convert.ToString(Convert.ToInt32(strLocalChannelAudioFormat, 16)));
-                AVFormatM2TS avfm2tsCurrentChannelVideoFormat = (AVFormatM2TS)Enum.Parse(typeof(AVFormatM2TS), Convert.ToString(Convert.ToInt32(strLocalChannelVideoFormat, 16)));
+                var avfm2tsCurrentChannelAudioFormat = (AVFormatM2TS)byCurrentChannelAudioFormat;
+                var avfm2tsCurrentChannelVideoFormat = (AVFormatM2TS)byCurrentChannelVideoFormat;
 
                 switch (avfm2tsCurrentChannelAudioFormat)
                 {
@@ -215,11 +217,12 @@ namespace KON.Liwest.ChannelFactory
                         cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_AVS;
                         break;
                     }
-                    case AVFormatM2TS.VIDEO_VC1:
+                    case AVFormatM2TS.VIDEO_VVC:
                     {
                         cavfLocalChannelVideoFormat = (int)AVFormat.VIDEO_VVC;
                         break;
                     }
+                    // VIDEO_VC1 / VIDEO_DIRAC have no DVBViewer equivalent and keep the default (MPEG2)
                 }
             }
 

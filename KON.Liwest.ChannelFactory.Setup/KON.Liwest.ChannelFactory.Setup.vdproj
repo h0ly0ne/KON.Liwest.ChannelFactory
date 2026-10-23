@@ -15,25 +15,25 @@
     {
         "Entry"
         {
-        "MsmKey" = "8:_3520ABD8AD544F3EB923CDA309B84CEB"
+        "MsmKey" = "8:_491C92A2E61F4F5B8169D9E3CFA56ACC"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_433A9BC4B3F94895A24E608D0DF3C03F"
+        "MsmKey" = "8:_5DACB26425C44F2E9DF90752FCE25113"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_776BF3A3DB064C57B1598E3D79AF2BBA"
+        "MsmKey" = "8:_6C76FEC8261B46228BC7C750C66EBEE3"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
         {
-        "MsmKey" = "8:_EFAEE5C279AD42DEB3313E23B9060899"
+        "MsmKey" = "8:_AA0A2048F4EC4962B1B8BEDED9C40205"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -134,9 +134,9 @@
         }
         "File"
         {
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_3520ABD8AD544F3EB923CDA309B84CEB"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_491C92A2E61F4F5B8169D9E3CFA56ACC"
             {
-            "SourcePath" = "8:..\\bin\\Debug\\net10.0\\win-x64\\publish\\KON.Liwest.ChannelFactory.exe"
+            "SourcePath" = "8:..\\KON.Liwest.ChannelFactory\\bin\\Debug\\net10.0\\win-x64\\publish\\KON.Liwest.ChannelFactory.exe"
             "TargetName" = "8:KON.Liwest.ChannelFactory.exe"
             "Tag" = "8:"
             "Folder" = "8:_F819CC512AF14F6B8A07ADA5A89833F7"
@@ -154,9 +154,29 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_433A9BC4B3F94895A24E608D0DF3C03F"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5DACB26425C44F2E9DF90752FCE25113"
             {
-            "SourcePath" = "8:..\\resources\\ChannelSorting.json"
+            "SourcePath" = "8:..\\KON.Liwest.ChannelFactory\\bin\\Debug\\net10.0\\win-x64\\publish\\resources\\ChannelRemoval.json"
+            "TargetName" = "8:ChannelRemoval.json"
+            "Tag" = "8:"
+            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_6C76FEC8261B46228BC7C750C66EBEE3"
+            {
+            "SourcePath" = "8:..\\KON.Liwest.ChannelFactory\\bin\\Debug\\net10.0\\win-x64\\publish\\resources\\ChannelSorting.json"
             "TargetName" = "8:ChannelSorting.json"
             "Tag" = "8:"
             "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
@@ -174,30 +194,10 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_776BF3A3DB064C57B1598E3D79AF2BBA"
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_AA0A2048F4EC4962B1B8BEDED9C40205"
             {
-            "SourcePath" = "8:..\\resources\\ChannelVariation.json"
+            "SourcePath" = "8:..\\KON.Liwest.ChannelFactory\\bin\\Debug\\net10.0\\win-x64\\publish\\resources\\ChannelVariation.json"
             "TargetName" = "8:ChannelVariation.json"
-            "Tag" = "8:"
-            "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
-            "Condition" = "8:"
-            "Transitive" = "11:FALSE"
-            "Vital" = "11:TRUE"
-            "ReadOnly" = "11:FALSE"
-            "Hidden" = "11:FALSE"
-            "System" = "11:FALSE"
-            "Permanent" = "11:FALSE"
-            "SharedLegacy" = "11:FALSE"
-            "PackageAs" = "3:1"
-            "Register" = "3:1"
-            "Exclude" = "11:FALSE"
-            "IsDependency" = "11:FALSE"
-            "IsolateTo" = "8:"
-            }
-            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EFAEE5C279AD42DEB3313E23B9060899"
-            {
-            "SourcePath" = "8:..\\resources\\ChannelRemoval.json"
-            "TargetName" = "8:ChannelRemoval.json"
             "Tag" = "8:"
             "Folder" = "8:_9D5CCA939E1742ADB8159091DD8B61ED"
             "Condition" = "8:"
@@ -282,7 +282,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:KON.Liwest.ChannelFactory"
         "ProductCode" = "8:{B0C3E009-57A7-43A9-B671-C6CF62345FD2}"
-        "PackageCode" = "8:{06BFB30F-F3A5-4F1B-9E3B-8588BB2E9A76}"
+        "PackageCode" = "8:{49C5D6C7-255C-4A14-A1FA-1F998495E758}"
         "UpgradeCode" = "8:{C4EE9912-02C3-4931-B8EB-27BFD6F20B84}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
