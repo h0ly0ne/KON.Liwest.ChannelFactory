@@ -1,6 +1,9 @@
-﻿using System.Data;
+﻿using System.Collections.Frozen;
+using System.Data;
 using System.Globalization;
 using System.Text.RegularExpressions;
+
+using KON.OctoScan.NET;
 
 using DataTablePrettyPrinter;
 using static KON.Liwest.ChannelFactory.Constants;
@@ -11,6 +14,32 @@ namespace KON.Liwest.ChannelFactory
     {
         [GeneratedRegex(@"\d+(?:[.,]\d+)?")]
         private static partial Regex rxFrequencyValue();
+
+        [GeneratedRegex(@"[ \t\r\n]+")]
+        private static partial Regex rxWhitespace();
+
+        [GeneratedRegex(@"[,;/|\s]+")]
+        private static partial Regex rxLanguageSeparator();
+
+        /// <summary>
+        /// ISO 639-1 (2 letters) and ISO 639-2/B, 639-2/T, 639-3 (3 letters) code -> ISO 639-2/T code (e.g. de, ger, deu -> deu)
+        /// </summary>
+        private static readonly Lazy<FrozenDictionary<string, string>> lfdLanguageCodes = new(() =>
+        {
+            var dCurrentLanguageCodes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var lCurrentLanguage in ISO639LanguageCollection.AllISO639Languages)
+            {
+                var strCurrentLanguageCode = GetThreeLetterLanguageCode(lCurrentLanguage.ISO6392Code) ?? lCurrentLanguage.ISO6393Code.ToLowerInvariant();
+
+                dCurrentLanguageCodes.TryAdd(lCurrentLanguage.ISO6393Code, strCurrentLanguageCode);
+
+                if (!string.IsNullOrEmpty(lCurrentLanguage.ISO6392Code))
+                    dCurrentLanguageCodes.TryAdd(lCurrentLanguage.ISO6392Code, strCurrentLanguageCode);
+            }
+
+            return dCurrentLanguageCodes.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
+        });
 
         public static bool? ToBoolean(this string strLocalString)
         {
@@ -41,9 +70,18 @@ namespace KON.Liwest.ChannelFactory
             return int.TryParse(strLocalString?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : null;
         }
 
+        public static ushort ToUInt16OrDefault(this int? iLocalValue)
+        {
+            return iLocalValue is >= ushort.MinValue and <= ushort.MaxValue ? (ushort)iLocalValue.Value : (ushort)0;
+        }
+
+        public static uint ToUInt32OrDefault(this int? iLocalValue)
+        {
+            return iLocalValue is >= 0 ? (uint)iLocalValue.Value : 0;
+        }
+
         /// <summary>
         /// Parses a frequency (e.g. "578000", "578", "578.00 MHz", "578,5") and normalizes it to kHz.
-        /// Values below ciFrequencyMHzUpperLimit are interpreted as MHz, values above ciFrequencyHzLowerLimit as Hz.
         /// </summary>
         public static int? ToFrequencyKHz(this string? strLocalString)
         {
@@ -51,110 +89,98 @@ namespace KON.Liwest.ChannelFactory
                 return null;
 
             var mCurrentMatch = rxFrequencyValue().Match(strLocalString);
-            if (!mCurrentMatch.Success || !decimal.TryParse(mCurrentMatch.Value.Replace(',', '.'), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var decCurrentFrequency) || decCurrentFrequency <= 0)
+            if (!mCurrentMatch.Success || !decimal.TryParse(mCurrentMatch.Value.Replace(',', '.'), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var decCurrentFrequency))
                 return null;
 
-            if (decCurrentFrequency < ciFrequencyMHzUpperLimit)
-                decCurrentFrequency *= 1000;
-            else if (decCurrentFrequency > ciFrequencyHzLowerLimit)
-                decCurrentFrequency /= 1000;
-
-            return decCurrentFrequency <= int.MaxValue ? (int)Math.Round(decCurrentFrequency, MidpointRounding.AwayFromZero) : null;
-        }
-
-        public static bool IsNullOrEmptyValue(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            var oCurrentValue = drLocalDataRow[strLocalColumnName];
-            return oCurrentValue == DBNull.Value || string.IsNullOrWhiteSpace(Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture));
-        }
-
-        public static int? GetNullableInt32(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            return drLocalDataRow[strLocalColumnName] switch
-            {
-                DBNull => null,
-                int iCurrentValue => iCurrentValue,
-                var oCurrentValue => Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture).ToNullableInt32()
-            };
-        }
-
-        public static int GetInt32OrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            return drLocalDataRow.GetNullableInt32(strLocalColumnName) ?? 0;
-        }
-
-        public static ushort GetUInt16OrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            return drLocalDataRow.GetNullableInt32(strLocalColumnName) is { } iCurrentValue and >= ushort.MinValue and <= ushort.MaxValue ? (ushort)iCurrentValue : (ushort)0;
-        }
-
-        public static uint GetUInt32OrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            return drLocalDataRow.GetNullableInt32(strLocalColumnName) is { } iCurrentValue and >= 0 ? (uint)iCurrentValue : 0;
-        }
-
-        public static bool GetBooleanOrDefault(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            return drLocalDataRow[strLocalColumnName] switch
-            {
-                DBNull => false,
-                bool bCurrentValue => bCurrentValue,
-                var oCurrentValue => (Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture) ?? string.Empty).ToBoolean() ?? false
-            };
-        }
-
-        public static string GetStringOrEmpty(this DataRow drLocalDataRow, string strLocalColumnName)
-        {
-            var oCurrentValue = drLocalDataRow[strLocalColumnName];
-            return oCurrentValue == DBNull.Value ? string.Empty : Convert.ToString(oCurrentValue, CultureInfo.InvariantCulture) ?? string.Empty;
+            return decCurrentFrequency.ToFrequencyKHz();
         }
 
         /// <summary>
-        /// Same as CopyToDataTable(), but returns an empty clone of the template table instead of throwing on an empty sequence.
+        /// Normalizes a frequency to kHz.
         /// </summary>
-        public static DataTable CopyToDataTableOrEmpty(this IEnumerable<DataRow> iedrLocalDataRows, DataTable dtLocalTemplateDataTable)
+        public static int? ToFrequencyKHz(this int? iLocalFrequency)
         {
-            var ldrCurrentDataRows = iedrLocalDataRows.ToList();
-            return ldrCurrentDataRows.Count > 0 ? ldrCurrentDataRows.CopyToDataTable() : dtLocalTemplateDataTable.Clone();
+            return iLocalFrequency.HasValue ? ((decimal)iLocalFrequency.Value).ToFrequencyKHz() : null;
         }
 
-        public static string RepairEncoding(this string? strLocalString)
+        /// <summary>
+        /// Normalizes a frequency to kHz - values below ciFrequencyMHzUpperLimit are interpreted as MHz, values above ciFrequencyHzLowerLimit as Hz.
+        /// </summary>
+        public static int? ToFrequencyKHz(this decimal decLocalFrequency)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? strLocalString.Replace("�", "ü") : string.Empty;
+            if (decLocalFrequency <= 0)
+                return null;
+
+            if (decLocalFrequency < ciFrequencyMHzUpperLimit)
+                decLocalFrequency *= 1000;
+            else if (decLocalFrequency > ciFrequencyHzLowerLimit)
+                decLocalFrequency /= 1000;
+
+            return decLocalFrequency <= int.MaxValue ? (int)Math.Round(decLocalFrequency, MidpointRounding.AwayFromZero) : null;
         }
+
+        /// <summary>
+        /// Replaces line breaks and tabs by spaces, merges multiple spaces and trims the string.
+        /// </summary>
         public static string TrimAdvanced(this string? strLocalString)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? strLocalString.MergeNewLine().MergeTabs().MergeIndent().Replace("\r\n\t", " ").Replace("\r\n", " ").Replace("\t", " ").Replace("\r", " ").Replace("\n", " ").MergeWhitespace().Trim() : string.Empty;
+            return !string.IsNullOrEmpty(strLocalString) ? rxWhitespace().Replace(strLocalString, " ").Trim() : string.Empty;
         }
 
-        public static string MergeWhitespace(this string? strLocalString)
+        /// <summary>
+        /// Converts a language code (e.g. "DE", "ger", "deu") to the 3 letter ISO 639-2/T code ("deu") - unknown codes are kept in lower case.
+        /// </summary>
+        /// <returns>Language code or null if empty</returns>
+        public static string? ToLanguageCode(this string? strLocalString)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? new Regex("[ ]{2,}", RegexOptions.None).Replace(strLocalString, " ") : string.Empty;
+            var strCurrentLanguageCode = strLocalString?.Trim();
+
+            if (string.IsNullOrEmpty(strCurrentLanguageCode))
+                return null;
+
+            return lfdLanguageCodes.Value.TryGetValue(strCurrentLanguageCode, out var strCurrentNormalizedLanguageCode) ? strCurrentNormalizedLanguageCode : strCurrentLanguageCode.ToLowerInvariant();
         }
-        public static string MergeTabs(this string? strLocalString)
+
+        /// <summary>
+        /// Converts a list of language codes (separated by comma, semicolon, slash, pipe or whitespace) to a comma separated list of 3 letter ISO 639-2/T codes.
+        /// </summary>
+        /// <returns>Language codes or null if empty</returns>
+        public static string? ToLanguageCodeList(this string? strLocalString)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? new Regex("[\t]{2,}", RegexOptions.None).Replace(strLocalString, "\t") : string.Empty;
+            if (string.IsNullOrWhiteSpace(strLocalString))
+                return null;
+
+            var saCurrentLanguageCodes = rxLanguageSeparator().Split(strLocalString).Select(strCurrentLanguageCode => strCurrentLanguageCode.ToLanguageCode()).OfType<string>().Distinct().ToArray();
+            return saCurrentLanguageCodes.Length > 0 ? string.Join(",", saCurrentLanguageCodes) : null;
         }
-        public static string MergeNewLine(this string? strLocalString)
+
+        /// <summary>
+        /// Language code without real language (undetermined, miscellaneous, multiple, no linguistic content, reserved for local use qaa-qtz e.g. original sound)
+        /// </summary>
+        public static bool IsPlaceholderLanguageCode(this string strLocalLanguageCode)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? new Regex("[\r\n]{2,}", RegexOptions.None).Replace(strLocalString, "\r\n") : string.Empty;
+            return csaPlaceholderLanguageCodes.Contains(strLocalLanguageCode, StringComparer.OrdinalIgnoreCase) || (strLocalLanguageCode.Length == 3 && string.Compare(strLocalLanguageCode, "qaa", StringComparison.OrdinalIgnoreCase) >= 0 && string.Compare(strLocalLanguageCode, "qtz", StringComparison.OrdinalIgnoreCase) <= 0);
         }
-        public static string MergeIndent(this string? strLocalString)
+
+        private static string? GetThreeLetterLanguageCode(string? strLocalTwoLetterLanguageCode)
         {
-            return !string.IsNullOrEmpty(strLocalString) ? new Regex("[\r\n\t]{2,}", RegexOptions.None).Replace(strLocalString, "\r\n\t") : string.Empty;
+            if (string.IsNullOrEmpty(strLocalTwoLetterLanguageCode))
+                return null;
+
+            try
+            {
+                var strCurrentLanguageCode = CultureInfo.GetCultureInfo(strLocalTwoLetterLanguageCode).ThreeLetterISOLanguageName;
+                return strCurrentLanguageCode is { Length: 3 } ? strCurrentLanguageCode.ToLowerInvariant() : null;
+            }
+            catch (CultureNotFoundException)
+            {
+                return null;
+            }
         }
 
         public static string? CheckVariationForPrimary(this string? strLocalString)
         {
-            if (Global.svdChannelVariationDictionary == null || strLocalString == null) 
-                return strLocalString;
-            
-            foreach (var kvpCurrentKeyValuePair in Global.svdChannelVariationDictionary.Where(kvpCurrentKeyValuePair => kvpCurrentKeyValuePair.Value.AsEnumerable().Contains(strLocalString, StringComparer.OrdinalIgnoreCase)))
-            {
-                return kvpCurrentKeyValuePair.Key;
-            }
-
-            return strLocalString;
+            return Global.GetPrimaryChannelName(strLocalString);
         }
 
         public static char[] ToBinary25CharArray(this string? strLocalString)
@@ -172,7 +198,7 @@ namespace KON.Liwest.ChannelFactory
                 if (bLocalLeadingSizeByte)
                 {
                     int iCurrentStringLength = strLocalCharArray[0];
-                    return new string(strLocalCharArray, 1, iCurrentStringLength > 25 ? 25 : iCurrentStringLength).TrimEnd('\0');
+                    return new string(strLocalCharArray, 1, Math.Min(iCurrentStringLength, Math.Min(25, strLocalCharArray.Length - 1))).TrimEnd('\0');
                 }
 
                 return new string(strLocalCharArray).TrimEnd('\0');

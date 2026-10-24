@@ -1,6 +1,8 @@
 ﻿using System.Globalization;
 using System.Runtime.InteropServices;
 
+using static KON.Liwest.ChannelFactory.Constants;
+
 namespace KON.Liwest.ChannelFactory
 {
     public class DVBViewer
@@ -98,45 +100,67 @@ namespace KON.Liwest.ChannelFactory
             public ushort PCR_PID;
         }
 
-        public static byte[] Binarize(object obj)
+        /// <summary>
+        /// DVBViewer.Binarize() - marshals a structure to its binary representation
+        /// </summary>
+        /// <param name="oLocalObject"></param>
+        /// <returns>byte[]</returns>
+        public static byte[] Binarize(object oLocalObject)
         {
-            var size = Marshal.SizeOf(obj);
-            var bytes = new byte[size];
-            var ptr = Marshal.AllocHGlobal(size);
-            Marshal.StructureToPtr(obj, ptr, false);
-            Marshal.Copy(ptr, bytes, 0, size);
-            Marshal.FreeHGlobal(ptr);
+            var iCurrentSize = Marshal.SizeOf(oLocalObject);
+            var baCurrentBytes = new byte[iCurrentSize];
+            var pCurrentPointer = Marshal.AllocHGlobal(iCurrentSize);
 
-            return bytes;
+            try
+            {
+                Marshal.StructureToPtr(oLocalObject, pCurrentPointer, false);
+                Marshal.Copy(pCurrentPointer, baCurrentBytes, 0, iCurrentSize);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pCurrentPointer);
+            }
+
+            return baCurrentBytes;
         }
-        //public static unsafe dynamic? ToObject(byte[] bytes)
-        //{
-        //    var rf = __makeref(bytes);
-        //    **(int**)&rf += 8;
-        //    return GCHandle.Alloc(bytes).Target;
-        //}
-        //public static byte HexStringToByte(string hex)
-        //{
-        //    return Enumerable.Range(0, hex.Length)
-        //        .Where(x => x % 2 == 0)
-        //        .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
-        //        .ToArray()[0];
-        //}
+
+        /// <summary>
+        /// DVBViewer.Debinarize() - marshals a binary representation back to its structure
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="baLocalBytes">At least Marshal.SizeOf&lt;T&gt;() bytes</param>
+        /// <returns>T</returns>
+        public static T Debinarize<T>(byte[] baLocalBytes) where T : class
+        {
+            if (baLocalBytes.Length < Marshal.SizeOf<T>())
+                throw new ArgumentException($"At least {Marshal.SizeOf<T>()} bytes required for {typeof(T).Name}", nameof(baLocalBytes));
+
+            var ghCurrentHandle = GCHandle.Alloc(baLocalBytes, GCHandleType.Pinned);
+
+            try
+            {
+                return Marshal.PtrToStructure<T>(ghCurrentHandle.AddrOfPinnedObject())!;
+            }
+            finally
+            {
+                ghCurrentHandle.Free();
+            }
+        }
 
         public static byte NibblesToByte(int iLocalLoNibble, int iLocalHiNibble)
         {
             return (byte)((iLocalLoNibble & 0x0F) | ((iLocalHiNibble & 0x0F) << 4));
         }
 
-        public static byte GenerateChannelFlags(bool bLocalIsEncrypted, bool bLocalAutomaticRefresh, bool bLocalBroadcastRDS, bool bLocalIsVideoService, bool bLocalIsAudioService, bool bIsFollowingPID)
+        public static byte GenerateChannelFlags(bool bLocalIsEncrypted, bool bLocalNoAutomaticRefresh, bool bLocalBroadcastRDS, bool bLocalIsVideoService, bool bLocalIsAudioService, bool bLocalIsFollowingPID)
         {
             byte byReturnFlag = 0;
 
             // Bit 0: 1 = encrypted channel
-            if (bLocalIsEncrypted) 
+            if (bLocalIsEncrypted)
                 byReturnFlag |= 1;
             // Bit 1: 1 = don't refresh channel automatically
-            if (bLocalAutomaticRefresh)
+            if (bLocalNoAutomaticRefresh)
                 byReturnFlag |= 2;
             // Bit 2: 1 = channel broadcasts RDS data
             if (bLocalBroadcastRDS)
@@ -150,7 +174,7 @@ namespace KON.Liwest.ChannelFactory
             // Bit 5..6 : reserved
 
             // Bit 7: 0 = channel is primary pid - 1 = channel is following pid
-            if (bIsFollowingPID)
+            if (bLocalIsFollowingPID)
                 byReturnFlag |= 128;
 
             return byReturnFlag;
@@ -161,7 +185,32 @@ namespace KON.Liwest.ChannelFactory
             return NibblesToByte((int)cavfLocalChannelAudioFormat, (int)cavfLocalChannelVideoFormat);
         }
 
-        public static byte GenerateChannelAVFormat(string strLocalChannelAudioFormat, string strLocalChannelVideoFormat)
+        /// <summary>
+        /// DVBViewer.GenerateChannelAVFormat()
+        /// </summary>
+        /// <param name="strLocalChannelAudioFormat">Stream type of the audio pid (hex)</param>
+        /// <param name="strLocalChannelVideoFormat">Stream type of the video pid (hex)</param>
+        /// <param name="strLocalChannelAudioCodec">Codec of the audio pid determined by the blindscan - takes precedence over the stream type (e.g. stream type 06 can be AC-3, DTS or AAC)</param>
+        /// <returns>byte</returns>
+        public static byte GenerateChannelAVFormat(string strLocalChannelAudioFormat, string strLocalChannelVideoFormat, string? strLocalChannelAudioCodec = null)
+        {
+            var byCurrentChannelAVFormat = GenerateChannelAVFormatFromStreamTypes(strLocalChannelAudioFormat, strLocalChannelVideoFormat);
+
+            var iCurrentChannelAudioFormat = strLocalChannelAudioCodec?.Trim().ToUpperInvariant() switch
+            {
+                csAudioCodecMPEG => (int?)AVFormat.AUDIO_MPEG,
+                csAudioCodecAAC => (int?)AVFormat.AUDIO_AAC,
+                csAudioCodecAC3 or csAudioCodecEAC3 => (int?)AVFormat.AUDIO_AC3,
+                // AC-4, DTS and TrueHD have no DVBViewer equivalent and keep the default (MPEG)
+                csAudioCodecAC4 or csAudioCodecDTS or csAudioCodecTrueHD => (int?)AVFormat.AUDIO_MPEG,
+                // No or unknown codec - stream type is used
+                _ => null
+            };
+
+            return iCurrentChannelAudioFormat.HasValue ? NibblesToByte(iCurrentChannelAudioFormat.Value, byCurrentChannelAVFormat >> 4) : byCurrentChannelAVFormat;
+        }
+
+        private static byte GenerateChannelAVFormatFromStreamTypes(string strLocalChannelAudioFormat, string strLocalChannelVideoFormat)
         {
             int cavfLocalChannelAudioFormat = 0;
             int cavfLocalChannelVideoFormat = 0;

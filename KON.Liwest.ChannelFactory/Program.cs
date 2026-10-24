@@ -6,8 +6,13 @@ using CommandLine;
 using CommandLine.Text;
 using NLog;
 using NLog.Layouts;
+using Krkadoni.EnigmaSettings;
 using Pastel;
 
+using static KON.Liwest.ChannelFactory.DataDumps;
+using static KON.Liwest.ChannelFactory.DataExports;
+using static KON.Liwest.ChannelFactory.DataModifications;
+using static KON.Liwest.ChannelFactory.DataSources;
 using static KON.Liwest.ChannelFactory.Global;
 
 namespace KON.Liwest.ChannelFactory
@@ -16,58 +21,58 @@ namespace KON.Liwest.ChannelFactory
     {
         public class Options
         {
-            [Option(longName: "mode", Required = true, HelpText = "Execution Mode or Operation to use")]
+            [Option(longName: "mode", Required = true, HelpText = "Execution-Mode or Operation to use: GenerateData (collect source data), ModifyData (channel removal / sorting of a source data file), ExportData (export a source data file), DumpData (output an existing file), AutomaticData (collect, modify and output / export in one run).")]
             public FlagMode cloMode { get; set; }
-            
-            [Option(longName: "submode", HelpText = "Execution Sub-Mode or Sub-Operation to use")]
+
+            [Option(longName: "submode", HelpText = "Execution-Sub-Mode of AutomaticData: SubModeCustom1 (no output), SubModeCustom2 (output to --target), SubModeCustom3 (exports of --exportmode).")]
             public FlagSubMode cloSubMode { get; set; }
 
-            [Option(longName: "source", Required = true, HelpText = "Source to use")]
+            [Option(longName: "source", Required = true, HelpText = "Source of the data: ChannelList (LIWEST channel list), SmartcardList (LIWEST signal check), BlindscanList (SAT>IP blindscan), CombinedList (all three), FileList (source data file), CustomFile (file for DumpData).")]
             public FlagSource cloSource { get; set; }
-            
-            [Option(longName: "target", HelpText = "Target to use")]
+
+            [Option(longName: "target", HelpText = "Output of the source data: None, ConsoleList (table on the console), FileList (source data file --targetfile).")]
             public FlagTarget cloTarget { get; set; }
 
-            [Option(longName: "smartcardid", HelpText = "Smartcard identifier")]
+            [Option(longName: "smartcardid", HelpText = "Smartcard number for the LIWEST signal check (11 digits, starting with 01359 or 02766). Not available between 23:00 and 1:00.")]
             public string? cloSmartcardID { get; set; }
-            
-            [Option(longName: "serverip", HelpText = "IP Address of SAT>IP server")]
+
+            [Option(longName: "serverip", HelpText = "IP Address of SAT>IP server for the blindscan.")]
             public string? cloServerIP { get; set; }
-            
-            [Option(longName: "frequencies", HelpText = "Frequencies in MHz, comma separated. Ranges as start-end:step.")]
+
+            [Option(longName: "frequencies", HelpText = "Frequencies in MHz for the blindscan, comma separated. Ranges as start-end:step.")]
             public string? cloFrequencies { get; set; }
-            
-            [Option(longName: "sourcefile", HelpText = "Filename for source to load from")]
+
+            [Option(longName: "sourcefile", HelpText = "Source data file (json) to load from - for DumpData the file to output.")]
             public string? cloSourceFile { get; set; }
-            
-            [Option(longName: "targetfile", HelpText = "Filename for target to save to")]
+
+            [Option(longName: "targetfile", HelpText = "Source data file (json) to save to (--target FileList).")]
             public string? cloTargetFile { get; set; }
 
-            [Option(longName: "channelvariationfile", HelpText = "Filename for channel variation dictionary to load from")]
+            [Option(longName: "channelvariationfile", HelpText = "Channel variation file (json) - unifies the channel names of the different sources.")]
             public string? cloChannelVariationFile { get; set; }
-            
-            [Option(longName: "sourcecleanup", HelpText = "Source cleanup operation mode")]
+
+            [Option(longName: "sourcecleanup", HelpText = "Cleanup of the source data: RemoveInvalidSIDs (remove channels without SID), GroupAndInvalidate (merge the sources per channel, remove channels without stream).")]
             public FlagSourceCleanup cloSourceCleanup { get; set; }
-            
-            [Option(longName: "channelremovalfile", HelpText = "Filename for channel removal dictionary to load from")]
+
+            [Option(longName: "channelremovalfile", HelpText = "Channel removal file (json) - channels (name and frequency) to remove.")]
             public string? cloChannelRemovalFile { get; set; }
-            
-            [Option(longName: "channelsortingfile", HelpText = "Filename for channel sorting dictionary to load from")]
+
+            [Option(longName: "channelsortingfile", HelpText = "Channel sorting file (json) - sort number per channel (name and frequency), unsorted channels are placed in front.")]
             public string? cloChannelSortingFile { get; set; }
 
-            [Option(longName: "exportmode", HelpText = "Export mode selection", Default = new FlagExportMode[0])]
+            [Option(longName: "exportmode", HelpText = "Exports, space separated (one entry per export): ExcelChannelList, DVBViewerTransponderList, DVBViewerChannelDatabase, EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles.")]
             public IEnumerable<FlagExportMode> cloExportMode { get; set; } = [];
 
-            [Option(longName: "exportfilename", HelpText = "Filename for export operation to save to", Default = new string[0])]
+            [Option(longName: "exportfilename", HelpText = "Filename per export, same order as --exportmode (\"\" for EnigmaBouquetsFiles - written to the current directory).")]
             public IEnumerable<string> cloExportFilename { get; set; } = [];
 
-            [Option(longName: "exportfilenameformat", HelpText = "Filename format for export operation to use to save to", Default = new FlagExportEnigmaFormat[0])]
+            [Option(longName: "exportfilenameformat", HelpText = "Enigma format per export, same order as --exportmode: Enigma1Ver1, Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and DVBViewer exports.")]
             public IEnumerable<FlagExportEnigmaFormat> cloExportFilenameFormat { get; set; } = [];
 
-            [Option(longName: "dumpdatamode", HelpText = "Dump data mode selection")]
+            [Option(longName: "dumpdatamode", HelpText = "Format of the file to output with DumpData.")]
             public FlagDumpDataMode cloDumpDataMode { get; set; }
 
-            [Option(longName: "verbose", HelpText = "Set output to verbose level")]
+            [Option(longName: "verbose", HelpText = "Set output to verbose level.")]
             public bool cloVerbose { get; set; }
         }
 
@@ -90,7 +95,8 @@ namespace KON.Liwest.ChannelFactory
         /// Program.Main()
         /// </summary>
         /// <param name="saLocalArguments"></param>
-        static void Main(string[] saLocalArguments)
+        /// <returns>Exit code (0 = success, 1 = invalid arguments, 2 = operation failed, 3 = prerequisites not met)</returns>
+        static int Main(string[] saLocalArguments)
         {
             LogTrace("Program.Main()");
 
@@ -98,23 +104,46 @@ namespace KON.Liwest.ChannelFactory
 
             var pCurrentParser = new Parser(apsCurrentConfiguration => apsCurrentConfiguration.HelpWriter = null);
             var prCurrentParseResult = pCurrentParser.ParseArguments<Options>(saLocalArguments);
+            var ecCurrentExitCode = ExitCode.InvalidArguments;
 
             prCurrentParseResult.WithParsed(delegate (Options oLocalOptions)
             {
-                if (oLocalOptions.cloVerbose)
-                    LogManager.Setup().LoadConfiguration(aslcbCurrentSetupLoadConfigurationBuilder => { aslcbCurrentSetupLoadConfigurationBuilder.ForLogger().FilterMinLevel(LogLevel.Trace).WriteToColoredConsole(new SimpleLayout("${message}")); });
-                else
-                    LogManager.Setup().LoadConfiguration(aslcbCurrentSetupLoadConfigurationBuilder => { aslcbCurrentSetupLoadConfigurationBuilder.ForLogger().FilterMinLevel(LogLevel.Info).WriteToColoredConsole(new SimpleLayout("${message}")); });
+                ConfigureLogging(oLocalOptions.cloVerbose ? LogLevel.Trace : LogLevel.Info);
 
-                Run(oLocalOptions);
+                try
+                {
+                    ecCurrentExitCode = Run(oLocalOptions);
+                }
+                catch (Exception excCurrentException)
+                {
+                    LogError($"-» Unexpected error: {excCurrentException.Message}");
+                    LogTrace(excCurrentException.ToString());
+                    ecCurrentExitCode = ExitCode.OperationFailed;
+                }
             });
 
-            prCurrentParseResult.WithNotParsed(delegate
+            prCurrentParseResult.WithNotParsed(delegate (IEnumerable<Error> ieeLocalErrors)
             {
-                LogManager.Setup().LoadConfiguration(aslcbCurrentSetupLoadConfigurationBuilder => { aslcbCurrentSetupLoadConfigurationBuilder.ForLogger().FilterMinLevel(LogLevel.Info).WriteToColoredConsole(new SimpleLayout("${message}")); });
+                ConfigureLogging(LogLevel.Info);
 
                 DisplayHelp(prCurrentParseResult);
+
+                var eaCurrentErrors = ieeLocalErrors.ToArray();
+                ecCurrentExitCode = eaCurrentErrors.IsHelp() || eaCurrentErrors.IsVersion() ? ExitCode.Success : ExitCode.InvalidArguments;
             });
+
+            WaitForKeyPress();
+
+            return (int)ecCurrentExitCode;
+        }
+
+        /// <summary>
+        /// Program.ConfigureLogging()
+        /// </summary>
+        /// <param name="llLocalMinimumLogLevel"></param>
+        private static void ConfigureLogging(LogLevel llLocalMinimumLogLevel)
+        {
+            LogManager.Setup().LoadConfiguration(aslcbCurrentSetupLoadConfigurationBuilder => { aslcbCurrentSetupLoadConfigurationBuilder.ForLogger().FilterMinLevel(llLocalMinimumLogLevel).WriteToColoredConsole(new SimpleLayout("${message}")); });
         }
 
         /// <summary>
@@ -126,7 +155,6 @@ namespace KON.Liwest.ChannelFactory
         {
             LogTrace("Program.DisplayHelp()");
 
-            // TODO: Add new parameters and samples
             var htCurrentHelpText = HelpText.AutoBuild(prLocalParseResult, htCurrentHelpText =>
             {
                 htCurrentHelpText.AddNewLineBetweenHelpSections = false;
@@ -135,88 +163,102 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.Heading = Constants.cstrCurrentProjectName.Pastel(Color.Green);
                 htCurrentHelpText.Copyright = Constants.cstrCurrentProjectCopyright.Pastel(Color.LimeGreen);
 
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Generate ChannelList and output to None".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData -source ChannelList -target None");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Channel list to the console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source ChannelList --target ConsoleList");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Generate SmartcardList and output to ConsoleList".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source SmartcardList --target ConsoleList --smartcardid 12345678900");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Channel list to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source ChannelList --target FileList");
+                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_ChannelList.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Generate BlindscanList and output to FileList".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source BlindscanList --target FileList --serverip 1.2.3.4");
-                htCurrentHelpText.AddPostOptionsLine($"    --frequencies 386-786:8 --targetfile SourceData_BlindscanList.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Smartcard (LIWEST signal check) to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source SmartcardList --target FileList --smartcardid 01359xxxxxx");
+                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_SmartcardList.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Generate CombinedList and output to FileList".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source BlindscanList --target FileList --smartcardid 12345678900");
-                htCurrentHelpText.AddPostOptionsLine($"    --serverip 1.2.3.4 --frequencies 386-786:8 --targetfile SourceData_CombinedList.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Blindscan (SAT>IP) to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source BlindscanList --target FileList --serverip 192.168.1.10");
+                htCurrentHelpText.AddPostOptionsLine($"    --frequencies 114,130-858:8 --targetfile SourceData_BlindscanList.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target None --sourcefile SourceData_FileList.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: All sources merged per channel to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source CombinedList --target FileList --smartcardid 01359xxxxxx");
+                htCurrentHelpText.AddPostOptionsLine($"    --serverip 192.168.1.10 --frequencies 114,130-858:8 --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_CombinedList.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Output FileList to ConsoleList".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target ConsoleList --sourcefile SourceData_FileList.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check a source data file and output it to the console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target ConsoleList");
+                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile SourceData_CombinedList.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Copy FileList to new FileList".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_FileList_Copy.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Remove channels without SID from a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target FileList");
+                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile SourceData_CombinedList.json --sourcecleanup RemoveInvalidSIDs");
+                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_Cleaned.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency and remove invalid SIDs".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target None --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup RemoveInvalidSIDs");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Merge the sources of a source data file per channel".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target FileList");
+                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile SourceData_CombinedList.json --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_Grouped.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency and remove invalid SIDs with variations".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target None --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json --sourcecleanup RemoveInvalidSIDs");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Remove and sort channels of a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode ModifyData --source FileList --target FileList --sourcefile SourceData_Grouped.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_Sorted.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency and invalidate".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target None --sourcefile SourceData_FileList.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to an excel channel list".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList --exportfilename channels.xlsx --exportfilenameformat None");
+                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to DVBViewer transponder list and channel database".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
+                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to Enigma2 transponders, channel database and bouquets".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename cables.xml lamedb \"\"");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to all formats into the folder export".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    EnigmaTransponderList EnigmaChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename export\\channels.xlsx export\\DVB-C_at_LIWEST.ini");
+                htCurrentHelpText.AddPostOptionsLine($"    export\\channels.dat export\\cables.xml export\\lamedb");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat None None None Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Output a DVBViewer channel database to the console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode DumpData --source CustomFile --dumpdatamode DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile channels.dat");
+                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Automatic run without output (collect, cleanup, modify only)".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode AutomaticData --submode SubModeCustom1 --source CombinedList");
+                htCurrentHelpText.AddPostOptionsLine($"    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
                 htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup GroupAndInvalidate");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency and invalidate with variations".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target None --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json --sourcecleanup GroupAndInvalidate");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency and do channel removal".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ModifyData --source FileList --target None --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency and do channel sorting".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ModifyData --source FileList --target None --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check FileList for consistency with channel removal + sorting".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ModifyData --source FileList --target None --sourcefile SourceData_FileList.json");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Automatic run with output to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode AutomaticData --submode SubModeCustom2 --source CombinedList");
+                htCurrentHelpText.AddPostOptionsLine($"    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
+                htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
                 htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
                 htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --target FileList --targetfile SourceData_Automatic.json");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export FileList to Excel channel file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList --exportfilename channels.xlsx");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Automatic run with exports to excel, DVBViewer and Enigma2".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode AutomaticData --submode SubModeCustom3 --source CombinedList");
+                htCurrentHelpText.AddPostOptionsLine($"    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
+                htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList DVBViewerChannelDatabase EnigmaChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    EnigmaBouquetsFiles --exportfilename channels.xlsx channels.dat lamedb \"\"");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat None None Enigma2Ver4 Enigma2Ver4");
                 htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export FileList to DVBViewer transponder file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerTransponderList --exportfilename DVB-C_at_LIWEST.ini");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export FileList to DVBViewer channel database file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerChannelDatabase --exportfilename channels.dat");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export FileList to Enigma transponder file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode EnigmaTransponderList --exportfilename cables.xml");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat Engima2Ver4");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export FileList to Enigma database file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode EnigmaChannelDatabase --exportfilename lamedb");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat Engima2Ver4");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export FileList to Enigma bouquets files".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_FileList.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode EnigmaBouquetsFiles --exportfilenameformat Engima2Ver4");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Dump CustomFile with DVBViewerChannelDatabase to console".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode DumpData --dumpdatamode DVBViewerChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    --source CustomFile --sourcefile channels.dat");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Channel list with verbose (trace) output".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source ChannelList --target None --verbose");
                 htCurrentHelpText.AddPostOptionsLine($"");
 
                 return HelpText.DefaultParsingErrorsHandler(prLocalParseResult, htCurrentHelpText);
@@ -233,7 +275,6 @@ namespace KON.Liwest.ChannelFactory
         {
             LogTrace("Program.DisplayHelpWithCustomCondition()");
 
-            // TODO: Add new parameters and samples
             var prCurrentParseResult = new Parser(x => { x.HelpWriter = null; }).ParseArguments<Options>(["--help"]);
             var htCurrentHelpText = HelpText.AutoBuild(prCurrentParseResult, htCurrentHelpText =>
             {
@@ -264,7 +305,8 @@ namespace KON.Liwest.ChannelFactory
         /// Program.Run()
         /// </summary>
         /// <param name="oLocalOptions"></param>
-        private static void Run(Options oLocalOptions)
+        /// <returns>ExitCode</returns>
+        private static ExitCode Run(Options oLocalOptions)
         {
             LogTrace("Program.Run()");
 
@@ -277,427 +319,366 @@ namespace KON.Liwest.ChannelFactory
             catch (Exception) { /* Not supported by every terminal */ }
             #endif
 
-            InitDataContainers(ref dtSourceDataTable);
-
-            if (CreateFirewallRule())
+            if (!CreateFirewallRule())
             {
-                string[] saLocalCustomCondition = [];
+                LogError("-» Firewall rule has not been created as there are not sufficient permissions or wrong operation system used. Operation stopped!");
+                return ExitCode.PrerequisitesNotMet;
+            }
 
-                /* Check for custom conditions */
-                if (!string.IsNullOrEmpty(oLocalOptions.cloChannelVariationFile) && !File.Exists(oLocalOptions.cloChannelVariationFile))
-                    saLocalCustomCondition = [.. saLocalCustomCondition, "channelvariationfile"];
+            // Show help dialog if custom conditions are not met
+            var saCurrentCustomConditions = ValidateOptions(oLocalOptions);
+            if (saCurrentCustomConditions.Count > 0)
+            {
+                DisplayHelpWithCustomCondition([.. saCurrentCustomConditions]);
+                return ExitCode.InvalidArguments;
+            }
 
-                switch (oLocalOptions.cloMode)
+            if (!string.IsNullOrEmpty(oLocalOptions.cloChannelVariationFile) && !LoadChannelVariationDictionaryFromFile(oLocalOptions.cloChannelVariationFile))
+                return ExitCode.OperationFailed;
+
+            var lsdiCurrentSourceData = new List<SourceDataItem>();
+
+            switch (oLocalOptions.cloMode)
+            {
+                case FlagMode.GenerateData:
                 {
-                    case FlagMode.GenerateData:
-                    {
-                        if (oLocalOptions.cloSource == FlagSource.SmartcardList || oLocalOptions.cloSource == FlagSource.CombinedList)
-                            saLocalCustomCondition = string.IsNullOrEmpty(oLocalOptions.cloSmartcardID) ? [.. saLocalCustomCondition, "smartcardid"] : saLocalCustomCondition;
+                    if (oLocalOptions.cloSource is FlagSource.ChannelList or FlagSource.CombinedList)
+                        GetSourceDataFromChannelList(lsdiCurrentSourceData);
 
-                        if (oLocalOptions.cloSource == FlagSource.BlindscanList || oLocalOptions.cloSource == FlagSource.CombinedList)
-                        {
-                            saLocalCustomCondition = string.IsNullOrEmpty(oLocalOptions.cloServerIP) ? [.. saLocalCustomCondition, "serverip"] : saLocalCustomCondition;
-                            saLocalCustomCondition = string.IsNullOrEmpty(oLocalOptions.cloFrequencies) ? [.. saLocalCustomCondition, "frequencies"] : saLocalCustomCondition;
-                        }
+                    if (oLocalOptions.cloSource is FlagSource.SmartcardList or FlagSource.CombinedList)
+                        GetSourceDataFromSmartcard(lsdiCurrentSourceData, oLocalOptions.cloSmartcardID);
 
-                        if (oLocalOptions.cloSource == FlagSource.FileList && (string.IsNullOrEmpty(oLocalOptions.cloSourceFile) || !File.Exists(oLocalOptions.cloSourceFile)))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "sourcefile"];
+                    if (oLocalOptions.cloSource is FlagSource.BlindscanList or FlagSource.CombinedList)
+                        GetSourceDataFromBlindscan(lsdiCurrentSourceData, oLocalOptions.cloServerIP, oLocalOptions.cloFrequencies);
 
-                        if (oLocalOptions.cloTarget == FlagTarget.FileList && string.IsNullOrEmpty(oLocalOptions.cloTargetFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "targetfile"];
-
+                    if (oLocalOptions.cloSource == FlagSource.FileList && !LoadSourceDataFromFile(lsdiCurrentSourceData, oLocalOptions.cloSourceFile))
                         break;
-                    }
-                    case FlagMode.ModifyData:
-                    {
-                        if (oLocalOptions.cloSource != FlagSource.FileList)
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "source"];
 
-                        if (string.IsNullOrEmpty(oLocalOptions.cloSourceFile) | !File.Exists(oLocalOptions.cloSourceFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "sourcefile"];
+                    CleanupSourceData(lsdiCurrentSourceData, oLocalOptions.cloSourceCleanup);
+                    WriteTarget(oLocalOptions, lsdiCurrentSourceData);
 
-                        if (oLocalOptions.cloTarget == FlagTarget.FileList && string.IsNullOrEmpty(oLocalOptions.cloTargetFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "targetfile"];
-
-                        if (!string.IsNullOrEmpty(oLocalOptions.cloChannelRemovalFile) && !File.Exists(oLocalOptions.cloChannelRemovalFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "channelremovalfile"];
-
-                        if (!string.IsNullOrEmpty(oLocalOptions.cloChannelSortingFile) && !File.Exists(oLocalOptions.cloChannelSortingFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "channelsortingfile"];
-
+                    break;
+                }
+                case FlagMode.ModifyData:
+                {
+                    if (!LoadSourceDataFromFile(lsdiCurrentSourceData, oLocalOptions.cloSourceFile))
                         break;
-                    }
-                    case FlagMode.ExportData:
-                    {
-                        if (oLocalOptions.cloSource != FlagSource.FileList)
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "source"];
 
-                        if (string.IsNullOrEmpty(oLocalOptions.cloSourceFile) | !File.Exists(oLocalOptions.cloSourceFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "sourcefile"];
+                    ModifySourceData(oLocalOptions, lsdiCurrentSourceData);
+                    WriteTarget(oLocalOptions, lsdiCurrentSourceData);
 
-                        if (!Array.TrueForAll([oLocalOptions.cloExportMode.Count(), oLocalOptions.cloExportFilename.Count(), oLocalOptions.cloExportFilenameFormat.Count()], vCurrentValue => oLocalOptions.cloExportMode.Count() == vCurrentValue))
-                        {
-                            var iMaxParameterCount = oLocalOptions.cloExportMode.Count();
-
-                            if (iMaxParameterCount == 0)
-                                saLocalCustomCondition = [.. saLocalCustomCondition, "exportmode"];
-
-                            if (oLocalOptions.cloExportFilename.Count() != iMaxParameterCount)
-                                saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilename"];
-
-                            if (oLocalOptions.cloExportFilenameFormat.Count() != iMaxParameterCount)
-                                saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilenameformat"];
-                        }
-                        else
-                        {
-                            for (var iExportDataElement = 0; iExportDataElement < oLocalOptions.cloExportMode.Count(); iExportDataElement++)
-                            {
-                                if (string.IsNullOrEmpty(oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement)) && oLocalOptions.cloExportMode.ElementAt(iExportDataElement) != FlagExportMode.EnigmaBouquetsFiles)
-                                    saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilename"];
-
-                                if (oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement) == null && (oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaTransponderList || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaChannelDatabase || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaBouquetsFiles))
-                                    saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilenameformat"];
-
-                                if (oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement) == FlagExportEnigmaFormat.None && (oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaTransponderList || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaChannelDatabase || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaBouquetsFiles))
-                                    saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilenameformat"];
-                            }
-                        }
-
+                    break;
+                }
+                case FlagMode.ExportData:
+                {
+                    if (!LoadSourceDataFromFile(lsdiCurrentSourceData, oLocalOptions.cloSourceFile))
                         break;
-                    }
-                    case FlagMode.DumpData:
+
+                    RunExports(oLocalOptions, lsdiCurrentSourceData);
+
+                    break;
+                }
+                case FlagMode.DumpData:
+                {
+                    if (oLocalOptions.cloDumpDataMode == FlagDumpDataMode.DVBViewerChannelDatabase)
+                        DumpDVBViewerChannelDatabase(oLocalOptions.cloSourceFile);
+
+                    break;
+                }
+                case FlagMode.AutomaticData:
+                {
+                    GetSourceDataFromChannelList(lsdiCurrentSourceData);
+                    GetSourceDataFromSmartcard(lsdiCurrentSourceData, oLocalOptions.cloSmartcardID);
+                    GetSourceDataFromBlindscan(lsdiCurrentSourceData, oLocalOptions.cloServerIP, oLocalOptions.cloFrequencies);
+
+                    CleanupSourceData(lsdiCurrentSourceData, oLocalOptions.cloSourceCleanup);
+                    ModifySourceData(oLocalOptions, lsdiCurrentSourceData);
+
+                    switch (oLocalOptions.cloSubMode)
                     {
-                        if (oLocalOptions.cloSource != FlagSource.CustomFile)
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "source"];
-
-                        if (string.IsNullOrEmpty(oLocalOptions.cloSourceFile) | !File.Exists(oLocalOptions.cloSourceFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "sourcefile"];
-
-                        break;
+                        case FlagSubMode.SubModeCustom1:
+                            // Sources, cleanup, removal and sorting only - no output
+                            break;
+                        case FlagSubMode.SubModeCustom2:
+                            WriteTarget(oLocalOptions, lsdiCurrentSourceData);
+                            break;
+                        case FlagSubMode.SubModeCustom3:
+                            RunExports(oLocalOptions, lsdiCurrentSourceData);
+                            break;
                     }
-                    case FlagMode.AutomaticData:
+
+                    break;
+                }
+            }
+
+            return bErrorOccurred ? ExitCode.OperationFailed : ExitCode.Success;
+        }
+
+        /// <summary>
+        /// Program.ValidateOptions() - checks the options which depend on mode, source, target and export selection
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <returns>Names of the options which are not met or missing</returns>
+        private static List<string> ValidateOptions(Options oLocalOptions)
+        {
+            LogTrace("Program.ValidateOptions()");
+
+            List<string> lsCurrentCustomConditions = [];
+
+            if (!string.IsNullOrEmpty(oLocalOptions.cloChannelVariationFile) && !File.Exists(oLocalOptions.cloChannelVariationFile))
+                lsCurrentCustomConditions.Add("channelvariationfile");
+
+            switch (oLocalOptions.cloMode)
+            {
+                case FlagMode.GenerateData:
+                {
+                    if (oLocalOptions.cloSource is FlagSource.SmartcardList or FlagSource.CombinedList && string.IsNullOrEmpty(oLocalOptions.cloSmartcardID))
+                        lsCurrentCustomConditions.Add("smartcardid");
+
+                    if (oLocalOptions.cloSource is FlagSource.BlindscanList or FlagSource.CombinedList)
                     {
-                        if (oLocalOptions.cloSubMode == FlagSubMode.None)
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "submode"];
-
-                        if (oLocalOptions.cloSource != FlagSource.ChannelList && oLocalOptions.cloSource != FlagSource.SmartcardList && oLocalOptions.cloSource != FlagSource.BlindscanList && oLocalOptions.cloSource != FlagSource.CombinedList)
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "source"];
-
-                        if (string.IsNullOrEmpty(oLocalOptions.cloSmartcardID))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "smartcardid"];
-
                         if (string.IsNullOrEmpty(oLocalOptions.cloServerIP))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "serverip"];
-                            
+                            lsCurrentCustomConditions.Add("serverip");
+
                         if (string.IsNullOrEmpty(oLocalOptions.cloFrequencies))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "frequencies"];
-
-                        if (oLocalOptions is { cloSubMode: FlagSubMode.SubModeCustom2, cloTarget: FlagTarget.None })
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "target"];
-
-                        if (oLocalOptions is { cloSubMode: FlagSubMode.SubModeCustom2, cloTarget: FlagTarget.FileList } && string.IsNullOrEmpty(oLocalOptions.cloTargetFile))
-                            saLocalCustomCondition = [.. saLocalCustomCondition, "targetfile"];
-
-                        if (!Array.TrueForAll([oLocalOptions.cloExportMode.Count(), oLocalOptions.cloExportFilename.Count(), oLocalOptions.cloExportFilenameFormat.Count()], vCurrentValue => oLocalOptions.cloExportMode.Count() == vCurrentValue))
-                        {
-                            var iMaxParameterCount = oLocalOptions.cloExportMode.Count();
-
-                            if (iMaxParameterCount == 0)
-                                saLocalCustomCondition = [.. saLocalCustomCondition, "exportmode"];
-
-                            if (oLocalOptions.cloExportFilename.Count() != iMaxParameterCount)
-                                saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilename"];
-
-                            if (oLocalOptions.cloExportFilenameFormat.Count() != iMaxParameterCount)
-                                saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilenameformat"];
-                        }
-                        else
-                        {
-                            for (var iExportDataElement = 0; iExportDataElement < oLocalOptions.cloExportMode.Count(); iExportDataElement++)
-                            {
-                                if (string.IsNullOrEmpty(oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement)) && oLocalOptions.cloExportMode.ElementAt(iExportDataElement) != FlagExportMode.EnigmaBouquetsFiles)
-                                    saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilename"];
-
-                                if (oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement) == null && (oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaTransponderList || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaChannelDatabase || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaBouquetsFiles))
-                                    saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilenameformat"];
-
-                                if (oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement) == FlagExportEnigmaFormat.None && (oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaTransponderList || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaChannelDatabase || oLocalOptions.cloExportMode.ElementAt(iExportDataElement) == FlagExportMode.EnigmaBouquetsFiles))
-                                    saLocalCustomCondition = [.. saLocalCustomCondition, "exportfilenameformat"];
-                            }
-                        }
-
-                        break;
+                            lsCurrentCustomConditions.Add("frequencies");
                     }
-                }
-                /* End-Check for custom conditions */
 
-                // Show help dialog if custom conditions are not met
-                if (saLocalCustomCondition.Length > 0)
-                    DisplayHelpWithCustomCondition(saLocalCustomCondition);
-                // Do operation if all custom conditions are met
-                else
+                    if (oLocalOptions.cloSource == FlagSource.FileList && !IsExistingFile(oLocalOptions.cloSourceFile))
+                        lsCurrentCustomConditions.Add("sourcefile");
+
+                    ValidateTargetOptions(oLocalOptions, lsCurrentCustomConditions);
+                    break;
+                }
+                case FlagMode.ModifyData:
                 {
-                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelVariationFile))
-                        LoadChannelVariationDictionaryFromFile(strLocalChannelVariationDictionaryFilename: oLocalOptions.cloChannelVariationFile);
+                    ValidateSourceFileOptions(oLocalOptions, FlagSource.FileList, lsCurrentCustomConditions);
+                    ValidateTargetOptions(oLocalOptions, lsCurrentCustomConditions);
+                    ValidateModifyOptions(oLocalOptions, lsCurrentCustomConditions);
+                    break;
+                }
+                case FlagMode.ExportData:
+                {
+                    ValidateSourceFileOptions(oLocalOptions, FlagSource.FileList, lsCurrentCustomConditions);
+                    ValidateExportOptions(oLocalOptions, lsCurrentCustomConditions);
+                    break;
+                }
+                case FlagMode.DumpData:
+                {
+                    ValidateSourceFileOptions(oLocalOptions, FlagSource.CustomFile, lsCurrentCustomConditions);
+                    break;
+                }
+                case FlagMode.AutomaticData:
+                {
+                    if (oLocalOptions.cloSubMode == FlagSubMode.None)
+                        lsCurrentCustomConditions.Add("submode");
 
-                    switch (oLocalOptions.cloMode)
-                    {
-                        case FlagMode.GenerateData:
-                        {
-                            if (oLocalOptions.cloSource is FlagSource.ChannelList or FlagSource.CombinedList)
-                                GetSourceDataFromChannelList();
+                    if (oLocalOptions.cloSource is not (FlagSource.ChannelList or FlagSource.SmartcardList or FlagSource.BlindscanList or FlagSource.CombinedList))
+                        lsCurrentCustomConditions.Add("source");
 
-                            if (oLocalOptions.cloSource is FlagSource.SmartcardList or FlagSource.CombinedList)
-                                GetSourceDataFromSmartcard(strLocalSmartcardId: oLocalOptions.cloSmartcardID);
+                    if (string.IsNullOrEmpty(oLocalOptions.cloSmartcardID))
+                        lsCurrentCustomConditions.Add("smartcardid");
 
-                            switch (oLocalOptions.cloSource)
-                            {
-                                case FlagSource.BlindscanList:
-                                case FlagSource.CombinedList:
-                                {
-                                    GetSourceDataFromBlindscan(oLocalOptions.cloServerIP, strLocalFrequencies: oLocalOptions.cloFrequencies);
-                                    
-                                    break;
-                                }
-                                case FlagSource.FileList:
-                                {
-                                    LoadSourceDataFromFile(strLocalSourceDataFilename: oLocalOptions.cloSourceFile);
+                    if (string.IsNullOrEmpty(oLocalOptions.cloServerIP))
+                        lsCurrentCustomConditions.Add("serverip");
 
-                                    break;
-                                }
-                            }
+                    if (string.IsNullOrEmpty(oLocalOptions.cloFrequencies))
+                        lsCurrentCustomConditions.Add("frequencies");
 
-                            if (oLocalOptions.cloSourceCleanup != FlagSourceCleanup.None)
-                                CleanupSourceData(oLocalOptions.cloSourceCleanup);
+                    if (oLocalOptions is { cloSubMode: FlagSubMode.SubModeCustom2, cloTarget: FlagTarget.None })
+                        lsCurrentCustomConditions.Add("target");
 
-                            switch (oLocalOptions.cloTarget)
-                            {
-                                case FlagTarget.ConsoleList:
-                                {
-                                    SaveSourceDataToConsole();
+                    if (oLocalOptions is { cloSubMode: FlagSubMode.SubModeCustom2, cloTarget: FlagTarget.FileList } && string.IsNullOrEmpty(oLocalOptions.cloTargetFile))
+                        lsCurrentCustomConditions.Add("targetfile");
 
-                                    break;
-                                }
-                                case FlagTarget.FileList:
-                                {
-                                    SaveSourceDataToFile(strLocalSourceDataFilename: oLocalOptions.cloTargetFile);
-
-                                    break;
-                                }
-                            }
-
-                            break;
-                        }
-                        case FlagMode.ModifyData:
-                        {
-                            LoadSourceDataFromFile(strLocalSourceDataFilename: oLocalOptions.cloSourceFile);
-
-                            if (!string.IsNullOrEmpty(oLocalOptions.cloChannelRemovalFile))
-                                ModifyDataRemoveChannels(strLocalChannelRemovalFile: oLocalOptions.cloChannelRemovalFile);
-
-                            if (!string.IsNullOrEmpty(oLocalOptions.cloChannelSortingFile))
-                                ModifyDataSortChannels(strLocalChannelSortingFile: oLocalOptions.cloChannelSortingFile);
-
-                            switch (oLocalOptions.cloTarget)
-                            {
-                                case FlagTarget.ConsoleList:
-                                {
-                                    SaveSourceDataToConsole();
-
-                                    break;
-                                }
-                                case FlagTarget.FileList:
-                                {
-                                    SaveSourceDataToFile(strLocalSourceDataFilename: oLocalOptions.cloTargetFile);
-
-                                    break;
-                                }
-                            }
-
-                            break;
-                        }
-                        case FlagMode.ExportData:
-                        {
-                            LoadSourceDataFromFile(strLocalSourceDataFilename: oLocalOptions.cloSourceFile);
-
-                            for (var iExportDataElement = 0; iExportDataElement < oLocalOptions.cloExportMode.Count(); iExportDataElement++)
-                            {
-                                switch (oLocalOptions.cloExportMode.ElementAt(iExportDataElement))
-                                {
-                                    case FlagExportMode.ExcelChannelList:
-                                    {
-                                        if (!string.IsNullOrEmpty(oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement)))
-                                            ExportSourceDataToExcelExportFile(strLocalExcelFilename: oLocalOptions.cloExportFilename.ElementAt(iExportDataElement));
-
-                                        break;
-                                    }
-                                    case FlagExportMode.DVBViewerTransponderList:
-                                    {
-                                        ExportSourceDataToDVBViewerTransponderFile(strLocalDVBViewerTransponderFilename: oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement));
-
-                                        break;
-                                    }
-                                    case FlagExportMode.DVBViewerChannelDatabase:
-                                    {
-                                        ExportSourceDataToDVBViewerChannelDatabase(strLocalDVBViewerChannelDatabaseFilename: oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement));
-
-                                        break;
-                                    }
-                                    case FlagExportMode.EnigmaTransponderList:
-                                    case FlagExportMode.EnigmaChannelDatabase:
-                                    {
-                                        ExportSourceDataToEnigmaSelector(femLocalFlagExportMode: oLocalOptions.cloExportMode.ElementAt(iExportDataElement), strLocalFilename: oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement), fefLocalExportFilenameFormat: oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement));
-
-                                        break;
-                                    }
-                                    case FlagExportMode.EnigmaBouquetsFiles:
-                                    {
-                                        ExportSourceDataToEnigmaSelector(femLocalFlagExportMode: oLocalOptions.cloExportMode.ElementAt(iExportDataElement), strLocalFilename: string.Empty, fefLocalExportFilenameFormat: oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement));
-
-                                        break;
-                                    }
-                                }
-                            }
-
-                            break;
-                        }
-                        case FlagMode.DumpData:
-                        {
-                            switch (oLocalOptions.cloDumpDataMode)
-                            {
-                                case FlagDumpDataMode.DVBViewerChannelDatabase:
-                                {
-                                    DumpDVBViewerChannelDatabase(strLocalDVBViewerChannelDatabaseFilename: oLocalOptions.cloSourceFile);
-
-                                    break;
-                                }
-                            }
-
-                            break;
-                        }
-                        case FlagMode.AutomaticData:
-                        {
-                            switch (oLocalOptions.cloSubMode)
-                            {
-                                case FlagSubMode.SubModeCustom1:
-                                {
-                                    GetSourceDataFromChannelList();
-                                    GetSourceDataFromSmartcard(strLocalSmartcardId: oLocalOptions.cloSmartcardID);
-                                    GetSourceDataFromBlindscan(strLocalServerIP: oLocalOptions.cloServerIP, strLocalFrequencies: oLocalOptions.cloFrequencies);
-
-                                    if (oLocalOptions.cloSourceCleanup != FlagSourceCleanup.None)
-                                        CleanupSourceData(oLocalOptions.cloSourceCleanup);
-
-                                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelRemovalFile))
-                                        ModifyDataRemoveChannels(strLocalChannelRemovalFile: oLocalOptions.cloChannelRemovalFile);
-
-                                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelSortingFile))
-                                        ModifyDataSortChannels(strLocalChannelSortingFile: oLocalOptions.cloChannelSortingFile);
-
-                                    break;
-                                }
-                                case FlagSubMode.SubModeCustom2:
-                                {
-                                    GetSourceDataFromChannelList();
-                                    GetSourceDataFromSmartcard(strLocalSmartcardId: oLocalOptions.cloSmartcardID);
-                                    GetSourceDataFromBlindscan(strLocalServerIP: oLocalOptions.cloServerIP, strLocalFrequencies: oLocalOptions.cloFrequencies);
-
-                                    if (oLocalOptions.cloSourceCleanup != FlagSourceCleanup.None)
-                                        CleanupSourceData(oLocalOptions.cloSourceCleanup);
-
-                                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelRemovalFile))
-                                        ModifyDataRemoveChannels(strLocalChannelRemovalFile: oLocalOptions.cloChannelRemovalFile);
-
-                                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelSortingFile))
-                                        ModifyDataSortChannels(strLocalChannelSortingFile: oLocalOptions.cloChannelSortingFile);
-
-                                    switch (oLocalOptions.cloTarget)
-                                    {
-                                        case FlagTarget.ConsoleList:
-                                        {
-                                            SaveSourceDataToConsole();
-
-                                            break;
-                                        }
-                                        case FlagTarget.FileList:
-                                        {
-                                            SaveSourceDataToFile(strLocalSourceDataFilename: oLocalOptions.cloTargetFile);
-
-                                            break;
-                                        }
-                                    }
-
-                                    break;
-                                }
-                                case FlagSubMode.SubModeCustom3:
-                                {
-                                    GetSourceDataFromChannelList();
-                                    GetSourceDataFromSmartcard(strLocalSmartcardId: oLocalOptions.cloSmartcardID);
-                                    GetSourceDataFromBlindscan(strLocalServerIP: oLocalOptions.cloServerIP, strLocalFrequencies: oLocalOptions.cloFrequencies);
-
-                                    if (oLocalOptions.cloSourceCleanup != FlagSourceCleanup.None)
-                                        CleanupSourceData(oLocalOptions.cloSourceCleanup);
-
-                                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelRemovalFile))
-                                        ModifyDataRemoveChannels(strLocalChannelRemovalFile: oLocalOptions.cloChannelRemovalFile);
-
-                                    if (!string.IsNullOrEmpty(oLocalOptions.cloChannelSortingFile))
-                                        ModifyDataSortChannels(strLocalChannelSortingFile: oLocalOptions.cloChannelSortingFile);
-
-                                    for (var iExportDataElement = 0; iExportDataElement < oLocalOptions.cloExportMode.Count(); iExportDataElement++)
-                                    {
-                                        switch (oLocalOptions.cloExportMode.ElementAt(iExportDataElement))
-                                        {
-                                            case FlagExportMode.ExcelChannelList:
-                                            {
-                                                if (!string.IsNullOrEmpty(oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement)))
-                                                    ExportSourceDataToExcelExportFile(strLocalExcelFilename: oLocalOptions.cloExportFilename.ElementAt(iExportDataElement));
-
-                                                break;
-                                            }
-                                            case FlagExportMode.DVBViewerTransponderList:
-                                            {
-                                                ExportSourceDataToDVBViewerTransponderFile(strLocalDVBViewerTransponderFilename: oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement));
-
-                                                break;
-                                            }
-                                            case FlagExportMode.DVBViewerChannelDatabase:
-                                            {
-                                                ExportSourceDataToDVBViewerChannelDatabase(strLocalDVBViewerChannelDatabaseFilename: oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement));
-
-                                                break;
-                                            }
-                                            case FlagExportMode.EnigmaTransponderList:
-                                            case FlagExportMode.EnigmaChannelDatabase:
-                                            {
-                                                ExportSourceDataToEnigmaSelector(femLocalFlagExportMode: oLocalOptions.cloExportMode.ElementAt(iExportDataElement), strLocalFilename: oLocalOptions.cloExportFilename?.ElementAt(iExportDataElement), fefLocalExportFilenameFormat: oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement));
-
-                                                break;
-                                            }
-                                            case FlagExportMode.EnigmaBouquetsFiles:
-                                            {
-                                                ExportSourceDataToEnigmaSelector(femLocalFlagExportMode: oLocalOptions.cloExportMode.ElementAt(iExportDataElement), strLocalFilename: string.Empty, fefLocalExportFilenameFormat: oLocalOptions.cloExportFilenameFormat?.ElementAt(iExportDataElement));
-
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                    break;
-                                }
-                            }
-
-                            break;
-                        }
-                    }
+                    ValidateExportOptions(oLocalOptions, lsCurrentCustomConditions);
+                    break;
                 }
             }
-            else
+
+            return lsCurrentCustomConditions;
+        }
+
+        /// <summary>
+        /// Program.ValidateSourceFileOptions()
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="fsLocalRequiredSource"></param>
+        /// <param name="lsLocalCustomConditions"></param>
+        private static void ValidateSourceFileOptions(Options oLocalOptions, FlagSource fsLocalRequiredSource, List<string> lsLocalCustomConditions)
+        {
+            if (oLocalOptions.cloSource != fsLocalRequiredSource)
+                lsLocalCustomConditions.Add("source");
+
+            if (!IsExistingFile(oLocalOptions.cloSourceFile))
+                lsLocalCustomConditions.Add("sourcefile");
+        }
+
+        /// <summary>
+        /// Program.ValidateTargetOptions()
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsLocalCustomConditions"></param>
+        private static void ValidateTargetOptions(Options oLocalOptions, List<string> lsLocalCustomConditions)
+        {
+            if (oLocalOptions.cloTarget == FlagTarget.FileList && string.IsNullOrEmpty(oLocalOptions.cloTargetFile))
+                lsLocalCustomConditions.Add("targetfile");
+        }
+
+        /// <summary>
+        /// Program.ValidateModifyOptions()
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsLocalCustomConditions"></param>
+        private static void ValidateModifyOptions(Options oLocalOptions, List<string> lsLocalCustomConditions)
+        {
+            if (!string.IsNullOrEmpty(oLocalOptions.cloChannelRemovalFile) && !File.Exists(oLocalOptions.cloChannelRemovalFile))
+                lsLocalCustomConditions.Add("channelremovalfile");
+
+            if (!string.IsNullOrEmpty(oLocalOptions.cloChannelSortingFile) && !File.Exists(oLocalOptions.cloChannelSortingFile))
+                lsLocalCustomConditions.Add("channelsortingfile");
+        }
+
+        /// <summary>
+        /// Program.ValidateExportOptions() - export mode, filename and filename format are given as lists of the same length
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsLocalCustomConditions"></param>
+        private static void ValidateExportOptions(Options oLocalOptions, List<string> lsLocalCustomConditions)
+        {
+            var femaCurrentExportModes = oLocalOptions.cloExportMode.ToArray();
+            var saCurrentExportFilenames = oLocalOptions.cloExportFilename.ToArray();
+            var fefaCurrentExportFilenameFormats = oLocalOptions.cloExportFilenameFormat.ToArray();
+
+            if (saCurrentExportFilenames.Length != femaCurrentExportModes.Length || fefaCurrentExportFilenameFormats.Length != femaCurrentExportModes.Length)
             {
-                lCurrentLogger.Error("-» Firewall rule has not been created as there are not sufficient permissions or wrong operation system used. Operation stopped!".Pastel(ConsoleColor.Red));
+                if (femaCurrentExportModes.Length == 0)
+                    lsLocalCustomConditions.Add("exportmode");
+
+                if (saCurrentExportFilenames.Length != femaCurrentExportModes.Length)
+                    lsLocalCustomConditions.Add("exportfilename");
+
+                if (fefaCurrentExportFilenameFormats.Length != femaCurrentExportModes.Length)
+                    lsLocalCustomConditions.Add("exportfilenameformat");
+
+                return;
             }
 
-            WaitForKeyPress();
+            for (var iCurrentExportElement = 0; iCurrentExportElement < femaCurrentExportModes.Length; iCurrentExportElement++)
+            {
+                if (string.IsNullOrEmpty(saCurrentExportFilenames[iCurrentExportElement]) && femaCurrentExportModes[iCurrentExportElement] != FlagExportMode.EnigmaBouquetsFiles)
+                    lsLocalCustomConditions.Add("exportfilename");
+
+                if (fefaCurrentExportFilenameFormats[iCurrentExportElement] == FlagExportEnigmaFormat.None && femaCurrentExportModes[iCurrentExportElement] is FlagExportMode.EnigmaTransponderList or FlagExportMode.EnigmaChannelDatabase or FlagExportMode.EnigmaBouquetsFiles)
+                    lsLocalCustomConditions.Add("exportfilenameformat");
+            }
+        }
+
+        /// <summary>
+        /// Program.IsExistingFile()
+        /// </summary>
+        /// <param name="strLocalFilename"></param>
+        /// <returns>bool</returns>
+        private static bool IsExistingFile(string? strLocalFilename)
+        {
+            return !string.IsNullOrEmpty(strLocalFilename) && File.Exists(strLocalFilename);
+        }
+
+        /// <summary>
+        /// Program.ModifySourceData() - channel removal and channel sorting
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsdiLocalSourceData"></param>
+        private static void ModifySourceData(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
+        {
+            ModifyDataRemoveChannels(lsdiLocalSourceData, oLocalOptions.cloChannelRemovalFile);
+            ModifyDataSortChannels(lsdiLocalSourceData, oLocalOptions.cloChannelSortingFile);
+        }
+
+        /// <summary>
+        /// Program.WriteTarget()
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsdiLocalSourceData"></param>
+        private static void WriteTarget(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
+        {
+            switch (oLocalOptions.cloTarget)
+            {
+                case FlagTarget.ConsoleList:
+                    SaveSourceDataToConsole(lsdiLocalSourceData);
+                    break;
+                case FlagTarget.FileList:
+                    ExecuteFileOperation(FlagTarget.FileList, () => SaveSourceDataToFile(lsdiLocalSourceData, oLocalOptions.cloTargetFile));
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Program.RunExports() - every export runs on its own, a failing export does not stop the following ones
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsdiLocalSourceData"></param>
+        private static void RunExports(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
+        {
+            var femaCurrentExportModes = oLocalOptions.cloExportMode.ToArray();
+            var saCurrentExportFilenames = oLocalOptions.cloExportFilename.ToArray();
+            var fefaCurrentExportFilenameFormats = oLocalOptions.cloExportFilenameFormat.ToArray();
+
+            for (var iCurrentExportElement = 0; iCurrentExportElement < femaCurrentExportModes.Length; iCurrentExportElement++)
+            {
+                var femCurrentExportMode = femaCurrentExportModes[iCurrentExportElement];
+                var strCurrentExportFilename = iCurrentExportElement < saCurrentExportFilenames.Length ? saCurrentExportFilenames[iCurrentExportElement] : null;
+                FlagExportEnigmaFormat? fefCurrentExportFilenameFormat = iCurrentExportElement < fefaCurrentExportFilenameFormats.Length ? fefaCurrentExportFilenameFormats[iCurrentExportElement] : null;
+
+                ExecuteFileOperation(femCurrentExportMode, () => RunExport(lsdiLocalSourceData, femCurrentExportMode, strCurrentExportFilename, fefCurrentExportFilenameFormat));
+            }
+        }
+
+        /// <summary>
+        /// Program.RunExport()
+        /// </summary>
+        /// <param name="lsdiLocalSourceData"></param>
+        /// <param name="femLocalExportMode"></param>
+        /// <param name="strLocalExportFilename"></param>
+        /// <param name="fefLocalExportFilenameFormat"></param>
+        private static void RunExport(List<SourceDataItem> lsdiLocalSourceData, FlagExportMode femLocalExportMode, string? strLocalExportFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat)
+        {
+            switch (femLocalExportMode)
+            {
+                case FlagExportMode.ExcelChannelList:
+                    ExportSourceDataToExcelExportFile(lsdiLocalSourceData, strLocalExportFilename);
+                    break;
+                case FlagExportMode.DVBViewerTransponderList:
+                    ExportSourceDataToDVBViewerTransponderFile(lsdiLocalSourceData, strLocalExportFilename);
+                    break;
+                case FlagExportMode.DVBViewerChannelDatabase:
+                    ExportSourceDataToDVBViewerChannelDatabase(lsdiLocalSourceData, strLocalExportFilename);
+                    break;
+                case FlagExportMode.EnigmaTransponderList:
+                case FlagExportMode.EnigmaChannelDatabase:
+                    ExportSourceDataToEnigmaSelector(lsdiLocalSourceData, femLocalExportMode, strLocalExportFilename, fefLocalExportFilenameFormat);
+                    break;
+                case FlagExportMode.EnigmaBouquetsFiles:
+                    ExportSourceDataToEnigmaSelector(lsdiLocalSourceData, femLocalExportMode, string.Empty, fefLocalExportFilenameFormat);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Program.ExecuteFileOperation() - reports file errors (e.g. file in use, missing permissions) instead of terminating
+        /// </summary>
+        /// <param name="eLocalOperation">Operation (export mode or target) for the error message</param>
+        /// <param name="aLocalOperation"></param>
+        private static void ExecuteFileOperation(Enum eLocalOperation, Action aLocalOperation)
+        {
+            try
+            {
+                aLocalOperation();
+            }
+            catch (Exception excCurrentException) when (excCurrentException is IOException or UnauthorizedAccessException or SettingsException)
+            {
+                LogError($"-» Error on {eLocalOperation.GetType().Name}.{eLocalOperation}: {excCurrentException.Message}");
+            }
         }
     }
 }
