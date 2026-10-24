@@ -32,7 +32,8 @@ Copyright (C) 2024-2026 Oswald Oliver
   --frequencies             Frequencies in MHz for the blindscan, comma separated. Ranges as
                             start-end:step.
   --sourcefile              Source data file (json) to load from - for DumpData the file to output.
-  --targetfile              Source data file (json) to save to (--target FileList).
+  --targetfile              Source data file (json) to save to (--target FileList). Relative paths
+                            are placed in Export\<start of the run> next to the executable.
   --channelvariationfile    Channel variation file (json) - unifies the channel names of the
                             different sources.
   --sourcecleanup           Cleanup of the source data: RemoveInvalidSIDs (remove channels without
@@ -45,7 +46,8 @@ Copyright (C) 2024-2026 Oswald Oliver
                             DVBViewerTransponderList, DVBViewerChannelDatabase,
                             EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles.
   --exportfilename          Filename per export, same order as --exportmode ("" for
-                            EnigmaBouquetsFiles - written to the current directory).
+                            EnigmaBouquetsFiles). Relative paths are placed in Export\<start of the
+                            run> next to the executable.
   --exportfilenameformat    Enigma format per export, same order as --exportmode: Enigma1Ver1,
                             Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current
                             images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and
@@ -54,6 +56,19 @@ Copyright (C) 2024-2026 Oswald Oliver
                             into all installed DVBViewer / DVBViewer Media Server instances
                             (ExportData or AutomaticData SubModeCustom3). Running instances are
                             stopped and restarted, existing files are backed up.
+  --installenigmadata       Install the exported Enigma2 data into the receivers of --enigmahost via
+                            SSH (ExportData or AutomaticData SubModeCustom3). The settings of the
+                            receiver are backed up locally and merged: other bouquets (e.g.
+                            streaming), other cables and foreign lamedb entries are kept, enigma2 is
+                            stopped and restarted.
+  --enigmahost              Enigma2 receivers for --installenigmadata, space separated (host or
+                            host:port of the SSH server).
+  --enigmauser              (Default: root) SSH user of the Enigma2 receivers.
+  --enigmapassword          SSH password of the Enigma2 receivers (required for
+                            --installenigmadata).
+  --dryrun                  Installation test without changes: finds the DVBViewer installations /
+                            connects to the Enigma2 receivers and backs up their settings, nothing
+                            is installed.
   --dumpdatamode            Format of the file to output with DumpData.
   --verbose                 Set output to verbose level.
   --help                    Display this help screen.
@@ -115,6 +130,28 @@ Copyright (C) 2024-2026 Oswald Oliver
     --exportmode DVBViewerTransponderList DVBViewerChannelDatabase
     --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None
     --installdvbviewerdata
+
+* e.g.: Test the installation into DVBViewer without changes
+    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
+    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase
+    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None
+    --installdvbviewerdata --dryrun
+
+* e.g.: Test the installation into an Enigma2 receiver (SSH, backup only)
+    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
+    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles
+    --exportfilename cables.xml lamedb ""
+    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4
+    --installenigmadata --enigmahost 192.168.1.20 --enigmauser root
+    --enigmapassword xxxxxx --dryrun
+
+* e.g.: Export to Enigma2 and install into a receiver (SSH)
+    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
+    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles
+    --exportfilename cables.xml lamedb ""
+    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4
+    --installenigmadata --enigmahost 192.168.1.20 --enigmauser root
+    --enigmapassword xxxxxx
 
 * e.g.: Export to Enigma2 transponders, channel database and bouquets
     --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
@@ -231,8 +268,16 @@ Channel names are matched case-insensitive.
 
 ## Output files
 
-All output files are resolved relative to the current working directory, absolute paths are kept and missing directories are created.
-Enigma bouquet files (`--exportmode EnigmaBouquetsFiles`) are written into the current working directory.
+Generated files (`--exportfilename`, `--targetfile`) with a relative path are placed in an export directory per run next to the executable:
+
+```text
+<directory of KON.Liwest.ChannelFactory.exe>\Export\<yyyyMMdd-HHmmss>\
+```
+
+* The timestamp is the start of the run - all files of a run are placed in the same directory
+* Absolute paths are kept, missing directories are created
+* Enigma bouquet files (`--exportmode EnigmaBouquetsFiles`) and the Enigma2 receiver backups (`EnigmaBackup`) are placed in the export directory of the run as well
+* Input files (`--sourcefile`, resource files) are still resolved relative to the current working directory
 
 ## DVBViewer installation
 
@@ -244,6 +289,29 @@ Enigma bouquet files (`--exportmode EnigmaBouquetsFiles`) are written into the c
 * Existing files are backed up as `<file>.<yyyyMMdd-HHmmss>.bak`
 * Running programs of the instance are closed (terminated if they do not close within 30 seconds) and restarted, running services (Media Server) are stopped and restarted
 * Only files written successfully in this run are installed
+
+## Enigma2 installation
+
+`--installenigmadata` (with `ExportData` or `AutomaticData` / `SubModeCustom3` and an Enigma2 export) connects to the receivers of `--enigmahost` via SSH / SFTP:
+
+* Credentials are passed with `--enigmauser` (default `root`) and `--enigmapassword` - no credentials are part of ChannelFactory
+* The host key of a receiver is stored on first use in `%LOCALAPPDATA%\KON.Liwest.ChannelFactory\known_hosts`, a changed host key is refused
+* All files of `/etc/enigma2` and the target files outside of it (e.g. `cables.xml`) are backed up to `EnigmaBackup\<host>_<yyyyMMdd-HHmmss>` (in the export directory of the run)
+* Streaming services found in the backed up bouquets / lamedb are reported
+* The export is merged with the backed up settings of the receiver:
+   * `lamedb` / `lamedb5`: entries of the DVB-C namespace (`ffff0000`) are replaced, all other entries kept - `lamedb5` is written (consistent with `lamedb`) if the receiver uses it
+   * `bouquets.tv` / `bouquets.radio`: kept (e.g. streaming bouquets), missing references to the exported bouquets added
+   * `userbouquet.*`: replaced by the export
+   * `cables.xml`: cables named `LIWEST...` replaced, other cables kept
+   * `blacklist` / `whitelist`: kept (parental control of the receiver)
+* enigma2 is stopped (`init 4`), the files are uploaded to a temporary file and moved to the target, enigma2 is started again (`init 3`) - also if the upload fails
+* Targets: `lamedb` / `lamedb5` and bouquet files to `/etc/enigma2`, `cables.xml` to `/etc/tuxbox/cables.xml` (symbolic links resolved)
+* The merged files are kept locally in `EnigmaBackup\<host>_<yyyyMMdd-HHmmss>_install`
+* The cable of the Enigma2 transponder export is always named `LIWEST` - the scan provider selection of the receiver is kept on every update
+
+## Dry run
+
+`--dryrun` together with `--installdvbviewerdata` / `--installenigmadata` only checks the installation: DVBViewer installations are found and the planned actions are shown, Enigma2 receivers are connected and backed up - nothing is changed.
 
 ## Enigma formats
 

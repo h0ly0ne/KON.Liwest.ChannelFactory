@@ -1,12 +1,12 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.ServiceProcess;
 
+using Microsoft.Win32;
+
 using static KON.Liwest.ChannelFactory.Constants;
 using static KON.Liwest.ChannelFactory.Global;
-
-using Microsoft.Win32;
 
 namespace KON.Liwest.ChannelFactory
 {
@@ -21,13 +21,13 @@ namespace KON.Liwest.ChannelFactory
     /// <summary>
     /// Installation of exported data into installed applications
     /// </summary>
-    [SupportedOSPlatform("windows")]
-    public static class DataInstallations
+    public static partial class DataInstallations
     {
         /// <summary>
         /// DataInstallations.FindDVBViewerInstances() - DVBViewer / DVBViewer Media Server installations of the uninstall entries (64 bit, 32 bit and current user)
         /// </summary>
         /// <returns>List of found instances</returns>
+        [SupportedOSPlatform("windows")]
         public static List<DVBViewerInstance> FindDVBViewerInstances()
         {
             LogTrace("DataInstallations.FindDVBViewerInstances()");
@@ -62,11 +62,30 @@ namespace KON.Liwest.ChannelFactory
         /// </summary>
         /// <param name="dviLocalInstance"></param>
         /// <param name="ltLocalFiles">Source file and target file relative to the data directory</param>
+        /// <param name="bLocalDryRun">Only show what would be done</param>
         /// <returns>bool - false if the installation failed (error is logged)</returns>
-        public static bool InstallDVBViewerData(DVBViewerInstance dviLocalInstance, IReadOnlyList<(string strSourceFile, string strTargetFile)> ltLocalFiles)
+        [SupportedOSPlatform("windows")]
+        public static bool InstallDVBViewerData(DVBViewerInstance dviLocalInstance, IReadOnlyList<(string strSourceFile, string strTargetFile)> ltLocalFiles, bool bLocalDryRun = false)
         {
             LogTrace("DataInstallations.InstallDVBViewerData()");
             LogInfo($"-» Install DVBViewer data into {dviLocalInstance.strName} ({dviLocalInstance.strDataDirectory})");
+
+            if (bLocalDryRun)
+            {
+                foreach (var scCurrentService in GetRunningServices(dviLocalInstance.strInstallDirectory))
+                    LogInfo($"-» Dry run - would stop and restart service {scCurrentService.ServiceName}");
+
+                foreach (var pCurrentProcess in GetRunningProcesses(dviLocalInstance.strInstallDirectory))
+                    LogInfo($"-» Dry run - would close and restart program {Path.GetFileName(pCurrentProcess.MainModule!.FileName)}");
+
+                foreach (var (strCurrentSourceFile, strCurrentTargetFile) in ltLocalFiles)
+                {
+                    var strCurrentTargetPath = Path.Combine(dviLocalInstance.strDataDirectory, strCurrentTargetFile);
+                    LogInfo($"-» Dry run - would {(File.Exists(strCurrentTargetPath) ? "back up and replace" : "create")} {strCurrentTargetPath} with {strCurrentSourceFile}");
+                }
+
+                return true;
+            }
 
             List<ServiceController> lscCurrentStoppedServices = [];
             List<string> lsCurrentStoppedPrograms = [];
@@ -131,6 +150,7 @@ namespace KON.Liwest.ChannelFactory
         /// <summary>
         /// DataInstallations.GetInstallDirectory() - InstallLocation, otherwise the directory of DisplayIcon / UninstallString
         /// </summary>
+        [SupportedOSPlatform("windows")]
         private static string? GetInstallDirectory(RegistryKey rkLocalProductKey)
         {
             if (rkLocalProductKey.GetValue("InstallLocation") is string strCurrentInstallLocation && !string.IsNullOrWhiteSpace(strCurrentInstallLocation))
@@ -187,6 +207,7 @@ namespace KON.Liwest.ChannelFactory
         /// <summary>
         /// DataInstallations.GetRunningServices() - running services whose executable is located in the program directory
         /// </summary>
+        [SupportedOSPlatform("windows")]
         private static List<ServiceController> GetRunningServices(string strLocalInstallDirectory)
         {
             List<ServiceController> lscCurrentServices = [];
@@ -233,6 +254,10 @@ namespace KON.Liwest.ChannelFactory
             return lpCurrentProcesses;
         }
 
+        /// <summary>
+        /// DataInstallations.RestartPrograms()
+        /// </summary>
+        /// <param name="lsLocalPrograms"></param>
         private static void RestartPrograms(List<string> lsLocalPrograms)
         {
             foreach (var strCurrentProgram in lsLocalPrograms.Distinct(StringComparer.OrdinalIgnoreCase))
@@ -249,6 +274,11 @@ namespace KON.Liwest.ChannelFactory
             }
         }
 
+        /// <summary>
+        /// DataInstallations.RestartServices()
+        /// </summary>
+        /// <param name="lscLocalServices"></param>
+        [SupportedOSPlatform("windows")]
         private static void RestartServices(List<ServiceController> lscLocalServices)
         {
             foreach (var scCurrentService in lscLocalServices)
@@ -274,16 +304,33 @@ namespace KON.Liwest.ChannelFactory
             }
         }
 
+        /// <summary>
+        /// DataInstallations.NormalizeDirectory() - removes quotes, trims and returns the full path without trailing directory separator
+        /// </summary>
+        /// <param name="strLocalDirectory"></param>
+        /// <returns></returns>
         private static string NormalizeDirectory(string strLocalDirectory)
         {
             return Path.GetFullPath(strLocalDirectory.Trim().Trim('"')).TrimEnd(Path.DirectorySeparatorChar);
         }
 
+        /// <summary>
+        /// DataInstallations.IsSamePath() - compares two paths after normalization
+        /// </summary>
+        /// <param name="strLocalPath1"></param>
+        /// <param name="strLocalPath2"></param>
+        /// <returns></returns>
         private static bool IsSamePath(string strLocalPath1, string strLocalPath2)
         {
             return string.Equals(NormalizeDirectory(strLocalPath1), NormalizeDirectory(strLocalPath2), StringComparison.OrdinalIgnoreCase);
         }
 
+        /// <summary>
+        /// DataInstallations.IsInDirectory() - checks if a file is located in a directory (or its subdirectories) after normalization
+        /// </summary>
+        /// <param name="strLocalFile"></param>
+        /// <param name="strLocalDirectory"></param>
+        /// <returns></returns>
         private static bool IsInDirectory(string strLocalFile, string strLocalDirectory)
         {
             try

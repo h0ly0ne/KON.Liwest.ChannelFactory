@@ -20,8 +20,21 @@ namespace KON.Liwest.ChannelFactory
         private static readonly ConcurrentDictionary<Type, (PropertyInfo piProperty, string[] saTokenPaths, JsonConverter? jcConverter)[]> cdReadMappingCache = new();
         private static readonly ConcurrentDictionary<Type, PropertyInfo[]> cdWriteMappingCache = new();
 
+        /// <summary>
+        /// NestedJsonPropertyConverter.CanConvert() - Always returns true, as this converter is used for all types.
+        /// </summary>
+        /// <param name="objectType"></param>
+        /// <returns></returns>
         public override bool CanConvert(Type objectType) => true;
 
+        /// <summary>
+        /// NestedJsonPropertyConverter.ReadJson() - Reads a JSON object and maps its properties to the target object, using the target class as reference.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="objectType"></param>
+        /// <param name="existingValue"></param>
+        /// <param name="serializer"></param>
+        /// <returns></returns>
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             if (reader.TokenType == JsonToken.Null)
@@ -60,6 +73,12 @@ namespace KON.Liwest.ChannelFactory
             return oCurrentTargetObject;
         }
 
+        /// <summary>
+        /// NestedJsonPropertyConverter.WriteJson() - Writes a JSON object with all public readable properties of the target object, using the property names as keys.
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="value"></param>
+        /// <param name="serializer"></param>
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
         {
             if (value == null)
@@ -79,6 +98,11 @@ namespace KON.Liwest.ChannelFactory
             writer.WriteEndObject();
         }
 
+        /// <summary>
+        /// NestedJsonPropertyConverter.GetReadMappings() - Gets the property mappings for reading, including the property info, token paths, and optional converter.
+        /// </summary>
+        /// <param name="tLocalObjectType"></param>
+        /// <returns></returns>
         private static (PropertyInfo piProperty, string[] saTokenPaths, JsonConverter? jcConverter)[] GetReadMappings(Type tLocalObjectType)
         {
             return cdReadMappingCache.GetOrAdd(tLocalObjectType, tCurrentObjectType => tCurrentObjectType
@@ -96,6 +120,11 @@ namespace KON.Liwest.ChannelFactory
                 .ToArray());
         }
 
+        /// <summary>
+        /// NestedJsonPropertyConverter.GetWriteMappings() - Gets the property mappings for writing, including only public readable properties that are not ignored.
+        /// </summary>
+        /// <param name="tLocalObjectType"></param>
+        /// <returns></returns>
         private static PropertyInfo[] GetWriteMappings(Type tLocalObjectType)
         {
             return cdWriteMappingCache.GetOrAdd(tLocalObjectType, tCurrentObjectType => tCurrentObjectType
@@ -104,6 +133,12 @@ namespace KON.Liwest.ChannelFactory
                 .ToArray());
         }
 
+        /// <summary>
+        /// NestedJsonPropertyConverter.GetToken() - Gets a JToken from a JObject using a token path, which can be nested (e.g. "frequency.value") or flat (e.g. "frequency").
+        /// </summary>
+        /// <param name="joLocalJsonObject"></param>
+        /// <param name="strLocalTokenPath"></param>
+        /// <returns></returns>
         private static JToken? GetToken(JObject joLocalJsonObject, string strLocalTokenPath)
         {
             return strLocalTokenPath.Contains('.') ? joLocalJsonObject.SelectToken(strLocalTokenPath) : joLocalJsonObject.GetValue(strLocalTokenPath, StringComparison.OrdinalIgnoreCase);
@@ -115,8 +150,21 @@ namespace KON.Liwest.ChannelFactory
     /// </summary>
     public class FrequencyJsonConverter : JsonConverter
     {
+        /// <summary>
+        /// FrequencyJsonConverter.CanConvert() - Returns true for int and int? types, as this converter is used for frequency values.
+        /// </summary>
+        /// <param name="objectType"></param>
+        /// <returns></returns>
         public override bool CanConvert(Type objectType) => objectType == typeof(int?) || objectType == typeof(int);
 
+        /// <summary>
+        /// FrequencyJsonConverter.ReadJson() - Reads a JSON token and converts it to a frequency in kHz, using the ToFrequencyKHz() extension method.
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="objectType"></param>
+        /// <param name="existingValue"></param>
+        /// <param name="serializer"></param>
+        /// <returns></returns>
         public override object? ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer)
         {
             return reader.TokenType switch
@@ -127,6 +175,12 @@ namespace KON.Liwest.ChannelFactory
             };
         }
 
+        /// <summary>
+        /// FrequencyJsonConverter.WriteJson() - Writes a JSON token with the frequency value in kHz, using the writer.WriteValue() method.
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="value"></param>
+        /// <param name="serializer"></param>
         public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) => writer.WriteValue(value);
     }
 }

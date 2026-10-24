@@ -4,9 +4,10 @@ using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 
+using DataTablePrettyPrinter;
+
 using KON.OctoScan.NET;
 
-using DataTablePrettyPrinter;
 using static KON.Liwest.ChannelFactory.Constants;
 
 namespace KON.Liwest.ChannelFactory
@@ -57,6 +58,11 @@ namespace KON.Liwest.ChannelFactory
             return dCurrentLanguageCodes.ToFrozenDictionary(StringComparer.OrdinalIgnoreCase);
         });
 
+        /// <summary>
+        /// Extensions.ToBoolean() - converts a string to a boolean value (true/false) or null if the string is not recognized as a boolean value.
+        /// </summary>
+        /// <param name="strLocalString"></param>
+        /// <returns></returns>
         public static bool? ToBoolean(this string strLocalString)
         {
             return string.IsNullOrEmpty(strLocalString) switch
@@ -76,21 +82,41 @@ namespace KON.Liwest.ChannelFactory
             };
         }
 
+        /// <summary>
+        /// Extensions.ToInt32() - converts a string to an integer value or 0 if the string is not recognized as an integer value.
+        /// </summary>
+        /// <param name="strLocalString"></param>
+        /// <returns></returns>
         public static int ToInt32(this string? strLocalString)
         {
             return int.TryParse(strLocalString, out var result) ? result : 0;
         }
 
+        /// <summary>
+        /// Extensions.ToNullableInt32() - converts a string to an integer value or null if the string is not recognized as an integer value.
+        /// </summary>
+        /// <param name="strLocalString"></param>
+        /// <returns></returns>
         public static int? ToNullableInt32(this string? strLocalString)
         {
             return int.TryParse(strLocalString?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var result) ? result : null;
         }
 
+        /// <summary>
+        /// Extensions.ToUInt16OrDefault() - converts a nullable integer to an unsigned short value or 0 if the integer is null or out of range.
+        /// </summary>
+        /// <param name="iLocalValue"></param>
+        /// <returns></returns>
         public static ushort ToUInt16OrDefault(this int? iLocalValue)
         {
             return iLocalValue is >= ushort.MinValue and <= ushort.MaxValue ? (ushort)iLocalValue.Value : (ushort)0;
         }
 
+        /// <summary>
+        /// Extensions.ToUInt32OrDefault() - converts a nullable integer to an unsigned integer value or 0 if the integer is null or negative.
+        /// </summary>
+        /// <param name="iLocalValue"></param>
+        /// <returns></returns>
         public static uint ToUInt32OrDefault(this int? iLocalValue)
         {
             return iLocalValue is >= 0 ? (uint)iLocalValue.Value : 0;
@@ -178,6 +204,11 @@ namespace KON.Liwest.ChannelFactory
             return csaPlaceholderLanguageCodes.Contains(strLocalLanguageCode, StringComparer.OrdinalIgnoreCase) || (strLocalLanguageCode.Length == 3 && string.Compare(strLocalLanguageCode, "qaa", StringComparison.OrdinalIgnoreCase) >= 0 && string.Compare(strLocalLanguageCode, "qtz", StringComparison.OrdinalIgnoreCase) <= 0);
         }
 
+        /// <summary>
+        /// Extensions.GetThreeLetterLanguageCode() - converts a 2 letter ISO 639-1 code to a 3 letter ISO 639-2/T code (e.g. de -> deu) or null if the input is not a valid 2 letter code.
+        /// </summary>
+        /// <param name="strLocalTwoLetterLanguageCode"></param>
+        /// <returns></returns>
         private static string? GetThreeLetterLanguageCode(string? strLocalTwoLetterLanguageCode)
         {
             if (string.IsNullOrEmpty(strLocalTwoLetterLanguageCode))
@@ -213,11 +244,21 @@ namespace KON.Liwest.ChannelFactory
             return strCurrentText.Length > 0 ? strCurrentText : null;
         }
 
+        /// <summary>
+        /// Extensions.CheckVariationForPrimary() - checks if the given string is a variation of a primary channel name and returns the primary channel name if it is, otherwise the given string unchanged.
+        /// </summary>
+        /// <param name="strLocalString"></param>
+        /// <returns></returns>
         public static string? CheckVariationForPrimary(this string? strLocalString)
         {
             return Global.GetPrimaryChannelName(strLocalString);
         }
 
+        /// <summary>
+        /// Extensions.ToBinary25CharArray() - converts a string to a 25 character array, padded with null characters and prefixed with the length of the string (or 25 if the string is longer than 25 characters).
+        /// </summary>
+        /// <param name="strLocalString"></param>
+        /// <returns></returns>
         public static char[] ToBinary25CharArray(this string? strLocalString)
         {
             if (!string.IsNullOrEmpty(strLocalString))
@@ -226,6 +267,12 @@ namespace KON.Liwest.ChannelFactory
             return string.Empty.PadRight(25, '\0').PadLeft(26, BitConverter.ToChar(BitConverter.GetBytes(0))).ToCharArray();
         }
 
+        /// <summary>
+        /// Extensions.FromBinary25CharArrayToString() - converts a 25 character array (with optional leading size byte) to a string, trimmed of null characters.
+        /// </summary>
+        /// <param name="strLocalCharArray"></param>
+        /// <param name="bLocalLeadingSizeByte"></param>
+        /// <returns></returns>
         public static string FromBinary25CharArrayToString(this char[]? strLocalCharArray, bool bLocalLeadingSizeByte)
         {
             if (strLocalCharArray is { Length: > 0 })
@@ -242,11 +289,21 @@ namespace KON.Liwest.ChannelFactory
             return string.Empty;
         }
 
+        /// <summary>
+        /// Extensions.ToHexString4Byte() - converts an integer to a 4 byte hex string, padded with leading zeros and in lower case.
+        /// </summary>
+        /// <param name="strLocalValue"></param>
+        /// <returns></returns>
         public static string ToHexString4Byte(this int strLocalValue)
         {
             return Convert.ToString(strLocalValue, 16).PadLeft(4, '0').ToLowerInvariant();
         }
 
+        /// <summary>
+        /// Extensions.SetColumnWidthToColumnCaption() - sets the width of each column in a DataTable to the length of its caption + 2, or 3 if the caption is empty.
+        /// </summary>
+        /// <param name="dtCurrentDataTable"></param>
+        /// <returns></returns>
         public static DataTable SetColumnWidthToColumnCaption(this DataTable dtCurrentDataTable)
         {
             foreach (DataColumn dcCurrentDataColumn in dtCurrentDataTable.Columns)

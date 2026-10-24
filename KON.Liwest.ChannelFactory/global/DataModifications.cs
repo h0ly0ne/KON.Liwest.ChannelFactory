@@ -138,7 +138,7 @@ namespace KON.Liwest.ChannelFactory
             if (crdaCurrentChannelRemovalDictionary is not { Length: > 0 } || lsdiLocalSourceData.Count == 0)
                 return;
 
-            var hsckCurrentRemovedChannels = crdaCurrentChannelRemovalDictionary.Where(crdCurrentEntry => crdCurrentEntry != null).Select(crdCurrentEntry => ChannelKey.Create(crdCurrentEntry.ChannelName, crdCurrentEntry.ChannelFrequency.ToFrequencyKHz())).ToHashSet();
+            var hsckCurrentRemovedChannels = crdaCurrentChannelRemovalDictionary.OfType<ChannelRemovalDictionary>().Select(crdCurrentEntry => ChannelKey.Create(crdCurrentEntry.ChannelName, crdCurrentEntry.ChannelFrequency.ToFrequencyKHz())).ToHashSet();
             lsdiLocalSourceData.RemoveAll(sdiCurrentSourceDataItem => hsckCurrentRemovedChannels.Contains(ChannelKey.Create(sdiCurrentSourceDataItem.ChannelName, sdiCurrentSourceDataItem.ChannelFrequency)));
         }
 
@@ -162,7 +162,7 @@ namespace KON.Liwest.ChannelFactory
 
             // First entry wins if a channel is listed more than once
             var dCurrentSortNumbers = new Dictionary<ChannelKey, int?>();
-            foreach (var csdCurrentEntry in csdaCurrentChannelSortingDictionary.Where(csdCurrentEntry => csdCurrentEntry != null))
+            foreach (var csdCurrentEntry in csdaCurrentChannelSortingDictionary.OfType<ChannelSortingDictionary>())
                 dCurrentSortNumbers.TryAdd(ChannelKey.Create(csdCurrentEntry.ChannelName, csdCurrentEntry.ChannelFrequency.ToFrequencyKHz()), csdCurrentEntry.SortNumber.ToNullableInt32());
 
             foreach (var sdiCurrentSourceDataItem in lsdiLocalSourceData)

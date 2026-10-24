@@ -45,7 +45,7 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "sourcefile", HelpText = "Source data file (json) to load from - for DumpData the file to output.")]
             public string? cloSourceFile { get; set; }
 
-            [Option(longName: "targetfile", HelpText = "Source data file (json) to save to (--target FileList).")]
+            [Option(longName: "targetfile", HelpText = "Source data file (json) to save to (--target FileList). Relative paths are placed in Export\\<start of the run> next to the executable.")]
             public string? cloTargetFile { get; set; }
 
             [Option(longName: "channelvariationfile", HelpText = "Channel variation file (json) - unifies the channel names of the different sources.")]
@@ -63,7 +63,7 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "exportmode", HelpText = "Exports, space separated (one entry per export): ExcelChannelList, DVBViewerTransponderList, DVBViewerChannelDatabase, EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles.")]
             public IEnumerable<FlagExportMode> cloExportMode { get; set; } = [];
 
-            [Option(longName: "exportfilename", HelpText = "Filename per export, same order as --exportmode (\"\" for EnigmaBouquetsFiles - written to the current directory).")]
+            [Option(longName: "exportfilename", HelpText = "Filename per export, same order as --exportmode (\"\" for EnigmaBouquetsFiles). Relative paths are placed in Export\\<start of the run> next to the executable.")]
             public IEnumerable<string> cloExportFilename { get; set; } = [];
 
             [Option(longName: "exportfilenameformat", HelpText = "Enigma format per export, same order as --exportmode: Enigma1Ver1, Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and DVBViewer exports.")]
@@ -71,6 +71,21 @@ namespace KON.Liwest.ChannelFactory
 
             [Option(longName: "installdvbviewerdata", HelpText = "Install the exported DVBViewer channel database and transponder list into all installed DVBViewer / DVBViewer Media Server instances (ExportData or AutomaticData SubModeCustom3). Running instances are stopped and restarted, existing files are backed up.")]
             public bool cloInstallDVBViewerData { get; set; }
+
+            [Option(longName: "installenigmadata", HelpText = "Install the exported Enigma2 data into the receivers of --enigmahost via SSH (ExportData or AutomaticData SubModeCustom3). The settings of the receiver are backed up locally and merged: other bouquets (e.g. streaming), other cables and foreign lamedb entries are kept, enigma2 is stopped and restarted.")]
+            public bool cloInstallEnigmaData { get; set; }
+
+            [Option(longName: "enigmahost", HelpText = "Enigma2 receivers for --installenigmadata, space separated (host or host:port of the SSH server).")]
+            public IEnumerable<string> cloEnigmaHost { get; set; } = [];
+
+            [Option(longName: "enigmauser", Default = "root", HelpText = "SSH user of the Enigma2 receivers.")]
+            public string cloEnigmaUser { get; set; } = "root";
+
+            [Option(longName: "enigmapassword", HelpText = "SSH password of the Enigma2 receivers (required for --installenigmadata).")]
+            public string? cloEnigmaPassword { get; set; }
+
+            [Option(longName: "dryrun", HelpText = "Installation test without changes: finds the DVBViewer installations / connects to the Enigma2 receivers and backs up their settings, nothing is installed.")]
+            public bool cloDryRun { get; set; }
 
             [Option(longName: "dumpdatamode", HelpText = "Format of the file to output with DumpData.")]
             public FlagDumpDataMode cloDumpDataMode { get; set; }
@@ -166,109 +181,131 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.Heading = Constants.cstrCurrentProjectName.Pastel(Color.Green);
                 htCurrentHelpText.Copyright = Constants.cstrCurrentProjectCopyright.Pastel(Color.LimeGreen);
 
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Channel list to the console".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source ChannelList --target ConsoleList");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Channel list to a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source ChannelList --target FileList");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_ChannelList.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Smartcard (LIWEST signal check) to a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source SmartcardList --target FileList --smartcardid 01359xxxxxx");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_SmartcardList.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Blindscan (SAT>IP) to a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source BlindscanList --target FileList --serverip 192.168.1.10");
-                htCurrentHelpText.AddPostOptionsLine($"    --frequencies 114,130-858:8 --targetfile SourceData_BlindscanList.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: All sources merged per channel to a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source CombinedList --target FileList --smartcardid 01359xxxxxx");
-                htCurrentHelpText.AddPostOptionsLine($"    --serverip 192.168.1.10 --frequencies 114,130-858:8 --sourcecleanup GroupAndInvalidate");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_CombinedList.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Check a source data file and output it to the console".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target ConsoleList");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile SourceData_CombinedList.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Remove channels without SID from a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target FileList");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile SourceData_CombinedList.json --sourcecleanup RemoveInvalidSIDs");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_Cleaned.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Merge the sources of a source data file per channel".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source FileList --target FileList");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile SourceData_CombinedList.json --sourcecleanup GroupAndInvalidate");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_Grouped.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Remove and sort channels of a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ModifyData --source FileList --target FileList --sourcefile SourceData_Grouped.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --targetfile SourceData_Sorted.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to an excel channel list".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList --exportfilename channels.xlsx --exportfilenameformat None");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to DVBViewer transponder list and channel database".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to DVBViewer and install into DVBViewer / Media Server".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
-                htCurrentHelpText.AddPostOptionsLine($"    --installdvbviewerdata");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to Enigma2 transponders, channel database and bouquets".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename cables.xml lamedb \"\"");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to all formats into the folder export".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList DVBViewerTransponderList DVBViewerChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    EnigmaTransponderList EnigmaChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename export\\channels.xlsx export\\DVB-C_at_LIWEST.ini");
-                htCurrentHelpText.AddPostOptionsLine($"    export\\channels.dat export\\cables.xml export\\lamedb");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat None None None Enigma2Ver4 Enigma2Ver4");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Output a DVBViewer channel database to the console".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode DumpData --source CustomFile --dumpdatamode DVBViewerChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcefile channels.dat");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Automatic run without output (collect, cleanup, modify only)".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode AutomaticData --submode SubModeCustom1 --source CombinedList");
-                htCurrentHelpText.AddPostOptionsLine($"    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup GroupAndInvalidate");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Automatic run with output to a source data file".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode AutomaticData --submode SubModeCustom2 --source CombinedList");
-                htCurrentHelpText.AddPostOptionsLine($"    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup GroupAndInvalidate");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --target FileList --targetfile SourceData_Automatic.json");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Automatic run with exports to excel, DVBViewer and Enigma2".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode AutomaticData --submode SubModeCustom3 --source CombinedList");
-                htCurrentHelpText.AddPostOptionsLine($"    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
-                htCurrentHelpText.AddPostOptionsLine($"    --sourcecleanup GroupAndInvalidate");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelvariationfile .\\resources\\ChannelVariation.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelremovalfile .\\resources\\ChannelRemoval.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --channelsortingfile .\\resources\\ChannelSorting.json");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportmode ExcelChannelList DVBViewerChannelDatabase EnigmaChannelDatabase");
-                htCurrentHelpText.AddPostOptionsLine($"    EnigmaBouquetsFiles --exportfilename channels.xlsx channels.dat lamedb \"\"");
-                htCurrentHelpText.AddPostOptionsLine($"    --exportfilenameformat None None Enigma2Ver4 Enigma2Ver4");
-                htCurrentHelpText.AddPostOptionsLine($"");
-                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Channel list with verbose (trace) output".Pastel(Color.Chocolate));
-                htCurrentHelpText.AddPostOptionsLine($"    --mode GenerateData --source ChannelList --target None --verbose");
-                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Channel list to the console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source ChannelList --target ConsoleList");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Channel list to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source ChannelList --target FileList");
+                htCurrentHelpText.AddPostOptionsLine("    --targetfile SourceData_ChannelList.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Smartcard (LIWEST signal check) to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source SmartcardList --target FileList --smartcardid 01359xxxxxx");
+                htCurrentHelpText.AddPostOptionsLine("    --targetfile SourceData_SmartcardList.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Blindscan (SAT>IP) to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source BlindscanList --target FileList --serverip 192.168.1.10");
+                htCurrentHelpText.AddPostOptionsLine("    --frequencies 114,130-858:8 --targetfile SourceData_BlindscanList.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: All sources merged per channel to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source CombinedList --target FileList --smartcardid 01359xxxxxx");
+                htCurrentHelpText.AddPostOptionsLine("    --serverip 192.168.1.10 --frequencies 114,130-858:8 --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine("    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine("    --targetfile SourceData_CombinedList.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Check a source data file and output it to the console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source FileList --target ConsoleList");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcefile SourceData_CombinedList.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Remove channels without SID from a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source FileList --target FileList");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcefile SourceData_CombinedList.json --sourcecleanup RemoveInvalidSIDs");
+                htCurrentHelpText.AddPostOptionsLine("    --targetfile SourceData_Cleaned.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Merge the sources of a source data file per channel".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source FileList --target FileList");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcefile SourceData_CombinedList.json --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine("    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine("    --targetfile SourceData_Grouped.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Remove and sort channels of a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ModifyData --source FileList --target FileList --sourcefile SourceData_Grouped.json");
+                htCurrentHelpText.AddPostOptionsLine("    --channelremovalfile .\\resources\\ChannelRemoval.json");
+                htCurrentHelpText.AddPostOptionsLine("    --channelsortingfile .\\resources\\ChannelSorting.json");
+                htCurrentHelpText.AddPostOptionsLine("    --targetfile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to an excel channel list".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode ExcelChannelList --exportfilename channels.xlsx --exportfilenameformat None");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to DVBViewer transponder list and channel database".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to DVBViewer and install into DVBViewer / Media Server".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
+                htCurrentHelpText.AddPostOptionsLine("    --installdvbviewerdata");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Test the installation into DVBViewer without changes".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
+                htCurrentHelpText.AddPostOptionsLine("    --installdvbviewerdata --dryrun");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Test the installation into an Enigma2 receiver (SSH, backup only)".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename cables.xml lamedb \"\"");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine("    --installenigmadata --enigmahost 192.168.1.20 --enigmauser root");
+                htCurrentHelpText.AddPostOptionsLine("    --enigmapassword xxxxxx --dryrun");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to Enigma2 and install into a receiver (SSH)".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename cables.xml lamedb \"\"");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine("    --installenigmadata --enigmahost 192.168.1.20 --enigmauser root");
+                htCurrentHelpText.AddPostOptionsLine("    --enigmapassword xxxxxx");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to Enigma2 transponders, channel database and bouquets".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename cables.xml lamedb \"\"");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to all formats into the folder export".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode ExcelChannelList DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    EnigmaTransponderList EnigmaChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilename export\\channels.xlsx export\\DVB-C_at_LIWEST.ini");
+                htCurrentHelpText.AddPostOptionsLine("    export\\channels.dat export\\cables.xml export\\lamedb");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilenameformat None None None Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Output a DVBViewer channel database to the console".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode DumpData --source CustomFile --dumpdatamode DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcefile channels.dat");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Automatic run without output (collect, cleanup, modify only)".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode AutomaticData --submode SubModeCustom1 --source CombinedList");
+                htCurrentHelpText.AddPostOptionsLine("    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Automatic run with output to a source data file".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode AutomaticData --submode SubModeCustom2 --source CombinedList");
+                htCurrentHelpText.AddPostOptionsLine("    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine("    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine("    --channelremovalfile .\\resources\\ChannelRemoval.json");
+                htCurrentHelpText.AddPostOptionsLine("    --channelsortingfile .\\resources\\ChannelSorting.json");
+                htCurrentHelpText.AddPostOptionsLine("    --target FileList --targetfile SourceData_Automatic.json");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Automatic run with exports to excel, DVBViewer and Enigma2".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode AutomaticData --submode SubModeCustom3 --source CombinedList");
+                htCurrentHelpText.AddPostOptionsLine("    --smartcardid 01359xxxxxx --serverip 192.168.1.10 --frequencies 114,130-858:8");
+                htCurrentHelpText.AddPostOptionsLine("    --sourcecleanup GroupAndInvalidate");
+                htCurrentHelpText.AddPostOptionsLine("    --channelvariationfile .\\resources\\ChannelVariation.json");
+                htCurrentHelpText.AddPostOptionsLine("    --channelremovalfile .\\resources\\ChannelRemoval.json");
+                htCurrentHelpText.AddPostOptionsLine("    --channelsortingfile .\\resources\\ChannelSorting.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode ExcelChannelList DVBViewerChannelDatabase EnigmaChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine("    EnigmaBouquetsFiles --exportfilename channels.xlsx channels.dat lamedb \"\"");
+                htCurrentHelpText.AddPostOptionsLine("    --exportfilenameformat None None Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Channel list with verbose (trace) output".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode GenerateData --source ChannelList --target None --verbose");
+                htCurrentHelpText.AddPostOptionsLine("");
 
                 return HelpText.DefaultParsingErrorsHandler(prLocalParseResult, htCurrentHelpText);
             }, e => e);
@@ -293,15 +330,15 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.Heading = Constants.cstrCurrentProjectName.Pastel(Color.Green);
                 htCurrentHelpText.Copyright = Constants.cstrCurrentProjectCopyright.Pastel(Color.LimeGreen);
 
-                if (saLocalCustomConditions.Length > 0)
-                {
-                    htCurrentHelpText.AddPreOptionsLine("ERROR(S):");
+                if (saLocalCustomConditions.Length <= 0)
+                    return HelpText.DefaultParsingErrorsHandler(prCurrentParseResult, htCurrentHelpText);
+                
+                htCurrentHelpText.AddPreOptionsLine("ERROR(S):");
 
-                    foreach (var strCurrentCustomCondition in saLocalCustomConditions)
-                    {
-                        if (!string.IsNullOrEmpty(strCurrentCustomCondition))
-                            htCurrentHelpText.AddPreOptionsLine($"  * Custom option '{strCurrentCustomCondition}' not met or missing.");
-                    }
+                foreach (var strCurrentCustomCondition in saLocalCustomConditions)
+                {
+                    if (!string.IsNullOrEmpty(strCurrentCustomCondition))
+                        htCurrentHelpText.AddPreOptionsLine($"  * Custom option '{strCurrentCustomCondition}' not met or missing.");
                 }
 
                 return HelpText.DefaultParsingErrorsHandler(prCurrentParseResult, htCurrentHelpText);
@@ -509,6 +546,19 @@ namespace KON.Liwest.ChannelFactory
             if (oLocalOptions.cloInstallDVBViewerData && (oLocalOptions is not ({ cloMode: FlagMode.ExportData } or { cloMode: FlagMode.AutomaticData, cloSubMode: FlagSubMode.SubModeCustom3 }) || !oLocalOptions.cloExportMode.Any(femCurrentExportMode => femCurrentExportMode is FlagExportMode.DVBViewerChannelDatabase or FlagExportMode.DVBViewerTransponderList)))
                 lsCurrentCustomConditions.Add("installdvbviewerdata");
 
+            // Installation of Enigma2 data only together with an Enigma2 export and a receiver
+            if (oLocalOptions.cloInstallEnigmaData && (oLocalOptions is not ({ cloMode: FlagMode.ExportData } or { cloMode: FlagMode.AutomaticData, cloSubMode: FlagSubMode.SubModeCustom3 }) || !oLocalOptions.cloExportMode.Any(femCurrentExportMode => femCurrentExportMode is FlagExportMode.EnigmaChannelDatabase or FlagExportMode.EnigmaTransponderList or FlagExportMode.EnigmaBouquetsFiles)))
+                lsCurrentCustomConditions.Add("installenigmadata");
+
+            if (oLocalOptions.cloInstallEnigmaData && oLocalOptions.cloEnigmaHost.All(string.IsNullOrWhiteSpace))
+                lsCurrentCustomConditions.Add("enigmahost");
+
+            if (oLocalOptions.cloInstallEnigmaData && (string.IsNullOrEmpty(oLocalOptions.cloEnigmaUser) || string.IsNullOrEmpty(oLocalOptions.cloEnigmaPassword)))
+                lsCurrentCustomConditions.Add(string.IsNullOrEmpty(oLocalOptions.cloEnigmaUser) ? "enigmauser" : "enigmapassword");
+
+            if (oLocalOptions.cloDryRun && oLocalOptions is { cloInstallDVBViewerData: false, cloInstallEnigmaData: false })
+                lsCurrentCustomConditions.Add("dryrun");
+
             return lsCurrentCustomConditions;
         }
 
@@ -627,16 +677,19 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// Program.RunExportsAndInstall() - exports and, with --installdvbviewerdata, installation of the exported DVBViewer data
+        /// Program.RunExportsAndInstall() - exports and installation of the exported data (--installdvbviewerdata, --installenigmadata)
         /// </summary>
         /// <param name="oLocalOptions"></param>
         /// <param name="lsdiLocalSourceData"></param>
         private static void RunExportsAndInstall(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
         {
-            var ltCurrentDVBViewerFiles = RunExports(oLocalOptions, lsdiLocalSourceData);
+            var lerCurrentExportResults = RunExports(oLocalOptions, lsdiLocalSourceData);
 
             if (oLocalOptions.cloInstallDVBViewerData)
-                InstallDVBViewerData(ltCurrentDVBViewerFiles);
+                InstallDVBViewerData(lerCurrentExportResults, oLocalOptions.cloDryRun);
+
+            if (oLocalOptions.cloInstallEnigmaData)
+                InstallEnigmaData(oLocalOptions, lerCurrentExportResults);
         }
 
         /// <summary>
@@ -644,13 +697,13 @@ namespace KON.Liwest.ChannelFactory
         /// </summary>
         /// <param name="oLocalOptions"></param>
         /// <param name="lsdiLocalSourceData"></param>
-        /// <returns>DVBViewer files (export mode, path) written successfully in this run</returns>
-        private static List<(FlagExportMode femExportMode, string strFilePath)> RunExports(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
+        /// <returns>Successful exports</returns>
+        private static List<ExportResult> RunExports(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
         {
             var femaCurrentExportModes = oLocalOptions.cloExportMode.ToArray();
             var saCurrentExportFilenames = oLocalOptions.cloExportFilename.ToArray();
             var fefaCurrentExportFilenameFormats = oLocalOptions.cloExportFilenameFormat.ToArray();
-            List<(FlagExportMode femExportMode, string strFilePath)> ltCurrentDVBViewerFiles = [];
+            List<ExportResult> lerCurrentExportResults = [];
 
             for (var iCurrentExportElement = 0; iCurrentExportElement < femaCurrentExportModes.Length; iCurrentExportElement++)
             {
@@ -662,27 +715,24 @@ namespace KON.Liwest.ChannelFactory
                 if (!ExecuteFileOperation(femCurrentExportMode, () => RunExport(lsdiLocalSourceData, femCurrentExportMode, strCurrentExportFilename, fefCurrentExportFilenameFormat)))
                     continue;
 
-                // Only files written by this export (an export without data writes no file)
-                if (femCurrentExportMode is FlagExportMode.DVBViewerChannelDatabase or FlagExportMode.DVBViewerTransponderList && !string.IsNullOrEmpty(strCurrentExportFilename))
-                {
-                    var strCurrentFilePath = Path.GetFullPath(strCurrentExportFilename);
-
-                    if (File.Exists(strCurrentFilePath) && File.GetLastWriteTimeUtc(strCurrentFilePath) >= dtCurrentExportStart)
-                        ltCurrentDVBViewerFiles.Add((femCurrentExportMode, strCurrentFilePath));
-                }
+                // Bouquet files are written to the export directory, all other exports to their filename
+                var strCurrentPath = femCurrentExportMode == FlagExportMode.EnigmaBouquetsFiles ? GetExportDirectory() : string.IsNullOrEmpty(strCurrentExportFilename) ? null : GetOutputFilePath(strCurrentExportFilename);
+                if (strCurrentPath != null)
+                    lerCurrentExportResults.Add(new ExportResult(femCurrentExportMode, strCurrentPath, dtCurrentExportStart));
             }
 
-            return ltCurrentDVBViewerFiles;
+            return lerCurrentExportResults;
         }
 
         /// <summary>
         /// Program.InstallDVBViewerData() - installs the exported channel database / transponder list into all DVBViewer / DVBViewer Media Server installations
         /// </summary>
-        /// <param name="ltLocalDVBViewerFiles"></param>
-        private static void InstallDVBViewerData(List<(FlagExportMode femExportMode, string strFilePath)> ltLocalDVBViewerFiles)
+        /// <param name="lerLocalExportResults"></param>
+        /// <param name="bLocalDryRun">Only show what would be installed</param>
+        private static void InstallDVBViewerData(List<ExportResult> lerLocalExportResults, bool bLocalDryRun)
         {
             LogTrace("Program.InstallDVBViewerData()");
-            LogInfo("-» Install DVBViewer data");
+            LogInfo($"-» Install DVBViewer data{(bLocalDryRun ? " (dry run)" : string.Empty)}");
 
             if (!OperatingSystem.IsWindows())
             {
@@ -690,7 +740,12 @@ namespace KON.Liwest.ChannelFactory
                 return;
             }
 
-            var ltCurrentFiles = ltLocalDVBViewerFiles.Select(tCurrentFile => (tCurrentFile.strFilePath, tCurrentFile.femExportMode == FlagExportMode.DVBViewerChannelDatabase ? Constants.csDVBViewerChannelDatabaseFile : Path.Combine(Constants.csDVBViewerTransponderDirectory, Path.GetFileName(tCurrentFile.strFilePath)))).ToList();
+            // Only files written by this run (an export without data writes no file)
+            var ltCurrentFiles = lerLocalExportResults
+                .Where(erCurrentExportResult => erCurrentExportResult.femExportMode is FlagExportMode.DVBViewerChannelDatabase or FlagExportMode.DVBViewerTransponderList && erCurrentExportResult.IsWrittenFile(erCurrentExportResult.strPath))
+                .Select(erCurrentExportResult => (erCurrentExportResult.strPath, erCurrentExportResult.femExportMode == FlagExportMode.DVBViewerChannelDatabase ? Constants.csDVBViewerChannelDatabaseFile : Path.Combine(Constants.csDVBViewerTransponderDirectory, Path.GetFileName(erCurrentExportResult.strPath))))
+                .ToList();
+
             if (ltCurrentFiles.Count == 0)
             {
                 LogError("-» No DVBViewer data has been exported in this run - nothing to install");
@@ -705,7 +760,73 @@ namespace KON.Liwest.ChannelFactory
             }
 
             foreach (var dviCurrentInstance in ldviCurrentInstances)
-                DataInstallations.InstallDVBViewerData(dviCurrentInstance, ltCurrentFiles);
+                DataInstallations.InstallDVBViewerData(dviCurrentInstance, ltCurrentFiles, bLocalDryRun);
+        }
+
+        /// <summary>
+        /// Program.InstallEnigmaData() - installs the exported Enigma2 data into the receivers of --enigmahost (SSH / SFTP)
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lerLocalExportResults"></param>
+        private static void InstallEnigmaData(Options oLocalOptions, List<ExportResult> lerLocalExportResults)
+        {
+            LogTrace("Program.InstallEnigmaData()");
+            LogInfo($"-» Install Enigma2 data{(oLocalOptions.cloDryRun ? " (dry run)" : string.Empty)}");
+
+            List<(string strSourceFile, string strTargetFile)> ltCurrentFiles = [];
+
+            foreach (var erCurrentExportResult in lerLocalExportResults)
+            {
+                switch (erCurrentExportResult.femExportMode)
+                {
+                    case FlagExportMode.EnigmaChannelDatabase:
+                    {
+                        if (erCurrentExportResult.IsWrittenFile(erCurrentExportResult.strPath))
+                            ltCurrentFiles.Add((erCurrentExportResult.strPath, $"{Constants.csEnigmaSettingsDirectory}/{Constants.csEnigmaChannelDatabaseFile}"));
+
+                        if (erCurrentExportResult.IsWrittenFile(erCurrentExportResult.strPath + "5"))
+                            ltCurrentFiles.Add((erCurrentExportResult.strPath + "5", $"{Constants.csEnigmaSettingsDirectory}/{Constants.csEnigmaChannelDatabaseFile}5"));
+
+                        break;
+                    }
+                    case FlagExportMode.EnigmaTransponderList:
+                    {
+                        if (erCurrentExportResult.IsWrittenFile(erCurrentExportResult.strPath))
+                            ltCurrentFiles.Add((erCurrentExportResult.strPath, Constants.csEnigmaCablesFile));
+
+                        break;
+                    }
+                    case FlagExportMode.EnigmaBouquetsFiles:
+                    {
+                        ltCurrentFiles.AddRange(from strCurrentFile in Constants.csaEnigmaBouquetFilePatterns.SelectMany(strCurrentPattern => Directory.GetFiles(erCurrentExportResult.strPath, strCurrentPattern)).Distinct(StringComparer.OrdinalIgnoreCase) where erCurrentExportResult.IsWrittenFile(strCurrentFile) select (strCurrentFile, $"{Constants.csEnigmaSettingsDirectory}/{Path.GetFileName(strCurrentFile)}"));
+
+                        break;
+                    }
+                }
+            }
+
+            if (ltCurrentFiles.Count == 0)
+            {
+                LogError("-» No Enigma2 data has been exported in this run - nothing to install");
+                return;
+            }
+
+            foreach (var strCurrentHost in oLocalOptions.cloEnigmaHost.Where(strCurrentHost => !string.IsNullOrWhiteSpace(strCurrentHost)))
+                DataInstallations.InstallEnigmaData(strCurrentHost, oLocalOptions.cloEnigmaUser, oLocalOptions.cloEnigmaPassword!, ltCurrentFiles, oLocalOptions.cloDryRun);
+        }
+
+        /// <summary>
+        /// Successful export
+        /// </summary>
+        /// <param name="femExportMode"></param>
+        /// <param name="strPath">Exported file - for EnigmaBouquetsFiles the directory of the bouquet files</param>
+        /// <param name="dtStartUtc">Start of the export</param>
+        private record ExportResult(FlagExportMode femExportMode, string strPath, DateTime dtStartUtc)
+        {
+            /// <summary>
+            /// File exists and has been written by this export
+            /// </summary>
+            public bool IsWrittenFile(string strLocalFile) => File.Exists(strLocalFile) && File.GetLastWriteTimeUtc(strLocalFile) >= dtStartUtc;
         }
 
         /// <summary>
@@ -720,21 +841,36 @@ namespace KON.Liwest.ChannelFactory
             switch (femLocalExportMode)
             {
                 case FlagExportMode.ExcelChannelList:
+                {
                     ExportSourceDataToExcelExportFile(lsdiLocalSourceData, strLocalExportFilename);
+                    
                     break;
+                }
                 case FlagExportMode.DVBViewerTransponderList:
+                {
                     ExportSourceDataToDVBViewerTransponderFile(lsdiLocalSourceData, strLocalExportFilename);
+
                     break;
+                }
                 case FlagExportMode.DVBViewerChannelDatabase:
+                {
                     ExportSourceDataToDVBViewerChannelDatabase(lsdiLocalSourceData, strLocalExportFilename);
+                    
                     break;
+                }
                 case FlagExportMode.EnigmaTransponderList:
                 case FlagExportMode.EnigmaChannelDatabase:
+                {
                     ExportSourceDataToEnigmaSelector(lsdiLocalSourceData, femLocalExportMode, strLocalExportFilename, fefLocalExportFilenameFormat);
+                    
                     break;
+                }
                 case FlagExportMode.EnigmaBouquetsFiles:
+                {
                     ExportSourceDataToEnigmaSelector(lsdiLocalSourceData, femLocalExportMode, string.Empty, fefLocalExportFilenameFormat);
+
                     break;
+                }
             }
         }
 

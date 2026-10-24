@@ -3,15 +3,16 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
-using KON.OctoScan.NET;
-using static KON.Liwest.ChannelFactory.Constants;
-using static KON.Liwest.ChannelFactory.Global;
-
 using CsvHelper;
 using CsvHelper.Configuration;
 using DataTablePrettyPrinter;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using KON.OctoScan.NET;
+
+using static KON.Liwest.ChannelFactory.Constants;
+using static KON.Liwest.ChannelFactory.Global;
 
 namespace KON.Liwest.ChannelFactory
 {
@@ -288,7 +289,7 @@ namespace KON.Liwest.ChannelFactory
             if (lsdiCurrentSourceData == null)
                 return false;
 
-            lsdiLocalSourceData.AddRange(lsdiCurrentSourceData.Where(sdiCurrentSourceDataItem => sdiCurrentSourceDataItem != null));
+            lsdiLocalSourceData.AddRange(lsdiCurrentSourceData.OfType<SourceDataItem>());
             return true;
         }
 

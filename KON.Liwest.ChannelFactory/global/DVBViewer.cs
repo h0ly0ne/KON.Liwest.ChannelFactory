@@ -133,7 +133,7 @@ namespace KON.Liwest.ChannelFactory
         public static T Debinarize<T>(byte[] baLocalBytes) where T : class
         {
             if (baLocalBytes.Length < Marshal.SizeOf<T>())
-                throw new ArgumentException($"At least {Marshal.SizeOf<T>()} bytes required for {typeof(T).Name}", nameof(baLocalBytes));
+                throw new ArgumentException($@"At least {Marshal.SizeOf<T>()} bytes required for {typeof(T).Name}", nameof(baLocalBytes));
 
             var ghCurrentHandle = GCHandle.Alloc(baLocalBytes, GCHandleType.Pinned);
 
@@ -147,11 +147,27 @@ namespace KON.Liwest.ChannelFactory
             }
         }
 
+        /// <summary>
+        /// DVBViewer.NibblesToByte() - combines two nibbles (4 bits each) into a single byte
+        /// </summary>
+        /// <param name="iLocalLoNibble"></param>
+        /// <param name="iLocalHiNibble"></param>
+        /// <returns></returns>
         public static byte NibblesToByte(int iLocalLoNibble, int iLocalHiNibble)
         {
             return (byte)((iLocalLoNibble & 0x0F) | ((iLocalHiNibble & 0x0F) << 4));
         }
 
+        /// <summary>
+        /// DVBViewer.GenerateChannelFlags() - generates the channel flags byte for a DVBViewer channel
+        /// </summary>
+        /// <param name="bLocalIsEncrypted"></param>
+        /// <param name="bLocalNoAutomaticRefresh"></param>
+        /// <param name="bLocalBroadcastRDS"></param>
+        /// <param name="bLocalIsVideoService"></param>
+        /// <param name="bLocalIsAudioService"></param>
+        /// <param name="bLocalIsFollowingPID"></param>
+        /// <returns></returns>
         public static byte GenerateChannelFlags(bool bLocalIsEncrypted, bool bLocalNoAutomaticRefresh, bool bLocalBroadcastRDS, bool bLocalIsVideoService, bool bLocalIsAudioService, bool bLocalIsFollowingPID)
         {
             byte byReturnFlag = 0;
@@ -180,6 +196,12 @@ namespace KON.Liwest.ChannelFactory
             return byReturnFlag;
         }
 
+        /// <summary>
+        /// DVBViewer.GenerateChannelAVFormat() - generates the channel AV format byte for a DVBViewer channel
+        /// </summary>
+        /// <param name="cavfLocalChannelAudioFormat"></param>
+        /// <param name="cavfLocalChannelVideoFormat"></param>
+        /// <returns></returns>
         public static byte GenerateChannelAVFormat(AVFormat cavfLocalChannelAudioFormat, AVFormat cavfLocalChannelVideoFormat)
         {
             return NibblesToByte((int)cavfLocalChannelAudioFormat, (int)cavfLocalChannelVideoFormat);
@@ -210,7 +232,13 @@ namespace KON.Liwest.ChannelFactory
             return iCurrentChannelAudioFormat.HasValue ? NibblesToByte(iCurrentChannelAudioFormat.Value, byCurrentChannelAVFormat >> 4) : byCurrentChannelAVFormat;
         }
 
-        private static byte GenerateChannelAVFormatFromStreamTypes(string strLocalChannelAudioFormat, string strLocalChannelVideoFormat)
+        /// <summary>
+        /// DVBViewer.GenerateChannelAVFormatFromStreamTypes() - generates the channel AV format byte for a DVBViewer channel based on the stream types of the audio and video PIDs
+        /// </summary>
+        /// <param name="strLocalChannelAudioFormat"></param>
+        /// <param name="strLocalChannelVideoFormat"></param>
+        /// <returns></returns>
+        private static byte GenerateChannelAVFormatFromStreamTypes(string? strLocalChannelAudioFormat, string? strLocalChannelVideoFormat)
         {
             int cavfLocalChannelAudioFormat = 0;
             int cavfLocalChannelVideoFormat = 0;

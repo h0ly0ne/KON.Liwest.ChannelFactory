@@ -1,12 +1,13 @@
-using System.Globalization;
+﻿using System.Globalization;
+
+using Krkadoni.EnigmaSettings;
+using Krkadoni.EnigmaSettings.Interfaces;
+using NanoXLSX;
 
 using static KON.Liwest.ChannelFactory.Constants;
 using static KON.Liwest.ChannelFactory.DVBViewer;
 using static KON.Liwest.ChannelFactory.Global;
 
-using Krkadoni.EnigmaSettings;
-using Krkadoni.EnigmaSettings.Interfaces;
-using NanoXLSX;
 using NullLogger = Krkadoni.EnigmaSettings.NullLogger;
 
 namespace KON.Liwest.ChannelFactory
@@ -224,9 +225,9 @@ namespace KON.Liwest.ChannelFactory
             if (lsdiLocalSourceData.Count == 0)
                 return;
 
-            // Bouquet files are saved without explicit filename into the current directory, all other files next to the given filename
+            // Bouquet files are saved without explicit filename into the export directory, all other files next to the given filename
             var strCurrentExportFilePath = string.IsNullOrEmpty(strLocalExportFilename) ? null : GetOutputFilePath(strLocalExportFilename);
-            var strCurrentExportFolderAbsolutePath = strCurrentExportFilePath != null ? Path.GetDirectoryName(strCurrentExportFilePath)! : Directory.GetCurrentDirectory();
+            var strCurrentExportFolderAbsolutePath = strCurrentExportFilePath != null ? Path.GetDirectoryName(strCurrentExportFilePath)! : GetExportDirectory();
             var strCurrentExportFilename = strCurrentExportFilePath != null ? Path.GetFileName(strCurrentExportFilePath) : string.Empty;
 
             var sioCurrentSettingsIO = new SettingsIO { EditorName = cstrCurrentProjectName, Log = new NullLogger() };
@@ -237,16 +238,17 @@ namespace KON.Liwest.ChannelFactory
 
             isCurrentISettings.SettingsVersion = fefLocalExportFilenameFormat switch
             {
-                FlagExportEnigmaFormat.Enigma1Ver1 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver1,
-                FlagExportEnigmaFormat.Enigma1Ver2 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma1Ver2,
-                FlagExportEnigmaFormat.Enigma2Ver3 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver3,
-                FlagExportEnigmaFormat.Enigma2Ver4 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver4,
-                FlagExportEnigmaFormat.Enigma2Ver5 => Krkadoni.EnigmaSettings.Enums.SettingsVersion.Enigma2Ver5,
+                FlagExportEnigmaFormat.Enigma1Ver1 => Enums.SettingsVersion.Enigma1Ver1,
+                FlagExportEnigmaFormat.Enigma1Ver2 => Enums.SettingsVersion.Enigma1Ver2,
+                FlagExportEnigmaFormat.Enigma2Ver3 => Enums.SettingsVersion.Enigma2Ver3,
+                FlagExportEnigmaFormat.Enigma2Ver4 => Enums.SettingsVersion.Enigma2Ver4,
+                FlagExportEnigmaFormat.Enigma2Ver5 => Enums.SettingsVersion.Enigma2Ver5,
                 _ => isCurrentISettings.SettingsVersion
             };
 
             var ixcCurrentIXmlCable = sioCurrentSettingsIO.Factory.InitNewXmlCable();
-            ixcCurrentIXmlCable.Name = string.Format(csTransponderRootElementNameFormat, DateTime.Now);
+            // Fixed name - the receiver keeps its scan provider selection (config.Nims.X.dvbc.scan_provider) on every update
+            ixcCurrentIXmlCable.Name = csCategory;
             ixcCurrentIXmlCable.SatFeed = Convert.ToString(ciSatFeed);
             ixcCurrentIXmlCable.Flags = Convert.ToString(ciFEC);
             ixcCurrentIXmlCable.CountryCode = ciCountryCode;
@@ -294,7 +296,7 @@ namespace KON.Liwest.ChannelFactory
                 var iCurrentONID = sdiCurrentSourceDataItem.ONID!.Value;
                 var bCurrentIsVideoService = sdiCurrentSourceDataItem.IsVideoService;
 
-                var strCurrentServiceReference = $"{sdiCurrentSourceDataItem.SID!.Value.ToHexString4Byte()}:{ciDefaultDVBCNamespace}:{iCurrentTSID.ToHexString4Byte()}:{iCurrentONID.ToHexString4Byte()}:{(bCurrentIsVideoService ? ciEnigmaServiceTypeTV : ciEnigmaServiceTypeRadio)}:{sdiCurrentSourceDataItem.ChannelNumber?.ToString(CultureInfo.InvariantCulture)}:0";
+                var strCurrentServiceReference = $"{sdiCurrentSourceDataItem.SID!.Value.ToHexString4Byte()}:{ciDefaultDVBCNamespace}:{iCurrentTSID.ToHexString4Byte()}:{iCurrentONID.ToHexString4Byte()}:{(bCurrentIsVideoService ? ciEnigmaServiceTypeTV : ciEnigmaServiceTypeRadio)}:{(sdiCurrentSourceDataItem.ChannelNumber ?? 0).ToString(CultureInfo.InvariantCulture)}:0";
                 var strCurrentServiceFlags = $"p:{sdiCurrentSourceDataItem.ProviderName}" +
                                              (bCurrentIsVideoService ? $",c:00{iCurrentVPID.ToHexString4Byte()}" : string.Empty) +
                                              (iCurrentTPID > 0 ? $",c:02{iCurrentTPID.ToHexString4Byte()}" : string.Empty) +

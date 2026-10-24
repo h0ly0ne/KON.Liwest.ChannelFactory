@@ -129,6 +129,23 @@
         public const string csDVBViewerTransponderDirectory = "Transponders"; // transponder lists within the data directory
         public const int ciDVBViewerProcessExitTimeoutSeconds = 30;         // time for a program to close regularly before it is terminated
         public const int ciDVBViewerServiceTimeoutSeconds = 60;             // time for a service to stop / start
+        public const string csEnigmaSettingsDirectory = "/etc/enigma2";     // settings directory of the receiver (lamedb, bouquets)
+        public const string csEnigmaChannelDatabaseFile = "lamedb";         // channel database of the receiver (lamedb5 next to it)
+        public const string csEnigmaCablesFile = "/etc/tuxbox/cables.xml";  // transponder list of the receiver (symbolic links are resolved)
+        public static readonly string[] csaEnigmaBouquetFilePatterns = ["bouquets.tv", "bouquets.radio", "userbouquet.*.tv", "userbouquet.*.radio", "blacklist", "whitelist"]; // files of an EnigmaBouquetsFiles export
+        public const string csEnigmaImageVersionFile = "/etc/image-version"; // image information of the receiver (key=value)
+        public static readonly string[] csaEnigmaImageNameKeys = ["comment", "distro", "displaydistro"];       // keys of the image name in csEnigmaImageVersionFile
+        public static readonly string[] csaEnigmaImageVersionKeys = ["imageversion", "version", "displayversion"]; // keys of the image version in csEnigmaImageVersionFile
+        public const int ciEnigmaSshPort = 22;                             // default port of the SSH server
+        public const int ciEnigmaConnectTimeoutSeconds = 15;                // timeout for the SSH connection
+        public const int ciEnigmaServiceTimeoutSeconds = 60;                // time for enigma2 to stop (init 4) / start (init 3)
+        public const int ciEnigmaCommandTimeoutSeconds = 60;               // timeout for a command on the receiver
+        public const string csExportDirectory = "Export";                   // export directory next to the executable (generated files with relative path)
+        public const string csExportTimestampFormat = "yyyyMMdd-HHmmss";    // subdirectory per run (start of the run)
+        public const string csEnigmaBackupDirectory = "EnigmaBackup";       // local backup directory of the receiver settings (within the export directory of the run)
+        public const string csEnigmaInstallDirectorySuffix = "_install";    // local directory of the merged install files (next to the backup)
+        public const string csEnigmaUploadSuffix = ".channelfactory.tmp";   // temporary file on the receiver during the upload
+        public const string csEnigmaKnownHostsFile = "known_hosts";        // host keys of the receivers (in the local application data of the user)
         public const string csBackupTimestampFormat = "yyyyMMdd-HHmmss";    // timestamp of backup files (<file>.<timestamp>.bak)
 
         public const int ciBlindscanRetries = 3;                         // retries per transponder

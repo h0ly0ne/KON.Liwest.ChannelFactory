@@ -1,10 +1,10 @@
 ﻿using System.Text;
 
-using static KON.Liwest.ChannelFactory.Constants;
-
 using Newtonsoft.Json;
 using NLog;
 using Pastel;
+
+using static KON.Liwest.ChannelFactory.Constants;
 
 namespace KON.Liwest.ChannelFactory
 {
@@ -148,10 +148,9 @@ namespace KON.Liwest.ChannelFactory
             // First primary name wins if a variation is listed more than once
             foreach (var kvpCurrentKeyValuePair in cvdLocalChannelVariationDictionary ?? [])
             {
-                foreach (var strCurrentVariation in kvpCurrentKeyValuePair.Value ?? [])
+                foreach (var strCurrentVariation in (kvpCurrentKeyValuePair.Value ?? []).OfType<string>())
                 {
-                    if (strCurrentVariation != null)
-                        dCurrentChannelVariationLookup.TryAdd(strCurrentVariation, kvpCurrentKeyValuePair.Key);
+                    dCurrentChannelVariationLookup.TryAdd(strCurrentVariation, kvpCurrentKeyValuePair.Key);
                 }
             }
 
@@ -196,14 +195,32 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
+        /// Start of the run - all generated files of a run are placed in the same export directory
+        /// </summary>
+        public static readonly DateTime dtRunStart = DateTime.Now;
+
+        /// <summary>
+        ///     Global.GetExportDirectory()
+        ///     Export directory of the run: (directory of the executable)\Export\(start of the run) - created if missing
+        /// </summary>
+        /// <returns>Absolute path of the export directory</returns>
+        public static string GetExportDirectory()
+        {
+            var strCurrentExportDirectory = Path.Combine(AppContext.BaseDirectory, csExportDirectory, dtRunStart.ToString(csExportTimestampFormat));
+            Directory.CreateDirectory(strCurrentExportDirectory);
+
+            return strCurrentExportDirectory;
+        }
+
+        /// <summary>
         ///     Global.GetOutputFilePath()
-        ///     All output files are resolved relative to the current working directory (absolute paths are kept), missing directories are created.
+        ///     Generated files with relative path are placed in the export directory of the run, absolute paths are kept - missing directories are created.
         /// </summary>
         /// <param name="strLocalFilename"></param>
         /// <returns>Absolute path of the output file</returns>
         public static string GetOutputFilePath(string strLocalFilename)
         {
-            var strCurrentFilePath = Path.GetFullPath(strLocalFilename);
+            var strCurrentFilePath = Path.GetFullPath(Path.IsPathFullyQualified(strLocalFilename) ? strLocalFilename : Path.Combine(GetExportDirectory(), strLocalFilename));
             var strCurrentDirectory = Path.GetDirectoryName(strCurrentFilePath);
 
             if (!string.IsNullOrEmpty(strCurrentDirectory))
