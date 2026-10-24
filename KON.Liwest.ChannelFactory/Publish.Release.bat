@@ -29,7 +29,7 @@ echo Output: %OUTPUT_DIR%
 echo.
 
 :: Publish
-%MSBUILD_PATH% %PROJ_FILE% /t:Publish /p:Configuration=Release /p:PublishProfile=FolderProfileRelease
+%MSBUILD_PATH% %PROJ_FILE% /restore /t:Publish /p:Configuration=Release /p:PublishProfile=FolderProfileRelease
 
 :: Check result
 if %errorlevel% neq 0 (

@@ -63,13 +63,11 @@
     <Folder Include="examples\" />
   </ItemGroup>
 
-	<!--
 	<Target Name="PostBuildPublish" AfterTargets="PostBuildEvent" Condition="'$(PUBLISHING)' == ''">
         <Message Importance="high" Text="====================================" />
         <Message Importance="high" Text="Running publishing as PostBuildEvent" />
         <Message Importance="high" Text="====================================" />
         <Exec Command="if $(ConfigurationName) == Debug ( $(ProjectDir)Publish.Debug.bat ) else ( $(ProjectDir)Publish.Release.bat )" IgnoreExitCode="false" />
     </Target>
-	-->
 
 </Project>
