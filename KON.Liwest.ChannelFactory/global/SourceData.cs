@@ -4,6 +4,7 @@ using System.Reflection;
 
 using Newtonsoft.Json;
 using static KON.Liwest.ChannelFactory.Constants;
+using static KON.Liwest.ChannelFactory.Global;
 
 namespace KON.Liwest.ChannelFactory
 {
@@ -27,6 +28,7 @@ namespace KON.Liwest.ChannelFactory
         private string? strChannelName;
         private string? strLanguage;
         private string? strCodec;
+        private string? strPackage;
         private int? iChannelFrequency;
 
         [JsonProperty("program_number")]
@@ -54,7 +56,11 @@ namespace KON.Liwest.ChannelFactory
             set => iChannelFrequency = value.ToFrequencyKHz();
         }
         [JsonProperty("package.nav_pack")]
-        public string? Package { get; set; }                            // CL, SC
+        public string? Package                                          // CL, SC - html of the smartcard api converted to text (line breaks -> " / ")
+        {
+            get => strPackage;
+            set => strPackage = value.ConvertHtmlToText();
+        }
         public bool? Dolby { get; set; }                                // CL
         public bool? VoD { get; set; }                                  // CL
         public string? Language                                         // CL, SC, BS - 3 letter ISO 639-2/T code(s), comma separated - csUndeterminedLanguage if unknown
@@ -102,6 +108,23 @@ namespace KON.Liwest.ChannelFactory
         public int? SPID { get; set; }                                  // BS
         public int? TPID { get; set; }                                  // BS
         public int? RunningStatus { get; set; }                         // BS
+        public string? Sources { get; set; }                            // CL, SC, BS - sources of the channel (ChannelList, SmartcardList, BlindscanList), comma separated
+
+        /// <summary>
+        /// Channel data comes from the smartcard - source data files without Sources (older versions) are recognized by the smartcard only fields Pairing / Authorized
+        /// </summary>
+        [JsonIgnore]
+        internal bool IsFromSmartcard => Sources != null ? HasSource(FlagSource.SmartcardList) : Pairing.HasValue || Authorized.HasValue;
+
+        /// <summary>
+        /// SourceDataItem.HasSource()
+        /// </summary>
+        /// <param name="fsLocalSource"></param>
+        /// <returns>bool</returns>
+        internal bool HasSource(FlagSource fsLocalSource)
+        {
+            return (Sources ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Contains(fsLocalSource.ToString(), StringComparer.OrdinalIgnoreCase);
+        }
 
         /// <summary>
         /// Service data (SID, TSID, ONID, frequency) required for channel database exports is available

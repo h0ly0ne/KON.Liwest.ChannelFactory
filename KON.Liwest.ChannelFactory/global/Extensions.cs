@@ -1,6 +1,7 @@
 ﻿using System.Collections.Frozen;
 using System.Data;
 using System.Globalization;
+using System.Net;
 using System.Text.RegularExpressions;
 
 using KON.OctoScan.NET;
@@ -20,6 +21,21 @@ namespace KON.Liwest.ChannelFactory
 
         [GeneratedRegex(@"[,;/|\s]+")]
         private static partial Regex rxLanguageSeparator();
+
+        [GeneratedRegex(@"<\s*br\s*/?\s*>|<\s*/\s*(?:p|div|li|tr)\s*>", RegexOptions.IgnoreCase)]
+        private static partial Regex rxHtmlLineBreak();
+
+        [GeneratedRegex(@"<[^>]*>")]
+        private static partial Regex rxHtmlTag();
+
+        [GeneratedRegex(@"&(?:#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);", RegexOptions.IgnoreCase)]
+        private static partial Regex rxHtmlEntity();
+
+        [GeneratedRegex(@"(?:\s*/\s*){2,}")]
+        private static partial Regex rxRepeatedTextSeparator();
+
+        [GeneratedRegex(@"^(?:\s*/\s*)+|(?:\s*/\s*)+$")]
+        private static partial Regex rxOuterTextSeparator();
 
         /// <summary>
         /// ISO 639-1 (2 letters) and ISO 639-2/B, 639-2/T, 639-3 (3 letters) code -> ISO 639-2/T code (e.g. de, ger, deu -> deu)
@@ -176,6 +192,25 @@ namespace KON.Liwest.ChannelFactory
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Converts html (e.g. of the smartcard api) to plain text: line breaks (br, end of p/div/li/tr) become csTextLineSeparator, other tags are removed and entities decoded.
+        /// Text without html is returned unchanged.
+        /// </summary>
+        public static string? ConvertHtmlToText(this string? strLocalString)
+        {
+            // Plain text (also "Film- & HD-Paket") stays unchanged - only tags or entities are converted
+            if (string.IsNullOrEmpty(strLocalString) || (!strLocalString.Contains('<') && !rxHtmlEntity().IsMatch(strLocalString)))
+                return strLocalString;
+
+            var strCurrentText = rxHtmlLineBreak().Replace(strLocalString, csTextLineSeparator);
+            strCurrentText = rxHtmlTag().Replace(strCurrentText, " ");
+            strCurrentText = WebUtility.HtmlDecode(strCurrentText).TrimAdvanced();
+            strCurrentText = rxRepeatedTextSeparator().Replace(strCurrentText, csTextLineSeparator);
+            strCurrentText = rxOuterTextSeparator().Replace(strCurrentText, string.Empty).Trim();
+
+            return strCurrentText.Length > 0 ? strCurrentText : null;
         }
 
         public static string? CheckVariationForPrimary(this string? strLocalString)

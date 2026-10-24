@@ -26,6 +26,7 @@
         public const string ciCountryCode = "AUT";                          // "AUT" = default country code for liwest
         public const string ciDefaultDVBCNamespace = "ffff0000";            // default namespace for dvb-c transponders
         public const int ciEnigmaTransponderInversion = 2;                  // 2 = auto inversion for enigma dvb-c transponders
+        public const string csTextLineSeparator = " / ";                    // replacement for html line breaks (e.g. package of the smartcard api)
         public const string csUndeterminedLanguage = "und";                 // iso 639-2 code for "undetermined" - fallback for channels without language
         public static readonly string[] csaPlaceholderLanguageCodes = ["und", "mis", "mul", "zxx"]; // language codes without real language (besides qaa-qtz)
         public const string csDefaultAudioLanguage = "mis";                // iso 639-2 code for "uncoded languages"

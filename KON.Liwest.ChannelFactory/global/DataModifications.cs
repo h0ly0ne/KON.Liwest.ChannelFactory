@@ -105,6 +105,14 @@ namespace KON.Liwest.ChannelFactory
                 // Language: real audio language of the blindscan, otherwise the first real language of the group, otherwise undetermined (Language never is empty and thus not filled by FillEmptyValuesFrom)
                 sdiCurrentMergedSourceDataItem.Language = sdiCurrentMergedSourceDataItem.LanguageFromAudioLanguages ?? igCurrentGroup.Select(sdiCurrentSourceDataItem => sdiCurrentSourceDataItem.Language).FirstOrDefault(strCurrentLanguage => strCurrentLanguage != null && !strCurrentLanguage.IsPlaceholderLanguageCode());
 
+                // Package of the smartcard wins over the channel list (channel list only as fallback)
+                if (igCurrentGroup.FirstOrDefault(sdiCurrentSourceDataItem => sdiCurrentSourceDataItem.IsFromSmartcard && !string.IsNullOrWhiteSpace(sdiCurrentSourceDataItem.Package))?.Package is { } strCurrentPackage)
+                    sdiCurrentMergedSourceDataItem.Package = strCurrentPackage;
+
+                // Sources of all merged channels
+                var saCurrentSources = igCurrentGroup.SelectMany(sdiCurrentSourceDataItem => (sdiCurrentSourceDataItem.Sources ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+                sdiCurrentMergedSourceDataItem.Sources = saCurrentSources.Length > 0 ? string.Join(",", saCurrentSources) : null;
+
                 if (sdiCurrentMergedSourceDataItem.HasValidStream)
                     lsdiCurrentMergedSourceData.Add(sdiCurrentMergedSourceDataItem);
             }

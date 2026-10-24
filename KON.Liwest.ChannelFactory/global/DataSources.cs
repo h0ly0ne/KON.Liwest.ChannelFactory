@@ -60,7 +60,8 @@ namespace KON.Liwest.ChannelFactory
                     {
                         ChannelNumber = saCurrentRecord[0].ToNullableInt32(),
                         ChannelName = saCurrentRecord[1],
-                        ChannelFrequency = saCurrentRecord[3].ToFrequencyKHz()
+                        ChannelFrequency = saCurrentRecord[3].ToFrequencyKHz(),
+                        Sources = nameof(FlagSource.ChannelList)
                     };
 
                     if (!oCurrentWebRequest.IsRadio)
@@ -111,8 +112,11 @@ namespace KON.Liwest.ChannelFactory
             foreach (var strCurrentType in new[] { csSmartcardApiTypeTV, csSmartcardApiTypeRadio })
             {
                 var lsdiCurrentPrograms = GetSmartcardPrograms(strLocalSmartcardId, strCurrentType);
-                if (lsdiCurrentPrograms != null)
-                    lsdiLocalSourceData.AddRange(lsdiCurrentPrograms);
+                if (lsdiCurrentPrograms == null)
+                    continue;
+
+                lsdiCurrentPrograms.ForEach(sdiCurrentSourceDataItem => sdiCurrentSourceDataItem.Sources = nameof(FlagSource.SmartcardList));
+                lsdiLocalSourceData.AddRange(lsdiCurrentPrograms);
             }
         }
 
@@ -253,7 +257,8 @@ namespace KON.Liwest.ChannelFactory
                     APIDSCODEC = GetText("lsAudioPacketIdentifiersCodec"),
                     SPID = GetValue("iSubtitlePacketIdentifier").ToInt32(),
                     TPID = GetValue("iTeletextPacketIdentifier").ToInt32(),
-                    RunningStatus = GetValue("iRunningStatus").ToInt32()
+                    RunningStatus = GetValue("iRunningStatus").ToInt32(),
+                    Sources = nameof(FlagSource.BlindscanList)
                 };
 
                 // Dolby from the audio codecs - older KON.OctoScan.NET versions without codecs leave it empty

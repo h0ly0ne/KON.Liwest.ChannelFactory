@@ -172,6 +172,9 @@ Copyright (C) 2024-2026 Oswald Oliver
 * Blindscan: SAT>IP server via [KON.OctoScan.NET](https://github.com/h0ly0ne/KON.OctoScan.NET)
 * Source data file: json array of channels with the property names of the source data (`ChannelName`, `ChannelFrequency`, `SID`, ...), not listed properties stay empty
 * Frequencies are always stored in kHz - input values like `578`, `578000` or `578.00 MHz` are normalized
+* `Sources` lists the sources of a channel (`ChannelList`, `SmartcardList`, `BlindscanList`) - after `--sourcecleanup GroupAndInvalidate` all merged sources
+* `Package`: with `--sourcecleanup GroupAndInvalidate` the package of the smartcard wins, the channel list is only used if the smartcard delivers none
+* `Package`: html of the smartcard api is converted to text - line breaks (`<br />`) become ` / `, other tags are removed, entities decoded
 
 ## Encryption
 
