@@ -142,9 +142,14 @@
         public const int ciEnigmaCommandTimeoutSeconds = 60;               // timeout for a command on the receiver
         public const string csExportDirectory = "Export";                   // export directory next to the executable (generated files with relative path)
         public const string csExportTimestampFormat = "yyyyMMdd-HHmmss";    // subdirectory per run (start of the run)
+        public const string csExportRunMarkerFile = ".channelfactory";      // marker of the run within its export directory (makes parallel runs unique)
         public const string csEnigmaBackupDirectory = "EnigmaBackup";       // local backup directory of the receiver settings (within the export directory of the run)
         public const string csEnigmaInstallDirectorySuffix = "_install";    // local directory of the merged install files (next to the backup)
         public const string csEnigmaUploadSuffix = ".channelfactory.tmp";   // temporary file on the receiver during the upload
+        public static readonly string[] csaEnigmaBackupExcludedFiles = ["epg.dat"]; // files of the settings directory which are not backed up (program guide)
+        public const string csEnigmaInstallStatusDone = "DONE";             // status: files moved ("DONE <number of failed files>")
+        public const string csEnigmaInstallStatusStopTimeout = "STOP_TIMEOUT"; // status: enigma2 not stopped - nothing installed
+        public const int ciEnigmaInstallTimeoutSeconds = 180;               // time for the installation command chain (stop, move, start)
         public const string csEnigmaKnownHostsFile = "known_hosts";        // host keys of the receivers (in the local application data of the user)
         public const string csBackupTimestampFormat = "yyyyMMdd-HHmmss";    // timestamp of backup files (<file>.<timestamp>.bak)
 

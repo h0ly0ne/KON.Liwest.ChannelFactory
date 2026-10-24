@@ -70,13 +70,22 @@ namespace KON.Liwest.ChannelFactory
             LogTrace("DataInstallations.InstallDVBViewerData()");
             LogInfo($"-» Install DVBViewer data into {dviLocalInstance.strName} ({dviLocalInstance.strDataDirectory})");
 
+            // One timestamp for all backups of the installation
+            var strCurrentBackupTimestamp = DateTime.Now.ToString(csBackupTimestampFormat);
+
             if (bLocalDryRun)
             {
                 foreach (var scCurrentService in GetRunningServices(dviLocalInstance.strInstallDirectory))
-                    LogInfo($"-» Dry run - would stop and restart service {scCurrentService.ServiceName}");
+                {
+                    using (scCurrentService)
+                        LogInfo($"-» Dry run - would stop and restart service {scCurrentService.ServiceName}");
+                }
 
                 foreach (var pCurrentProcess in GetRunningProcesses(dviLocalInstance.strInstallDirectory))
-                    LogInfo($"-» Dry run - would close and restart program {Path.GetFileName(pCurrentProcess.MainModule!.FileName)}");
+                {
+                    using (pCurrentProcess)
+                        LogInfo($"-» Dry run - would close and restart program {Path.GetFileName(pCurrentProcess.MainModule!.FileName)}");
+                }
 
                 foreach (var (strCurrentSourceFile, strCurrentTargetFile) in ltLocalFiles)
                 {
@@ -103,6 +112,7 @@ namespace KON.Liwest.ChannelFactory
 
                 foreach (var pCurrentProcess in GetRunningProcesses(dviLocalInstance.strInstallDirectory))
                 {
+                    using var _ = pCurrentProcess;
                     var strCurrentProgram = pCurrentProcess.MainModule!.FileName;
                     LogInfo($"-» Close program {Path.GetFileName(strCurrentProgram)}");
 
@@ -124,7 +134,7 @@ namespace KON.Liwest.ChannelFactory
 
                     if (File.Exists(strCurrentTargetPath))
                     {
-                        var strCurrentBackupPath = $"{strCurrentTargetPath}.{DateTime.Now.ToString(csBackupTimestampFormat)}.bak";
+                        var strCurrentBackupPath = $"{strCurrentTargetPath}.{strCurrentBackupTimestamp}.bak";
                         File.Copy(strCurrentTargetPath, strCurrentBackupPath, true);
                         LogInfo($"-» Backup {strCurrentBackupPath}");
                     }
@@ -214,18 +224,21 @@ namespace KON.Liwest.ChannelFactory
 
             foreach (var scCurrentService in ServiceController.GetServices())
             {
+                // Services which are not part of the instance are released immediately
                 if (scCurrentService.Status != ServiceControllerStatus.Running)
+                {
+                    scCurrentService.Dispose();
                     continue;
+                }
 
                 using var rkCurrentServiceKey = Registry.LocalMachine.OpenSubKey($@"{csServicesRegistryKey}\{scCurrentService.ServiceName}");
-                if (rkCurrentServiceKey?.GetValue("ImagePath") is not string strCurrentImagePath)
-                    continue;
-
-                strCurrentImagePath = Environment.ExpandEnvironmentVariables(strCurrentImagePath).Trim();
+                var strCurrentImagePath = Environment.ExpandEnvironmentVariables(rkCurrentServiceKey?.GetValue("ImagePath") as string ?? string.Empty).Trim();
                 var strCurrentExecutable = strCurrentImagePath.StartsWith('"') ? strCurrentImagePath.Split('"', StringSplitOptions.RemoveEmptyEntries)[0] : strCurrentImagePath.Split(' ')[0];
 
-                if (IsInDirectory(strCurrentExecutable, strLocalInstallDirectory))
+                if (strCurrentExecutable.Length > 0 && IsInDirectory(strCurrentExecutable, strLocalInstallDirectory))
                     lscCurrentServices.Add(scCurrentService);
+                else
+                    scCurrentService.Dispose();
             }
 
             return lscCurrentServices;
@@ -240,15 +253,22 @@ namespace KON.Liwest.ChannelFactory
 
             foreach (var pCurrentProcess in Process.GetProcesses())
             {
+                var bCurrentIsInstanceProcess = false;
+
                 try
                 {
-                    if (pCurrentProcess.Id != Environment.ProcessId && pCurrentProcess.MainModule?.FileName is { } strCurrentFileName && IsInDirectory(strCurrentFileName, strLocalInstallDirectory))
-                        lpCurrentProcesses.Add(pCurrentProcess);
+                    bCurrentIsInstanceProcess = pCurrentProcess.Id != Environment.ProcessId && pCurrentProcess.MainModule?.FileName is { } strCurrentFileName && IsInDirectory(strCurrentFileName, strLocalInstallDirectory);
                 }
                 catch (Exception excCurrentException) when (excCurrentException is Win32Exception or InvalidOperationException)
                 {
                     // No access to system / ended processes - not part of the instance
                 }
+
+                // Processes which are not part of the instance are released immediately
+                if (bCurrentIsInstanceProcess)
+                    lpCurrentProcesses.Add(pCurrentProcess);
+                else
+                    pCurrentProcess.Dispose();
             }
 
             return lpCurrentProcesses;

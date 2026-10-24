@@ -69,6 +69,9 @@ Copyright (C) 2024-2026 Oswald Oliver
   --dryrun                  Installation test without changes: finds the DVBViewer installations /
                             connects to the Enigma2 receivers and backs up their settings, nothing
                             is installed.
+  --keepexports             Number of run directories in Export next to the executable to keep
+                            (including the current run) - older ones are removed. Without this
+                            option all run directories are kept.
   --dumpdatamode            Format of the file to output with DumpData.
   --verbose                 Set output to verbose level.
   --help                    Display this help screen.
@@ -275,6 +278,8 @@ Generated files (`--exportfilename`, `--targetfile`) with a relative path are pl
 ```
 
 * The timestamp is the start of the run - all files of a run are placed in the same directory
+* Runs started in the same second get their own directory (`<yyyyMMdd-HHmmss>_2`, `_3`, ...) - marked by the hidden file `.channelfactory`
+* `--keepexports <n>` keeps the newest n run directories (including the current run) and removes older ones - only directories named like a run are touched, without the option all run directories are kept
 * Absolute paths are kept, missing directories are created
 * Enigma bouquet files (`--exportmode EnigmaBouquetsFiles`) and the Enigma2 receiver backups (`EnigmaBackup`) are placed in the export directory of the run as well
 * Input files (`--sourcefile`, resource files) are still resolved relative to the current working directory
@@ -296,7 +301,7 @@ Generated files (`--exportfilename`, `--targetfile`) with a relative path are pl
 
 * Credentials are passed with `--enigmauser` (default `root`) and `--enigmapassword` - no credentials are part of ChannelFactory
 * The host key of a receiver is stored on first use in `%LOCALAPPDATA%\KON.Liwest.ChannelFactory\known_hosts`, a changed host key is refused
-* All files of `/etc/enigma2` and the target files outside of it (e.g. `cables.xml`) are backed up to `EnigmaBackup\<host>_<yyyyMMdd-HHmmss>` (in the export directory of the run)
+* All files of `/etc/enigma2` (except the program guide `epg.dat`) and the target files outside of it (e.g. `cables.xml`) are backed up to `EnigmaBackup\<host>_<yyyyMMdd-HHmmss>` (in the export directory of the run)
 * Streaming services found in the backed up bouquets / lamedb are reported
 * The export is merged with the backed up settings of the receiver:
    * `lamedb` / `lamedb5`: entries of the DVB-C namespace (`ffff0000`) are replaced, all other entries kept - `lamedb5` is written (consistent with `lamedb`) if the receiver uses it
@@ -304,7 +309,10 @@ Generated files (`--exportfilename`, `--targetfile`) with a relative path are pl
    * `userbouquet.*`: replaced by the export
    * `cables.xml`: cables named `LIWEST...` replaced, other cables kept
    * `blacklist` / `whitelist`: kept (parental control of the receiver)
-* enigma2 is stopped (`init 4`), the files are uploaded to a temporary file and moved to the target, enigma2 is started again (`init 3`) - also if the upload fails
+* The files are uploaded to temporary files (`<file>.channelfactory.tmp`) while enigma2 is still running - on an upload error they are removed and the receiver stays unchanged
+* One SSH command chain stops enigma2 (`init 4`), moves the files to their targets, removes leftovers and always starts enigma2 again (`init 3`) - no script or other file is stored on the receiver, no round trip between stop and start
+* A hangup of the SSH session is ignored by the chain (`trap '' HUP`), so it is completed and enigma2 started again also if the connection is lost
+* If enigma2 does not stop within 60 seconds nothing is installed (temporary files removed, enigma2 kept running)
 * Targets: `lamedb` / `lamedb5` and bouquet files to `/etc/enigma2`, `cables.xml` to `/etc/tuxbox/cables.xml` (symbolic links resolved)
 * The merged files are kept locally in `EnigmaBackup\<host>_<yyyyMMdd-HHmmss>_install`
 * The cable of the Enigma2 transponder export is always named `LIWEST` - the scan provider selection of the receiver is kept on every update

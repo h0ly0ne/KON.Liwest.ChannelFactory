@@ -87,6 +87,9 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "dryrun", HelpText = "Installation test without changes: finds the DVBViewer installations / connects to the Enigma2 receivers and backs up their settings, nothing is installed.")]
             public bool cloDryRun { get; set; }
 
+            [Option(longName: "keepexports", HelpText = "Number of run directories in Export next to the executable to keep (including the current run) - older ones are removed. Without this option all run directories are kept.")]
+            public int? cloKeepExports { get; set; }
+
             [Option(longName: "dumpdatamode", HelpText = "Format of the file to output with DumpData.")]
             public FlagDumpDataMode cloDumpDataMode { get; set; }
 
@@ -457,6 +460,9 @@ namespace KON.Liwest.ChannelFactory
                 }
             }
 
+            if (oLocalOptions.cloKeepExports is { } iCurrentKeepExports)
+                CleanupExportDirectories(iCurrentKeepExports);
+
             return bErrorOccurred ? ExitCode.OperationFailed : ExitCode.Success;
         }
 
@@ -555,6 +561,9 @@ namespace KON.Liwest.ChannelFactory
 
             if (oLocalOptions.cloInstallEnigmaData && (string.IsNullOrEmpty(oLocalOptions.cloEnigmaUser) || string.IsNullOrEmpty(oLocalOptions.cloEnigmaPassword)))
                 lsCurrentCustomConditions.Add(string.IsNullOrEmpty(oLocalOptions.cloEnigmaUser) ? "enigmauser" : "enigmapassword");
+
+            if (oLocalOptions.cloKeepExports is < 1)
+                lsCurrentCustomConditions.Add("keepexports");
 
             if (oLocalOptions.cloDryRun && oLocalOptions is { cloInstallDVBViewerData: false, cloInstallEnigmaData: false })
                 lsCurrentCustomConditions.Add("dryrun");

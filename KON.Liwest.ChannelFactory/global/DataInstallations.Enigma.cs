@@ -69,42 +69,62 @@ namespace KON.Liwest.ChannelFactory
                     return true;
                 }
 
-                var bCurrentEnigmaStopped = false;
+                var ltCurrentRemoteFiles = ltCurrentInstallFiles.Select(tCurrentFile => (strTemporaryFile: tCurrentFile.strTargetFile + csEnigmaUploadSuffix, tCurrentFile.strTargetFile)).ToList();
 
                 try
                 {
-                    // enigma2 writes lamedb and bouquets on exit - it has to be stopped before the files are replaced
-                    LogInfo("-» Stop enigma2");
-                    RunCommand(scCurrentSshClient, "init 4", true);
-                    bCurrentEnigmaStopped = true;
+                    // 1. Upload while enigma2 is still running - leftovers of an earlier run are removed first
+                    RunCommand(scCurrentSshClient, $"rm -f {string.Join(' ', ltCurrentRemoteFiles.Select(tCurrentFile => QuoteShell(tCurrentFile.strTemporaryFile)))}", true);
 
-                    if (!WaitForEnigma(scCurrentSshClient, false))
-                        throw new InvalidOperationException($"enigma2 has not stopped within {ciEnigmaServiceTimeoutSeconds} seconds");
-
-                    foreach (var (strCurrentSourceFile, strCurrentTargetFile) in ltCurrentInstallFiles)
+                    foreach (var ((strCurrentSourceFile, _), (strCurrentTemporaryFile, _)) in ltCurrentInstallFiles.Zip(ltCurrentRemoteFiles))
                     {
-                        UploadEnigmaFile(scCurrentSshClient, scCurrentSftpClient, strCurrentSourceFile, strCurrentTargetFile);
-                        LogInfo($"-» Installed {strCurrentTargetFile}");
+                        using var fsCurrentFileStream = File.OpenRead(strCurrentSourceFile);
+                        scCurrentSftpClient.UploadFile(fsCurrentFileStream, strCurrentTemporaryFile, true);
                     }
 
-                    return true;
                 }
                 catch (Exception excCurrentException) when (excCurrentException is SshException or IOException or InvalidOperationException)
                 {
-                    LogError($"-» Error on installing Enigma2 data into {strLocalHost}: {excCurrentException.Message} - the settings of the receiver can be restored from {strCurrentBackupDirectory}");
+                    // enigma2 has not been touched yet - only the uploaded temporary files are removed
+                    TryRunCommand(scCurrentSshClient, $"rm -f {string.Join(' ', ltCurrentRemoteFiles.Select(tCurrentFile => QuoteShell(tCurrentFile.strTemporaryFile)))}");
+                    LogError($"-» Error on uploading Enigma2 data to {strLocalHost}: {excCurrentException.Message} - the receiver is unchanged");
                     return false;
                 }
-                finally
-                {
-                    if (bCurrentEnigmaStopped)
-                    {
-                        LogInfo("-» Start enigma2");
-                        RunCommand(scCurrentSshClient, "init 3", true);
 
-                        if (!WaitForEnigma(scCurrentSshClient, true))
-                            LogWarning($"-» enigma2 has not started within {ciEnigmaServiceTimeoutSeconds} seconds - please check the receiver");
-                    }
+                // 2. Stop enigma2, move the files and start enigma2 again - one command chain via SSH, no round trip between stop and start
+                string strCurrentStatus;
+
+                try
+                {
+                    LogInfo("-» Stop enigma2, install the files and start enigma2 again");
+                    strCurrentStatus = RunCommand(scCurrentSshClient, BuildEnigmaInstallCommand(ltCurrentRemoteFiles), false, ciEnigmaInstallTimeoutSeconds).Trim().Split('\n').LastOrDefault()?.Trim() ?? string.Empty;
                 }
+                catch (Exception excCurrentException) when (excCurrentException is SshException or SocketException or IOException or InvalidOperationException)
+                {
+                    LogError($"-» Connection to {strLocalHost} lost during the installation: {excCurrentException.Message} - please check the receiver, the settings can be restored from {strCurrentBackupDirectory}");
+                    return false;
+                }
+
+                switch (strCurrentStatus.Split(' ')[0])
+                {
+                    case csEnigmaInstallStatusDone when strCurrentStatus == $"{csEnigmaInstallStatusDone} 0":
+                        ltCurrentRemoteFiles.ForEach(tCurrentFile => LogInfo($"-» Installed {tCurrentFile.strTargetFile}"));
+                        break;
+                    case csEnigmaInstallStatusDone:
+                        LogError($"-» {strCurrentStatus.Split(' ')[1]} file(s) could not be installed on {strLocalHost} - the settings of the receiver can be restored from {strCurrentBackupDirectory}");
+                        break;
+                    case csEnigmaInstallStatusStopTimeout:
+                        LogError($"-» enigma2 has not stopped within {ciEnigmaServiceTimeoutSeconds} seconds on {strLocalHost} - nothing has been installed");
+                        break;
+                    default:
+                        LogError($"-» Unexpected result of the installation on {strLocalHost} ('{strCurrentStatus}') - please check the receiver, the settings can be restored from {strCurrentBackupDirectory}");
+                        break;
+                }
+
+                if (!WaitForEnigma(scCurrentSshClient, true))
+                    LogWarning($"-» enigma2 has not started within {ciEnigmaServiceTimeoutSeconds} seconds - please check the receiver");
+
+                return strCurrentStatus == $"{csEnigmaInstallStatusDone} 0";
             }
             catch (Exception excCurrentException) when (excCurrentException is SshException or SocketException or IOException or InvalidOperationException or InvalidDataException or XmlException)
             {
@@ -122,7 +142,8 @@ namespace KON.Liwest.ChannelFactory
             var strCurrentBackupDirectory = Path.GetFullPath(Path.Combine(GetExportDirectory(), csEnigmaBackupDirectory, $"{string.Concat(strLocalHost.Select(cCurrentCharacter => Path.GetInvalidFileNameChars().Contains(cCurrentCharacter) ? '_' : cCurrentCharacter))}_{DateTime.Now.ToString(csBackupTimestampFormat)}"));
             Directory.CreateDirectory(strCurrentBackupDirectory);
 
-            var lsCurrentRemoteFiles = scLocalSftpClient.ListDirectory(csEnigmaSettingsDirectory).Where(ssfCurrentFile => ssfCurrentFile.IsRegularFile).Select(ssfCurrentFile => ssfCurrentFile.FullName).ToList();
+            // Program guide (epg.dat) and temporary files of an upload are not part of the settings
+            var lsCurrentRemoteFiles = scLocalSftpClient.ListDirectory(csEnigmaSettingsDirectory).Where(ssfCurrentFile => ssfCurrentFile.IsRegularFile && !csaEnigmaBackupExcludedFiles.Contains(ssfCurrentFile.Name, StringComparer.Ordinal) && !ssfCurrentFile.Name.EndsWith(csEnigmaUploadSuffix, StringComparison.Ordinal)).Select(ssfCurrentFile => ssfCurrentFile.FullName).ToList();
             lsCurrentRemoteFiles.AddRange(ieLocalTargetFiles.Where(strCurrentTargetFile => !strCurrentTargetFile.StartsWith(csEnigmaSettingsDirectory + "/", StringComparison.Ordinal) && scLocalSftpClient.Exists(strCurrentTargetFile)));
 
             foreach (var strCurrentRemoteFile in lsCurrentRemoteFiles.Distinct(StringComparer.Ordinal))
@@ -402,16 +423,56 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
-        /// DataInstallations.UploadEnigmaFile() - uploads to a temporary file and moves it to the target, the target is never partly written
+        /// DataInstallations.BuildEnigmaInstallCommand() - command chain for one SSH command: stops enigma2, moves the uploaded files to their targets, removes leftovers and always starts enigma2 again.
+        /// A hangup of the session (lost connection) is ignored, so the chain is completed and enigma2 started again. Nothing is stored on the receiver.
+        /// The last output line is the result: "DONE <number of failed files>" or "STOP_TIMEOUT" (enigma2 not stopped - nothing installed).
         /// </summary>
-        private static void UploadEnigmaFile(SshClient scLocalSshClient, SftpClient scLocalSftpClient, string strLocalSourceFile, string strLocalTargetFile)
+        /// <param name="ltLocalFiles">Uploaded temporary file and target file on the receiver</param>
+        /// <returns>Command chain with LF line endings</returns>
+        private static string BuildEnigmaInstallCommand(IReadOnlyList<(string strTemporaryFile, string strTargetFile)> ltLocalFiles)
         {
-            var strCurrentTemporaryFile = strLocalTargetFile + csEnigmaUploadSuffix;
+            var strCurrentTemporaryFiles = string.Join(' ', ltLocalFiles.Select(tCurrentFile => QuoteShell(tCurrentFile.strTemporaryFile)));
+            var sbCurrentScript = new StringBuilder();
 
-            using (var fsCurrentFileStream = File.OpenRead(strLocalSourceFile))
-                scLocalSftpClient.UploadFile(fsCurrentFileStream, strCurrentTemporaryFile, true);
+            sbCurrentScript.Append("trap '' HUP\n");
+            sbCurrentScript.Append("init 4\n");
+            sbCurrentScript.Append("i=0\n");
+            sbCurrentScript.Append("while pidof enigma2 >/dev/null 2>&1; do\n");
+            sbCurrentScript.Append($"  if [ $i -ge {ciEnigmaServiceTimeoutSeconds} ]; then\n");
+            sbCurrentScript.Append($"    rm -f {strCurrentTemporaryFiles}\n");
+            sbCurrentScript.Append("    init 3\n");
+            sbCurrentScript.Append($"    echo '{csEnigmaInstallStatusStopTimeout}'\n");
+            sbCurrentScript.Append("    exit 1\n");
+            sbCurrentScript.Append("  fi\n");
+            sbCurrentScript.Append("  sleep 1\n");
+            sbCurrentScript.Append("  i=$((i+1))\n");
+            sbCurrentScript.Append("done\n");
+            sbCurrentScript.Append("FAILED=0\n");
 
-            RunCommand(scLocalSshClient, $"mv -f {QuoteShell(strCurrentTemporaryFile)} {QuoteShell(strLocalTargetFile)}", true);
+            foreach (var (strCurrentTemporaryFile, strCurrentTargetFile) in ltLocalFiles)
+                sbCurrentScript.Append($"mv -f {QuoteShell(strCurrentTemporaryFile)} {QuoteShell(strCurrentTargetFile)} || FAILED=$((FAILED+1))\n");
+
+            sbCurrentScript.Append($"rm -f {strCurrentTemporaryFiles}\n");
+            sbCurrentScript.Append("init 3\n");
+            sbCurrentScript.Append($"echo \"{csEnigmaInstallStatusDone} $FAILED\"\n");
+
+            return sbCurrentScript.ToString();
+        }
+
+        /// <summary>
+        /// DataInstallations.TryRunCommand() - runs a command, errors are only traced (cleanup)
+        /// </summary>
+        private static void TryRunCommand(SshClient scLocalSshClient, string strLocalCommand)
+        {
+            try
+            {
+                if (scLocalSshClient.IsConnected)
+                    RunCommand(scLocalSshClient, strLocalCommand);
+            }
+            catch (Exception excCurrentException) when (excCurrentException is SshException or SocketException or IOException or InvalidOperationException)
+            {
+                LogTrace($"DataInstallations.TryRunCommand() - {excCurrentException.Message}");
+            }
         }
 
         /// <summary>
@@ -548,14 +609,15 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="scLocalSshClient"></param>
         /// <param name="strLocalCommand"></param>
         /// <param name="bLocalCheckExitStatus"></param>
+        /// <param name="iLocalTimeoutSeconds">Timeout of the command, ciEnigmaCommandTimeoutSeconds if not given</param>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException"></exception>
-        private static string RunCommand(SshClient scLocalSshClient, string strLocalCommand, bool bLocalCheckExitStatus = false)
+        private static string RunCommand(SshClient scLocalSshClient, string strLocalCommand, bool bLocalCheckExitStatus = false, int iLocalTimeoutSeconds = ciEnigmaCommandTimeoutSeconds)
         {
             LogTrace($"DataInstallations.RunCommand() - {strLocalCommand}");
 
             using var scCurrentCommand = scLocalSshClient.CreateCommand(strLocalCommand);
-            scCurrentCommand.CommandTimeout = TimeSpan.FromSeconds(ciEnigmaCommandTimeoutSeconds);
+            scCurrentCommand.CommandTimeout = TimeSpan.FromSeconds(iLocalTimeoutSeconds);
 
             var strCurrentResult = scCurrentCommand.Execute();
 

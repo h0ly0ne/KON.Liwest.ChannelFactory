@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 
 using Newtonsoft.Json;
 using NLog;
@@ -8,7 +9,7 @@ using static KON.Liwest.ChannelFactory.Constants;
 
 namespace KON.Liwest.ChannelFactory
 {
-    public static class Global
+    public static partial class Global
     {
         public static readonly Logger lCurrentLogger = LogManager.GetCurrentClassLogger();
         public static readonly HttpClient hcCurrentHttpClient = new();
@@ -206,11 +207,71 @@ namespace KON.Liwest.ChannelFactory
         /// <returns>Absolute path of the export directory</returns>
         public static string GetExportDirectory()
         {
-            var strCurrentExportDirectory = Path.Combine(AppContext.BaseDirectory, csExportDirectory, dtRunStart.ToString(csExportTimestampFormat));
-            Directory.CreateDirectory(strCurrentExportDirectory);
-
-            return strCurrentExportDirectory;
+            return lstrExportDirectory.Value;
         }
+
+        /// <summary>
+        /// Export directory of the run - created once, parallel runs started in the same second get their own directory (suffix _2, _3, ...)
+        /// </summary>
+        private static readonly Lazy<string> lstrExportDirectory = new(() =>
+        {
+            var strCurrentBaseDirectory = Path.Combine(AppContext.BaseDirectory, csExportDirectory, dtRunStart.ToString(csExportTimestampFormat));
+
+            for (var iCurrentSuffix = 1; ; iCurrentSuffix++)
+            {
+                var strCurrentExportDirectory = iCurrentSuffix == 1 ? strCurrentBaseDirectory : $"{strCurrentBaseDirectory}_{iCurrentSuffix}";
+                Directory.CreateDirectory(strCurrentExportDirectory);
+
+                try
+                {
+                    // Creating the marker fails if another run already uses the directory
+                    using (File.Open(Path.Combine(strCurrentExportDirectory, csExportRunMarkerFile), FileMode.CreateNew))
+                        File.SetAttributes(Path.Combine(strCurrentExportDirectory, csExportRunMarkerFile), FileAttributes.Hidden);
+
+                    return strCurrentExportDirectory;
+                }
+                catch (IOException) when (File.Exists(Path.Combine(strCurrentExportDirectory, csExportRunMarkerFile)))
+                {
+                    // Directory of another run - next suffix
+                }
+            }
+        });
+
+        /// <summary>
+        ///     Global.CleanupExportDirectories()
+        ///     Removes the oldest run directories of the export directory - only directories named like a run (yyyyMMdd-HHmmss[_n]) are touched, the current run is always kept
+        /// </summary>
+        /// <param name="iLocalKeepExports">Number of run directories to keep (including the current one)</param>
+        public static void CleanupExportDirectories(int iLocalKeepExports)
+        {
+            LogTrace("Global.CleanupExportDirectories()");
+
+            var strCurrentExportRoot = Path.Combine(AppContext.BaseDirectory, csExportDirectory);
+            if (!Directory.Exists(strCurrentExportRoot))
+                return;
+
+            var strCurrentRunDirectory = lstrExportDirectory.IsValueCreated ? lstrExportDirectory.Value : null;
+            var lsCurrentRunDirectories = Directory.GetDirectories(strCurrentExportRoot)
+                .Where(strCurrentDirectory => rxExportRunDirectory().IsMatch(Path.GetFileName(strCurrentDirectory)))
+                .OrderByDescending(strCurrentDirectory => Path.GetFileName(strCurrentDirectory), StringComparer.Ordinal)
+                .ToList();
+
+            foreach (var strCurrentDirectory in lsCurrentRunDirectories.Skip(iLocalKeepExports).Where(strCurrentDirectory => !string.Equals(strCurrentDirectory, strCurrentRunDirectory, StringComparison.OrdinalIgnoreCase)))
+            {
+                try
+                {
+                    Directory.Delete(strCurrentDirectory, true);
+                    LogInfo($"-» Removed old export directory {Path.GetFileName(strCurrentDirectory)}");
+                }
+                catch (Exception excCurrentException) when (excCurrentException is IOException or UnauthorizedAccessException)
+                {
+                    LogWarning($"-» Old export directory {Path.GetFileName(strCurrentDirectory)} could not be removed: {excCurrentException.Message}");
+                }
+            }
+        }
+
+        [GeneratedRegex(@"^\d{8}-\d{6}(_\d+)?$")]
+        private static partial Regex rxExportRunDirectory();
 
         /// <summary>
         ///     Global.GetOutputFilePath()
