@@ -120,7 +120,18 @@
         };
 
         public static readonly string[] csaDolbyAudioCodecs = [csAudioCodecAC3, csAudioCodecEAC3, csAudioCodecAC4]; // audio codecs which mark a channel as dolby
-        public const int ciBlindscanRetries = 3;                          // retries per transponder
+        public const string csUninstallRegistryKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall"; // uninstall entries of installed programs
+        public const string csServicesRegistryKey = @"SYSTEM\CurrentControlSet\Services";                    // service configuration (ImagePath)
+        public static readonly string[] csaDVBViewerProductNames = ["DVBViewer Pro", "DVBViewer Media Server", "DVBViewer Recording Service", "DVBViewer GE"]; // DisplayName prefixes of supported installations
+        public const string csDVBViewerUserModeFile = "usermode.ini";       // defines the data directory of a DVBViewer installation
+        public const string csDVBViewerDefaultRootDirectory = "CMUV";       // default parent of the data directory (Root of usermode.ini)
+        public const string csDVBViewerChannelDatabaseFile = "channels.dat"; // channel database within the data directory
+        public const string csDVBViewerTransponderDirectory = "Transponders"; // transponder lists within the data directory
+        public const int ciDVBViewerProcessExitTimeoutSeconds = 30;         // time for a program to close regularly before it is terminated
+        public const int ciDVBViewerServiceTimeoutSeconds = 60;             // time for a service to stop / start
+        public const string csBackupTimestampFormat = "yyyyMMdd-HHmmss";    // timestamp of backup files (<file>.<timestamp>.bak)
+
+        public const int ciBlindscanRetries = 3;                         // retries per transponder
         public const int ciBlindscanTunerLockGraceTime = 3000;              // grace time in ms for the tuner to lock
         public const string csBlindscanServerPort = "554";                  // rtsp port of the sat>ip server
         public const bool cbBlindscanIPv6 = false;                          // use ipv6 for the sat>ip connection

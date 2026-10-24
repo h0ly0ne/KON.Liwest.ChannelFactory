@@ -45,6 +45,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NLog" Version="6.2.2" />
     <PackageReference Include="Pastel" Version="8.0.0" />
+    <PackageReference Include="System.ServiceProcess.ServiceController" Version="10.0.13" />
   </ItemGroup>
 
   <ItemGroup>

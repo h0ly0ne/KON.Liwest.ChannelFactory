@@ -50,6 +50,10 @@ Copyright (C) 2024-2026 Oswald Oliver
                             Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current
                             images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and
                             DVBViewer exports.
+  --installdvbviewerdata    Install the exported DVBViewer channel database and transponder list
+                            into all installed DVBViewer / DVBViewer Media Server instances
+                            (ExportData or AutomaticData SubModeCustom3). Running instances are
+                            stopped and restarted, existing files are backed up.
   --dumpdatamode            Format of the file to output with DumpData.
   --verbose                 Set output to verbose level.
   --help                    Display this help screen.
@@ -105,6 +109,12 @@ Copyright (C) 2024-2026 Oswald Oliver
     --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
     --exportmode DVBViewerTransponderList DVBViewerChannelDatabase
     --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None
+
+* e.g.: Export to DVBViewer and install into DVBViewer / Media Server
+    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
+    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase
+    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None
+    --installdvbviewerdata
 
 * e.g.: Export to Enigma2 transponders, channel database and bouquets
     --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
@@ -223,6 +233,17 @@ Channel names are matched case-insensitive.
 
 All output files are resolved relative to the current working directory, absolute paths are kept and missing directories are created.
 Enigma bouquet files (`--exportmode EnigmaBouquetsFiles`) are written into the current working directory.
+
+## DVBViewer installation
+
+`--installdvbviewerdata` (with `ExportData` or `AutomaticData` / `SubModeCustom3` and a DVBViewer export) installs the DVBViewer files exported in this run into all installed DVBViewer / DVBViewer Media Server instances:
+
+* Installations are found by their uninstall entries (DVBViewer Pro, DVBViewer Media Server, DVBViewer Recording Service, DVBViewer GE)
+* The data directory is defined by `usermode.ini` of the program directory: `UserMode` 0 = program directory, 1 = application data of the user, 2 = common application data (`C:\ProgramData`), each with `Root` (e.g. `CMUV\DVBViewer`)
+* `channels.dat` is copied to the data directory, the transponder list to `<data directory>\Transponders`
+* Existing files are backed up as `<file>.<yyyyMMdd-HHmmss>.bak`
+* Running programs of the instance are closed (terminated if they do not close within 30 seconds) and restarted, running services (Media Server) are stopped and restarted
+* Only files written successfully in this run are installed
 
 ## Enigma formats
 

@@ -69,6 +69,9 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "exportfilenameformat", HelpText = "Enigma format per export, same order as --exportmode: Enigma1Ver1, Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and DVBViewer exports.")]
             public IEnumerable<FlagExportEnigmaFormat> cloExportFilenameFormat { get; set; } = [];
 
+            [Option(longName: "installdvbviewerdata", HelpText = "Install the exported DVBViewer channel database and transponder list into all installed DVBViewer / DVBViewer Media Server instances (ExportData or AutomaticData SubModeCustom3). Running instances are stopped and restarted, existing files are backed up.")]
+            public bool cloInstallDVBViewerData { get; set; }
+
             [Option(longName: "dumpdatamode", HelpText = "Format of the file to output with DumpData.")]
             public FlagDumpDataMode cloDumpDataMode { get; set; }
 
@@ -213,6 +216,12 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
                 htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
                 htCurrentHelpText.AddPostOptionsLine($"    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
+                htCurrentHelpText.AddPostOptionsLine($"");
+                htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to DVBViewer and install into DVBViewer / Media Server".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportmode DVBViewerTransponderList DVBViewerChannelDatabase");
+                htCurrentHelpText.AddPostOptionsLine($"    --exportfilename DVB-C_at_LIWEST.ini channels.dat --exportfilenameformat None None");
+                htCurrentHelpText.AddPostOptionsLine($"    --installdvbviewerdata");
                 htCurrentHelpText.AddPostOptionsLine($"");
                 htCurrentHelpText.AddPostOptionsLine($"* e.g.: Export to Enigma2 transponders, channel database and bouquets".Pastel(Color.Chocolate));
                 htCurrentHelpText.AddPostOptionsLine($"    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
@@ -374,7 +383,7 @@ namespace KON.Liwest.ChannelFactory
                     if (!LoadSourceDataFromFile(lsdiCurrentSourceData, oLocalOptions.cloSourceFile))
                         break;
 
-                    RunExports(oLocalOptions, lsdiCurrentSourceData);
+                    RunExportsAndInstall(oLocalOptions, lsdiCurrentSourceData);
 
                     break;
                 }
@@ -403,7 +412,7 @@ namespace KON.Liwest.ChannelFactory
                             WriteTarget(oLocalOptions, lsdiCurrentSourceData);
                             break;
                         case FlagSubMode.SubModeCustom3:
-                            RunExports(oLocalOptions, lsdiCurrentSourceData);
+                            RunExportsAndInstall(oLocalOptions, lsdiCurrentSourceData);
                             break;
                     }
 
@@ -495,6 +504,10 @@ namespace KON.Liwest.ChannelFactory
                     break;
                 }
             }
+
+            // Installation of DVBViewer data only together with a DVBViewer export
+            if (oLocalOptions.cloInstallDVBViewerData && (oLocalOptions is not ({ cloMode: FlagMode.ExportData } or { cloMode: FlagMode.AutomaticData, cloSubMode: FlagSubMode.SubModeCustom3 }) || !oLocalOptions.cloExportMode.Any(femCurrentExportMode => femCurrentExportMode is FlagExportMode.DVBViewerChannelDatabase or FlagExportMode.DVBViewerTransponderList)))
+                lsCurrentCustomConditions.Add("installdvbviewerdata");
 
             return lsCurrentCustomConditions;
         }
@@ -614,24 +627,85 @@ namespace KON.Liwest.ChannelFactory
         }
 
         /// <summary>
+        /// Program.RunExportsAndInstall() - exports and, with --installdvbviewerdata, installation of the exported DVBViewer data
+        /// </summary>
+        /// <param name="oLocalOptions"></param>
+        /// <param name="lsdiLocalSourceData"></param>
+        private static void RunExportsAndInstall(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
+        {
+            var ltCurrentDVBViewerFiles = RunExports(oLocalOptions, lsdiLocalSourceData);
+
+            if (oLocalOptions.cloInstallDVBViewerData)
+                InstallDVBViewerData(ltCurrentDVBViewerFiles);
+        }
+
+        /// <summary>
         /// Program.RunExports() - every export runs on its own, a failing export does not stop the following ones
         /// </summary>
         /// <param name="oLocalOptions"></param>
         /// <param name="lsdiLocalSourceData"></param>
-        private static void RunExports(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
+        /// <returns>DVBViewer files (export mode, path) written successfully in this run</returns>
+        private static List<(FlagExportMode femExportMode, string strFilePath)> RunExports(Options oLocalOptions, List<SourceDataItem> lsdiLocalSourceData)
         {
             var femaCurrentExportModes = oLocalOptions.cloExportMode.ToArray();
             var saCurrentExportFilenames = oLocalOptions.cloExportFilename.ToArray();
             var fefaCurrentExportFilenameFormats = oLocalOptions.cloExportFilenameFormat.ToArray();
+            List<(FlagExportMode femExportMode, string strFilePath)> ltCurrentDVBViewerFiles = [];
 
             for (var iCurrentExportElement = 0; iCurrentExportElement < femaCurrentExportModes.Length; iCurrentExportElement++)
             {
                 var femCurrentExportMode = femaCurrentExportModes[iCurrentExportElement];
                 var strCurrentExportFilename = iCurrentExportElement < saCurrentExportFilenames.Length ? saCurrentExportFilenames[iCurrentExportElement] : null;
                 FlagExportEnigmaFormat? fefCurrentExportFilenameFormat = iCurrentExportElement < fefaCurrentExportFilenameFormats.Length ? fefaCurrentExportFilenameFormats[iCurrentExportElement] : null;
+                var dtCurrentExportStart = DateTime.UtcNow.AddSeconds(-1);
 
-                ExecuteFileOperation(femCurrentExportMode, () => RunExport(lsdiLocalSourceData, femCurrentExportMode, strCurrentExportFilename, fefCurrentExportFilenameFormat));
+                if (!ExecuteFileOperation(femCurrentExportMode, () => RunExport(lsdiLocalSourceData, femCurrentExportMode, strCurrentExportFilename, fefCurrentExportFilenameFormat)))
+                    continue;
+
+                // Only files written by this export (an export without data writes no file)
+                if (femCurrentExportMode is FlagExportMode.DVBViewerChannelDatabase or FlagExportMode.DVBViewerTransponderList && !string.IsNullOrEmpty(strCurrentExportFilename))
+                {
+                    var strCurrentFilePath = Path.GetFullPath(strCurrentExportFilename);
+
+                    if (File.Exists(strCurrentFilePath) && File.GetLastWriteTimeUtc(strCurrentFilePath) >= dtCurrentExportStart)
+                        ltCurrentDVBViewerFiles.Add((femCurrentExportMode, strCurrentFilePath));
+                }
             }
+
+            return ltCurrentDVBViewerFiles;
+        }
+
+        /// <summary>
+        /// Program.InstallDVBViewerData() - installs the exported channel database / transponder list into all DVBViewer / DVBViewer Media Server installations
+        /// </summary>
+        /// <param name="ltLocalDVBViewerFiles"></param>
+        private static void InstallDVBViewerData(List<(FlagExportMode femExportMode, string strFilePath)> ltLocalDVBViewerFiles)
+        {
+            LogTrace("Program.InstallDVBViewerData()");
+            LogInfo("-» Install DVBViewer data");
+
+            if (!OperatingSystem.IsWindows())
+            {
+                LogError("-» DVBViewer data can only be installed on windows");
+                return;
+            }
+
+            var ltCurrentFiles = ltLocalDVBViewerFiles.Select(tCurrentFile => (tCurrentFile.strFilePath, tCurrentFile.femExportMode == FlagExportMode.DVBViewerChannelDatabase ? Constants.csDVBViewerChannelDatabaseFile : Path.Combine(Constants.csDVBViewerTransponderDirectory, Path.GetFileName(tCurrentFile.strFilePath)))).ToList();
+            if (ltCurrentFiles.Count == 0)
+            {
+                LogError("-» No DVBViewer data has been exported in this run - nothing to install");
+                return;
+            }
+
+            var ldviCurrentInstances = DataInstallations.FindDVBViewerInstances();
+            if (ldviCurrentInstances.Count == 0)
+            {
+                LogError("-» No DVBViewer / DVBViewer Media Server installation found");
+                return;
+            }
+
+            foreach (var dviCurrentInstance in ldviCurrentInstances)
+                DataInstallations.InstallDVBViewerData(dviCurrentInstance, ltCurrentFiles);
         }
 
         /// <summary>
@@ -669,15 +743,18 @@ namespace KON.Liwest.ChannelFactory
         /// </summary>
         /// <param name="eLocalOperation">Operation (export mode or target) for the error message</param>
         /// <param name="aLocalOperation"></param>
-        private static void ExecuteFileOperation(Enum eLocalOperation, Action aLocalOperation)
+        /// <returns>bool - false if the operation failed (error is logged)</returns>
+        private static bool ExecuteFileOperation(Enum eLocalOperation, Action aLocalOperation)
         {
             try
             {
                 aLocalOperation();
+                return true;
             }
             catch (Exception excCurrentException) when (excCurrentException is IOException or UnauthorizedAccessException or SettingsException)
             {
                 LogError($"-» Error on {eLocalOperation.GetType().Name}.{eLocalOperation}: {excCurrentException.Message}");
+                return false;
             }
         }
     }
