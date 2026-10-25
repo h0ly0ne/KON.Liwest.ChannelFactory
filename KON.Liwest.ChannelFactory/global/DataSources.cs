@@ -190,7 +190,8 @@ namespace KON.Liwest.ChannelFactory
                 try
                 {
                     var joCurrentErrorResponse = string.IsNullOrWhiteSpace(strCurrentContent) ? null : JObject.Parse(strCurrentContent);
-                    strCurrentApiMessage = joCurrentErrorResponse?["message"]?.ToString() ?? joCurrentErrorResponse?["error"]?.ToString();
+                    // Times of the api (e.g. maintenance window) are given in UTC - shown in the time zone of the system
+                    strCurrentApiMessage = (joCurrentErrorResponse?["message"]?.ToString() ?? joCurrentErrorResponse?["error"]?.ToString())?.ConvertUtcTimesToLocalTime();
                 }
                 catch (JsonException)
                 {

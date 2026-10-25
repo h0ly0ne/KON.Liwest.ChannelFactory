@@ -23,6 +23,9 @@ namespace KON.Liwest.ChannelFactory
         [GeneratedRegex(@"[,;/|\s]+")]
         private static partial Regex rxLanguageSeparator();
 
+        [GeneratedRegex(@"\b([01]?\d|2[0-3]):([0-5]\d)\b")]
+        private static partial Regex rxTimeOfDay();
+
         [GeneratedRegex(@"<\s*br\s*/?\s*>|<\s*/\s*(?:p|div|li|tr)\s*>", RegexOptions.IgnoreCase)]
         private static partial Regex rxHtmlLineBreak();
 
@@ -242,6 +245,23 @@ namespace KON.Liwest.ChannelFactory
             strCurrentText = rxOuterTextSeparator().Replace(strCurrentText, string.Empty).Trim();
 
             return strCurrentText.Length > 0 ? strCurrentText : null;
+        }
+
+        /// <summary>
+        /// Extensions.ConvertUtcTimesToLocalTime() - converts the times of day of a text (e.g. "23:00", "1:00") given in UTC to the time zone of the system (daylight saving time of the current day).
+        /// The rest of the text is kept, times keep their format (with / without leading zero).
+        /// </summary>
+        /// <param name="strLocalString"></param>
+        /// <returns>Text with local times</returns>
+        public static string ConvertUtcTimesToLocalTime(this string strLocalString)
+        {
+            var dtCurrentUtcDate = DateTime.UtcNow.Date;
+
+            return rxTimeOfDay().Replace(strLocalString, mCurrentMatch =>
+            {
+                var dtCurrentLocalTime = TimeZoneInfo.ConvertTimeFromUtc(dtCurrentUtcDate.AddHours(int.Parse(mCurrentMatch.Groups[1].Value, CultureInfo.InvariantCulture)).AddMinutes(int.Parse(mCurrentMatch.Groups[2].Value, CultureInfo.InvariantCulture)), TimeZoneInfo.Local);
+                return dtCurrentLocalTime.ToString(mCurrentMatch.Groups[1].Value.StartsWith('0') ? "HH:mm" : "H:mm", CultureInfo.InvariantCulture);
+            });
         }
 
         /// <summary>

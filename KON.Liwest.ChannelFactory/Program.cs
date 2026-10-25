@@ -33,7 +33,7 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "target", HelpText = "Output of the source data: None, ConsoleList (table on the console), FileList (source data file --targetfile).")]
             public FlagTarget cloTarget { get; set; }
 
-            [Option(longName: "smartcardid", HelpText = "Smartcard number for the LIWEST signal check (11 digits, starting with 01359 or 02766). Not available between 23:00 and 1:00.")]
+            [Option(longName: "smartcardid", HelpText = "Smartcard number for the LIWEST signal check (11 digits, starting with 01359 or 02766). Not available between 23:00 and 1:00 UTC.")]
             public string? cloSmartcardID { get; set; }
 
             [Option(longName: "serverip", HelpText = "IP Address of SAT>IP server for the blindscan.")]

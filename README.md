@@ -27,7 +27,7 @@ Copyright (C) 2024-2026 Oswald Oliver
   --target                  Output of the source data: None, ConsoleList (table on the console),
                             FileList (source data file --targetfile).
   --smartcardid             Smartcard number for the LIWEST signal check (11 digits, starting with
-                            01359 or 02766). Not available between 23:00 and 1:00.
+                            01359 or 02766). Not available between 23:00 and 1:00 UTC.
   --serverip                IP Address of SAT>IP server for the blindscan.
   --frequencies             Frequencies in MHz for the blindscan, comma separated. Ranges as
                             start-end:step.
@@ -218,7 +218,7 @@ Copyright (C) 2024-2026 Oswald Oliver
 ## Sources and data
 
 * Channel list: LIWEST channel list (tv and radio csv)
-* Smartcard: LIWEST signal check api - not available between 23:00 and 1:00 (maintenance window of the api)
+* Smartcard: LIWEST signal check api - not available between 23:00 and 1:00 UTC (maintenance window of the api, e.g. 1:00 to 3:00 in Austria during daylight saving time, 0:00 to 2:00 otherwise) - times in messages of the api are shown in the time zone of the system
 * Blindscan: SAT>IP server via [KON.OctoScan.NET](https://github.com/h0ly0ne/KON.OctoScan.NET)
 * Source data file: json array of channels with the property names of the source data (`ChannelName`, `ChannelFrequency`, `SID`, ...), not listed properties stay empty
 * Frequencies are always stored in kHz - input values like `578`, `578000` or `578.00 MHz` are normalized
