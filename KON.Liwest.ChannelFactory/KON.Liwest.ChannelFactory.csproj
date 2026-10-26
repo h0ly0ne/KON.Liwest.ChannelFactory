@@ -21,6 +21,7 @@
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
     <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="DataTablePrettyPrinter" Version="0.2.0" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.14" />
     <PackageReference Include="NanoXLSX" Version="3.2.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NLog" Version="6.2.2" />
@@ -38,6 +39,9 @@
     <None Update="resources\*">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <TargetPath>resources\%(Filename)%(Extension)</TargetPath>
+    </None>
+    <None Update="resources\Panasonic\**\*">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

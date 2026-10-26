@@ -81,7 +81,8 @@ namespace KON.Liwest.ChannelFactory
             DVBViewerChannelDatabase = 3,
             EnigmaTransponderList = 4,
             EnigmaChannelDatabase = 5,
-            EnigmaBouquetsFiles = 6
+            EnigmaBouquetsFiles = 6,
+            PanasonicChannelList = 7
         }
         public enum FlagExportEnigmaFormat
         {

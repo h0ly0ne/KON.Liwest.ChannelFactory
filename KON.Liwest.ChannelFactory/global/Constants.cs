@@ -140,6 +140,28 @@
         public const int ciEnigmaConnectTimeoutSeconds = 15;                // timeout for the SSH connection
         public const int ciEnigmaServiceTimeoutSeconds = 60;                // time for enigma2 to stop (init 4) / start (init 3)
         public const int ciEnigmaCommandTimeoutSeconds = 60;               // timeout for a command on the receiver
+        public const string csPanasonicTemplateDirectory = @"resources\Panasonic"; // templates per model (<model>\hotel_setup) next to the executable
+        public const string csPanasonicHotelSetupDirectory = "hotel_setup";  // directory of the channel list export of the tv (usb stick)
+        public const string csPanasonicChannelDatabaseFile = "svl.db";      // encrypted sqlite channel database within hotel_setup
+        public const string csPanasonicWorkFileSuffix = ".channelfactory.tmp"; // decrypted channel database during the export (removed afterwards)
+        public const uint ciPanasonicChannelDatabaseMagic = 0xA07DCB50;     // first 4 bytes (little endian) of an encrypted svl.db ("SQLi" encrypted)
+        public const int ciPanasonicCipherStart = 0x0388;                   // start value of the xor cipher (reset every ciPanasonicCipherBlockLength bytes)
+        public const int ciPanasonicCipherIncrement = 0x96A3;               // increment of the xor cipher per byte (plus the plain byte)
+        public const int ciPanasonicCipherBlockLength = 256;                // length of a cipher block
+        public const uint ciPanasonicChecksumPolynomial = 0x04C11DB7;       // crc32 (mpeg-2) over the encrypted data, appended big endian
+        public const int ciPanasonicNetworkTypeCableIP = 15;                // ntype of dvb over ip (cable>ip)
+        public const int ciPanasonicDeliveryTypeCableIP = 18;               // delivery_type of cable>ip transponders (15 = sat>ip)
+        public const int ciPanasonicPhysicalChannelBase = 0x4000;           // physical_ch = base + frequency in kHz / 100
+        public const byte ciPanasonicModulationQAM256 = 0x46;               // modulation within the delivery data (qam256)
+        public const int ciPanasonicDeliveryDataLength = 17;                // length of the delivery data (frequency in 10 Hz, symbolrate, modulation)
+        public const int ciPanasonicServiceTypeTV = 1;                      // stype of tv services
+        public const int ciPanasonicServiceTypeRadio = 2;                   // stype of radio services (also stingray music channels)
+        public const int ciPanasonicRunningStatusRunning = 4;               // running_status if unknown (4 = running)
+        public const int ciPanasonicServiceAttributes = 3;                  // attr of the services as set by the tv (with the default value 0 all channels are hidden)
+        public const int ciLiwestNetworkId = 222;                           // network_id of the liwest cable network
+        public const int ciCableChannelHyperbandFirstFrequency = 306000;     // S21 (kHz) - S21..S41 and E21..E69 in steps of 8 MHz
+        public const int ciCableChannelUHFFirstFrequency = 474000;          // E21 (kHz)
+        public const int ciCableChannelStep = 8000;                         // channel spacing (kHz) of hyperband and uhf
         public const string csExportDirectory = "Export";                   // export directory next to the executable (generated files with relative path)
         public const string csExportTimestampFormat = "yyyyMMdd-HHmmss";    // subdirectory per run (start of the run)
         public const string csExportRunMarkerFile = ".channelfactory";      // marker of the run within its export directory (makes parallel runs unique)

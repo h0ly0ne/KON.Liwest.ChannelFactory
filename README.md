@@ -44,14 +44,20 @@ Copyright (C) 2024-2026 Oswald Oliver
                             frequency), unsorted channels are placed in front.
   --exportmode              Exports, space separated (one entry per export): ExcelChannelList,
                             DVBViewerTransponderList, DVBViewerChannelDatabase,
-                            EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles.
+                            EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles,
+                            PanasonicChannelList.
   --exportfilename          Filename per export, same order as --exportmode ("" for
-                            EnigmaBouquetsFiles). Relative paths are placed in Export\<start of the
-                            run> next to the executable.
+                            EnigmaBouquetsFiles, directory to create for PanasonicChannelList - e.g.
+                            hotel_setup). Relative paths are placed in Export\<start of the run>
+                            next to the executable.
   --exportfilenameformat    Enigma format per export, same order as --exportmode: Enigma1Ver1,
                             Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current
                             images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and
                             DVBViewer exports.
+  --panasonictemplate       Template of the tv for PanasonicChannelList: model of a template in
+                            resources\Panasonic next to the executable (e.g. TX-65FX780W) or the
+                            hotel_setup directory exported by the tv (usb channel list copy). The
+                            settings of the template are kept, only the channel list is replaced.
   --installdvbviewerdata    Install the exported DVBViewer channel database and transponder list
                             into all installed DVBViewer / DVBViewer Media Server instances
                             (ExportData or AutomaticData SubModeCustom3). Running instances are
@@ -162,6 +168,16 @@ Copyright (C) 2024-2026 Oswald Oliver
     --exportfilename cables.xml lamedb ""
     --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4
 
+* e.g.: Export to a Panasonic channel list (template of the model)
+    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
+    --exportmode PanasonicChannelList --exportfilename hotel_setup --exportfilenameformat None
+    --panasonictemplate TX-65FX780W
+
+* e.g.: Export to a Panasonic channel list (template exported by the tv)
+    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
+    --exportmode PanasonicChannelList --exportfilename hotel_setup --exportfilenameformat None
+    --panasonictemplate E:\hotel_setup
+
 * e.g.: Export to all formats into the folder export
     --mode ExportData --source FileList --sourcefile SourceData_Sorted.json
     --exportmode ExcelChannelList DVBViewerTransponderList DVBViewerChannelDatabase
@@ -237,6 +253,7 @@ Exports:
 
 * DVBViewer: encrypted flag of the channel from `Encrypted`
 * Enigma (lamedb): encrypted services get one `C:xxxx` entry per CA_system_ID, `C:0000` if no CA_system_ID is known - unencrypted services get none
+* Panasonic: `free_CA_mode` of the channel from `Encrypted`
 
 Channels without `Encrypted` (e.g. no blindscan data or older source data files) are exported as not encrypted - regenerate older source data files with a current blindscan.
 Channel list, smartcard and blindscan data of one channel are only combined with `--sourcecleanup GroupAndInvalidate`.
@@ -266,6 +283,7 @@ Channels without any language get `und` (undetermined).
 | `resources/ChannelVariation.json` | `--channelvariationfile` | Primary channel name and its variations (different spellings of the sources) |
 | `resources/ChannelRemoval.json` | `--channelremovalfile` | Channels (name and frequency) to remove |
 | `resources/ChannelSorting.json` | `--channelsortingfile` | Sort number per channel (name and frequency) - channels without sort number are placed in front |
+| `resources/Panasonic/<model>/hotel_setup` | `--panasonictemplate <model>` | Template of a Panasonic tv for `PanasonicChannelList` (see Panasonic channel list) |
 
 Channel names are matched case-insensitive.
 
@@ -316,6 +334,23 @@ Generated files (`--exportfilename`, `--targetfile`) with a relative path are pl
 * Targets: `lamedb` / `lamedb5` and bouquet files to `/etc/enigma2`, `cables.xml` to `/etc/tuxbox/cables.xml` (symbolic links resolved)
 * The merged files are kept locally in `EnigmaBackup\<host>_<yyyyMMdd-HHmmss>_install`
 * The cable of the Enigma2 transponder export is always named `LIWEST` - the scan provider selection of the receiver is kept on every update
+
+## Panasonic channel list
+
+`--exportmode PanasonicChannelList` creates the directory of `--exportfilename` (e.g. `hotel_setup`) for the channel list import of a Panasonic tv via usb (copy the directory to the root of the usb stick, import in the menu of the tv):
+
+* The channel list is generated from the template of the tv (`--panasonictemplate`): the model of a template in `resources\Panasonic` next to the executable (e.g. `TX-65FX780W`) or a `hotel_setup` directory exported by the tv
+* The template defines the settings of the tv (`fake_eeprom` - e.g. SAT>IP server, favourite names -, `model_id.info`, `network_data_ether`, `layoutData`) - these files are copied unchanged and required by the import (without them the tv reports an unexpected error), lists of different models are not compatible
+* `svl.db` (encrypted sqlite database with checksum) of the template: all channels and transponders are replaced
+* Channels are exported as CABLE>IP (`ntype` 15, `delivery_type` 18) with symbol rate 6900 and QAM256, network LIWEST (network id 222)
+* Program number = order of the source data (`--channelsortingfile`), LCN = channel number of LIWEST, radio = no video stream or Stingray music channel
+* Only the required columns are written (names without zero padding), all other columns keep the default value of the schema - `attr` is always 3 (with the default value 0 the tv hides all channels)
+* Only channels with service data (SID / TSID / ONID / frequency) are exported - duplicates (same ONID / TSID / SID) are skipped
+* Templates are made from a `hotel_setup` export of the tv: `svl.db` without channels, transponders and cached data
+
+| Template | TV |
+|---|---|
+| `TX-65FX780W` | Panasonic TX-65FX780W (2018, CABLE>IP) |
 
 ## Dry run
 

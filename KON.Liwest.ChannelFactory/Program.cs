@@ -7,6 +7,7 @@ using CommandLine.Text;
 using NLog;
 using NLog.Layouts;
 using Krkadoni.EnigmaSettings;
+using Microsoft.Data.Sqlite;
 using Pastel;
 
 using static KON.Liwest.ChannelFactory.DataDumps;
@@ -60,14 +61,17 @@ namespace KON.Liwest.ChannelFactory
             [Option(longName: "channelsortingfile", HelpText = "Channel sorting file (json) - sort number per channel (name and frequency), unsorted channels are placed in front.")]
             public string? cloChannelSortingFile { get; set; }
 
-            [Option(longName: "exportmode", HelpText = "Exports, space separated (one entry per export): ExcelChannelList, DVBViewerTransponderList, DVBViewerChannelDatabase, EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles.")]
+            [Option(longName: "exportmode", HelpText = "Exports, space separated (one entry per export): ExcelChannelList, DVBViewerTransponderList, DVBViewerChannelDatabase, EnigmaTransponderList, EnigmaChannelDatabase, EnigmaBouquetsFiles, PanasonicChannelList.")]
             public IEnumerable<FlagExportMode> cloExportMode { get; set; } = [];
 
-            [Option(longName: "exportfilename", HelpText = "Filename per export, same order as --exportmode (\"\" for EnigmaBouquetsFiles). Relative paths are placed in Export\\<start of the run> next to the executable.")]
+            [Option(longName: "exportfilename", HelpText = "Filename per export, same order as --exportmode (\"\" for EnigmaBouquetsFiles, directory to create for PanasonicChannelList - e.g. hotel_setup). Relative paths are placed in Export\\<start of the run> next to the executable.")]
             public IEnumerable<string> cloExportFilename { get; set; } = [];
 
             [Option(longName: "exportfilenameformat", HelpText = "Enigma format per export, same order as --exportmode: Enigma1Ver1, Enigma1Ver2 (Enigma 1), Enigma2Ver3, Enigma2Ver4 (default of current images), Enigma2Ver5 (Enigma 2 lamedb version) - None for excel and DVBViewer exports.")]
             public IEnumerable<FlagExportEnigmaFormat> cloExportFilenameFormat { get; set; } = [];
+
+            [Option(longName: "panasonictemplate", HelpText = "Template of the tv for PanasonicChannelList: model of a template in resources\\Panasonic next to the executable (e.g. TX-65FX780W) or the hotel_setup directory exported by the tv (usb channel list copy). The settings of the template are kept, only the channel list is replaced.")]
+            public string? cloPanasonicTemplate { get; set; }
 
             [Option(longName: "installdvbviewerdata", HelpText = "Install the exported DVBViewer channel database and transponder list into all installed DVBViewer / DVBViewer Media Server instances (ExportData or AutomaticData SubModeCustom3). Running instances are stopped and restarted, existing files are backed up.")]
             public bool cloInstallDVBViewerData { get; set; }
@@ -268,6 +272,16 @@ namespace KON.Liwest.ChannelFactory
                 htCurrentHelpText.AddPostOptionsLine("    --exportmode EnigmaTransponderList EnigmaChannelDatabase EnigmaBouquetsFiles");
                 htCurrentHelpText.AddPostOptionsLine("    --exportfilename cables.xml lamedb \"\"");
                 htCurrentHelpText.AddPostOptionsLine("    --exportfilenameformat Enigma2Ver4 Enigma2Ver4 Enigma2Ver4");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to a Panasonic channel list (template of the model)".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode PanasonicChannelList --exportfilename hotel_setup --exportfilenameformat None");
+                htCurrentHelpText.AddPostOptionsLine("    --panasonictemplate TX-65FX780W");
+                htCurrentHelpText.AddPostOptionsLine("");
+                htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to a Panasonic channel list (template exported by the tv)".Pastel(Color.Chocolate));
+                htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
+                htCurrentHelpText.AddPostOptionsLine("    --exportmode PanasonicChannelList --exportfilename hotel_setup --exportfilenameformat None");
+                htCurrentHelpText.AddPostOptionsLine("    --panasonictemplate E:\\hotel_setup");
                 htCurrentHelpText.AddPostOptionsLine("");
                 htCurrentHelpText.AddPostOptionsLine("* e.g.: Export to all formats into the folder export".Pastel(Color.Chocolate));
                 htCurrentHelpText.AddPostOptionsLine("    --mode ExportData --source FileList --sourcefile SourceData_Sorted.json");
@@ -644,6 +658,10 @@ namespace KON.Liwest.ChannelFactory
                 if (fefaCurrentExportFilenameFormats[iCurrentExportElement] == FlagExportEnigmaFormat.None && femaCurrentExportModes[iCurrentExportElement] is FlagExportMode.EnigmaTransponderList or FlagExportMode.EnigmaChannelDatabase or FlagExportMode.EnigmaBouquetsFiles)
                     lsLocalCustomConditions.Add("exportfilenameformat");
             }
+
+            // Panasonic channel list only with an existing template (model or hotel_setup directory)
+            if (femaCurrentExportModes.Contains(FlagExportMode.PanasonicChannelList) && Panasonic.ResolveTemplateDirectory(oLocalOptions.cloPanasonicTemplate) == null)
+                lsLocalCustomConditions.Add("panasonictemplate");
         }
 
         /// <summary>
@@ -721,7 +739,7 @@ namespace KON.Liwest.ChannelFactory
                 FlagExportEnigmaFormat? fefCurrentExportFilenameFormat = iCurrentExportElement < fefaCurrentExportFilenameFormats.Length ? fefaCurrentExportFilenameFormats[iCurrentExportElement] : null;
                 var dtCurrentExportStart = DateTime.UtcNow.AddSeconds(-1);
 
-                if (!ExecuteFileOperation(femCurrentExportMode, () => RunExport(lsdiLocalSourceData, femCurrentExportMode, strCurrentExportFilename, fefCurrentExportFilenameFormat)))
+                if (!ExecuteFileOperation(femCurrentExportMode, () => RunExport(lsdiLocalSourceData, femCurrentExportMode, strCurrentExportFilename, fefCurrentExportFilenameFormat, oLocalOptions.cloPanasonicTemplate)))
                     continue;
 
                 // Bouquet files are written to the export directory, all other exports to their filename
@@ -845,7 +863,8 @@ namespace KON.Liwest.ChannelFactory
         /// <param name="femLocalExportMode"></param>
         /// <param name="strLocalExportFilename"></param>
         /// <param name="fefLocalExportFilenameFormat"></param>
-        private static void RunExport(List<SourceDataItem> lsdiLocalSourceData, FlagExportMode femLocalExportMode, string? strLocalExportFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat)
+        /// <param name="strLocalPanasonicTemplate"></param>
+        private static void RunExport(List<SourceDataItem> lsdiLocalSourceData, FlagExportMode femLocalExportMode, string? strLocalExportFilename, FlagExportEnigmaFormat? fefLocalExportFilenameFormat, string? strLocalPanasonicTemplate)
         {
             switch (femLocalExportMode)
             {
@@ -880,6 +899,12 @@ namespace KON.Liwest.ChannelFactory
 
                     break;
                 }
+                case FlagExportMode.PanasonicChannelList:
+                {
+                    ExportSourceDataToPanasonicChannelList(lsdiLocalSourceData, strLocalExportFilename, strLocalPanasonicTemplate);
+
+                    break;
+                }
             }
         }
 
@@ -896,7 +921,7 @@ namespace KON.Liwest.ChannelFactory
                 aLocalOperation();
                 return true;
             }
-            catch (Exception excCurrentException) when (excCurrentException is IOException or UnauthorizedAccessException or SettingsException)
+            catch (Exception excCurrentException) when (excCurrentException is IOException or UnauthorizedAccessException or InvalidDataException or SettingsException or SqliteException)
             {
                 LogError($"-» Error on {eLocalOperation.GetType().Name}.{eLocalOperation}: {excCurrentException.Message}");
                 return false;

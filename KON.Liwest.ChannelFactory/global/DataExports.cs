@@ -2,6 +2,7 @@
 
 using Krkadoni.EnigmaSettings;
 using Krkadoni.EnigmaSettings.Interfaces;
+using Microsoft.Data.Sqlite;
 using NanoXLSX;
 
 using static KON.Liwest.ChannelFactory.Constants;
@@ -13,7 +14,7 @@ using NullLogger = Krkadoni.EnigmaSettings.NullLogger;
 namespace KON.Liwest.ChannelFactory
 {
     /// <summary>
-    /// Export of source data to excel, DVBViewer and Enigma files
+    /// Export of source data to excel, DVBViewer, Enigma and Panasonic files
     /// </summary>
     public static class DataExports
     {
@@ -319,6 +320,179 @@ namespace KON.Liwest.ChannelFactory
             isCurrentISettings.Bouquets.Add(ifbCurrentIFileBouquetRadio);
 
             sioCurrentSettingsIO.Save(strCurrentExportFolderAbsolutePath, isCurrentISettings, strCurrentExportFilename, bLocalExportChannelDatabase, false, bLocalExportTransponders, bLocalExportBouquetsFiles);
+        }
+
+        /// <summary>
+        /// DataExports.ExportSourceDataToPanasonicChannelList()
+        /// Creates a hotel_setup directory for the usb import of a Panasonic tv from the template of the model: the channel database (svl.db) of the template is filled with
+        /// all services and their transponders (cable>ip), the other files of the template (settings of the tv) are copied unchanged.
+        /// </summary>
+        /// <param name="lsdiLocalSourceData"></param>
+        /// <param name="strLocalExportDirectoryName">Directory to create (hotel_setup)</param>
+        /// <param name="strLocalTemplate">Model name of a template next to the executable or hotel_setup directory of the tv</param>
+        public static void ExportSourceDataToPanasonicChannelList(List<SourceDataItem> lsdiLocalSourceData, string? strLocalExportDirectoryName, string? strLocalTemplate)
+        {
+            if (string.IsNullOrEmpty(strLocalExportDirectoryName))
+                return;
+
+            LogTrace("DataExports.ExportSourceDataToPanasonicChannelList()");
+            LogInfo("-» Export source data to Panasonic channel list");
+
+            if (lsdiLocalSourceData.Count == 0)
+                return;
+
+            var strCurrentTemplateDirectory = Panasonic.ResolveTemplateDirectory(strLocalTemplate);
+            if (strCurrentTemplateDirectory == null)
+            {
+                LogError($"-» Panasonic template '{strLocalTemplate}' not found (available: {string.Join(", ", Panasonic.GetTemplateNames())})");
+                return;
+            }
+
+            // Services are identified by ONID / TSID / SID - duplicates would result in the same channel twice on the tv
+            var lsdiCurrentExportableItems = GetExportableServiceItems(lsdiLocalSourceData, "Panasonic channel list").DistinctBy(sdiCurrentSourceDataItem => (sdiCurrentSourceDataItem.ONID, sdiCurrentSourceDataItem.TSID, sdiCurrentSourceDataItem.SID)).ToList();
+            if (lsdiCurrentExportableItems.Count == 0)
+                return;
+
+            // Template checked before anything is written
+            var baCurrentTemplateDatabase = Panasonic.DecryptChannelDatabase(File.ReadAllBytes(Path.Combine(strCurrentTemplateDirectory, csPanasonicChannelDatabaseFile)));
+
+            var strCurrentExportDirectory = GetOutputFilePath(strLocalExportDirectoryName);
+            Directory.CreateDirectory(strCurrentExportDirectory);
+
+            var strCurrentWorkFile = Path.Combine(strCurrentExportDirectory, csPanasonicChannelDatabaseFile + csPanasonicWorkFileSuffix);
+            File.WriteAllBytes(strCurrentWorkFile, baCurrentTemplateDatabase);
+
+            try
+            {
+                int iCurrentTransponderCount;
+
+                // No pooling - the work file is removed afterwards
+                using (var scCurrentConnection = new SqliteConnection(new SqliteConnectionStringBuilder { DataSource = strCurrentWorkFile, Pooling = false }.ToString()))
+                {
+                    scCurrentConnection.Open();
+
+                    using (var stCurrentTransaction = scCurrentConnection.BeginTransaction())
+                    {
+                        // All channels and transponders of the template are replaced (analog transponders are not needed by the tv)
+                        ExecuteSqliteCommand(scCurrentConnection, stCurrentTransaction, "DELETE FROM SVL");
+                        ExecuteSqliteCommand(scCurrentConnection, stCurrentTransaction, "DELETE FROM TSL");
+
+                        iCurrentTransponderCount = InsertPanasonicTransponders(scCurrentConnection, stCurrentTransaction, lsdiCurrentExportableItems);
+                        InsertPanasonicServices(scCurrentConnection, stCurrentTransaction, lsdiCurrentExportableItems);
+
+                        stCurrentTransaction.Commit();
+                    }
+
+                    // Removes the free pages of the template
+                    ExecuteSqliteCommand(scCurrentConnection, null, "VACUUM");
+                }
+
+                File.WriteAllBytes(Path.Combine(strCurrentExportDirectory, csPanasonicChannelDatabaseFile), Panasonic.EncryptChannelDatabase(File.ReadAllBytes(strCurrentWorkFile)));
+
+                foreach (var strCurrentTemplateFile in Directory.GetFiles(strCurrentTemplateDirectory).Where(strCurrentTemplateFile => !string.Equals(Path.GetFileName(strCurrentTemplateFile), csPanasonicChannelDatabaseFile, StringComparison.OrdinalIgnoreCase)))
+                    File.Copy(strCurrentTemplateFile, Path.Combine(strCurrentExportDirectory, Path.GetFileName(strCurrentTemplateFile)), true);
+
+                LogInfo($"-» Panasonic channel list with {lsdiCurrentExportableItems.Count} channel(s) on {iCurrentTransponderCount} transponder(s) written to {strCurrentExportDirectory} (template {strCurrentTemplateDirectory})");
+            }
+            finally
+            {
+                File.Delete(strCurrentWorkFile);
+            }
+        }
+
+        /// <summary>
+        /// DataExports.InsertPanasonicTransponders() - one TSL entry per frequency / TSID / ONID
+        /// </summary>
+        /// <param name="scLocalConnection"></param>
+        /// <param name="stLocalTransaction"></param>
+        /// <param name="lsdiLocalSourceData"></param>
+        /// <returns>Number of transponders</returns>
+        private static int InsertPanasonicTransponders(SqliteConnection scLocalConnection, SqliteTransaction stLocalTransaction, List<SourceDataItem> lsdiLocalSourceData)
+        {
+            var taCurrentTransponders = lsdiLocalSourceData
+                .Select(sdiCurrentSourceDataItem => (iFrequency: sdiCurrentSourceDataItem.ChannelFrequency!.Value, iTSID: sdiCurrentSourceDataItem.TSID!.Value, iONID: sdiCurrentSourceDataItem.ONID!.Value))
+                .Distinct()
+                .OrderBy(tCurrentTransponder => tCurrentTransponder.iFrequency)
+                .ToArray();
+
+            using var scCurrentCommand = scLocalConnection.CreateCommand();
+            scCurrentCommand.Transaction = stLocalTransaction;
+            // All other columns keep the default value of the schema
+            scCurrentCommand.CommandText = "INSERT INTO TSL (physical_ch, onid, tsid, ntype, freq, nid, netname, chname, delivery_type, delivery) " +
+                                           "VALUES (@physical_ch, @onid, @tsid, @ntype, @freq, @nid, @netname, @chname, @delivery_type, @delivery)";
+
+            foreach (var (iCurrentFrequency, iCurrentTSID, iCurrentONID) in taCurrentTransponders)
+            {
+                scCurrentCommand.Parameters.Clear();
+                scCurrentCommand.Parameters.AddWithValue("@physical_ch", Panasonic.GetPhysicalChannel(iCurrentFrequency));
+                scCurrentCommand.Parameters.AddWithValue("@onid", iCurrentONID);
+                scCurrentCommand.Parameters.AddWithValue("@tsid", iCurrentTSID);
+                scCurrentCommand.Parameters.AddWithValue("@ntype", ciPanasonicNetworkTypeCableIP);
+                scCurrentCommand.Parameters.AddWithValue("@freq", iCurrentFrequency);
+                scCurrentCommand.Parameters.AddWithValue("@nid", ciLiwestNetworkId);
+                scCurrentCommand.Parameters.AddWithValue("@netname", csCategory);
+                scCurrentCommand.Parameters.AddWithValue("@chname", Panasonic.GetCableChannelName(iCurrentFrequency));
+                scCurrentCommand.Parameters.AddWithValue("@delivery_type", ciPanasonicDeliveryTypeCableIP);
+                scCurrentCommand.Parameters.Add("@delivery", SqliteType.Blob).Value = Panasonic.CreateDeliveryData(iCurrentFrequency);
+                scCurrentCommand.ExecuteNonQuery();
+            }
+
+            return taCurrentTransponders.Length;
+        }
+
+        /// <summary>
+        /// DataExports.InsertPanasonicServices() - one SVL entry per service, program number = position in the source data (sorting), LCN = channel number of LIWEST
+        /// </summary>
+        /// <param name="scLocalConnection"></param>
+        /// <param name="stLocalTransaction"></param>
+        /// <param name="lsdiLocalSourceData"></param>
+        private static void InsertPanasonicServices(SqliteConnection scLocalConnection, SqliteTransaction stLocalTransaction, List<SourceDataItem> lsdiLocalSourceData)
+        {
+            using var scCurrentCommand = scLocalConnection.CreateCommand();
+            scCurrentCommand.Transaction = stLocalTransaction;
+            // All other columns keep the default value of the schema - attr is required (with the default value 0 the tv hides all channels)
+            scCurrentCommand.CommandText = "INSERT INTO SVL (onid, tsid, svcid, nid, physical_ch, ntype, major_channel, default_ch, stype, sname, " +
+                                           "H_EIT_flag, M_EIT_flag, L_EIT_flag, EIT_schedule_flag, EIT_present_following_flag, running_status, free_CA_mode, attr, ologch) " +
+                                           "VALUES (@onid, @tsid, @svcid, @nid, @physical_ch, @ntype, @major_channel, @major_channel, @stype, @sname, " +
+                                           "1, 1, 1, 1, 1, @running_status, @free_CA_mode, @attr, @ologch)";
+
+            for (var iCurrentPosition = 0; iCurrentPosition < lsdiLocalSourceData.Count; iCurrentPosition++)
+            {
+                var sdiCurrentSourceDataItem = lsdiLocalSourceData[iCurrentPosition];
+
+                // Stingray music channels are radio services on the tv (still image as video)
+                var bCurrentIsRadioService = !sdiCurrentSourceDataItem.IsVideoService || sdiCurrentSourceDataItem.Stingray == true;
+
+                scCurrentCommand.Parameters.Clear();
+                scCurrentCommand.Parameters.AddWithValue("@onid", sdiCurrentSourceDataItem.ONID!.Value);
+                scCurrentCommand.Parameters.AddWithValue("@tsid", sdiCurrentSourceDataItem.TSID!.Value);
+                scCurrentCommand.Parameters.AddWithValue("@svcid", sdiCurrentSourceDataItem.SID!.Value);
+                scCurrentCommand.Parameters.AddWithValue("@nid", ciLiwestNetworkId);
+                scCurrentCommand.Parameters.AddWithValue("@physical_ch", Panasonic.GetPhysicalChannel(sdiCurrentSourceDataItem.ChannelFrequency!.Value));
+                scCurrentCommand.Parameters.AddWithValue("@ntype", ciPanasonicNetworkTypeCableIP);
+                scCurrentCommand.Parameters.AddWithValue("@major_channel", iCurrentPosition + 1);
+                scCurrentCommand.Parameters.AddWithValue("@stype", bCurrentIsRadioService ? ciPanasonicServiceTypeRadio : ciPanasonicServiceTypeTV);
+                scCurrentCommand.Parameters.AddWithValue("@sname", sdiCurrentSourceDataItem.ChannelName ?? string.Empty);
+                scCurrentCommand.Parameters.AddWithValue("@running_status", sdiCurrentSourceDataItem.RunningStatus ?? ciPanasonicRunningStatusRunning);
+                scCurrentCommand.Parameters.AddWithValue("@free_CA_mode", sdiCurrentSourceDataItem.IsEncrypted ? 1 : 0);
+                scCurrentCommand.Parameters.AddWithValue("@attr", ciPanasonicServiceAttributes);
+                scCurrentCommand.Parameters.AddWithValue("@ologch", sdiCurrentSourceDataItem.ChannelNumber ?? 0);
+                scCurrentCommand.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// DataExports.ExecuteSqliteCommand()
+        /// </summary>
+        /// <param name="scLocalConnection"></param>
+        /// <param name="stLocalTransaction"></param>
+        /// <param name="strLocalCommandText"></param>
+        private static void ExecuteSqliteCommand(SqliteConnection scLocalConnection, SqliteTransaction? stLocalTransaction, string strLocalCommandText)
+        {
+            using var scCurrentCommand = scLocalConnection.CreateCommand();
+            scCurrentCommand.Transaction = stLocalTransaction;
+            scCurrentCommand.CommandText = strLocalCommandText;
+            scCurrentCommand.ExecuteNonQuery();
         }
 
         /// <summary>
